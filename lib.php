@@ -15,24 +15,24 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Defines the APIs used by ibassessmentreport reports
+ * Defines the APIs used by ibassessment reports
  *
  * @package    report
- * @subpackage ibassessmentreport
+ * @subpackage ibassessment
  * @copyright  2021 Veronica Bermegui
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use ibassessmentreport\Feedback_files_tree;
+use ibassessment\Feedback_files_tree;
 
 defined('MOODLE_INTERNAL') || die;
 
 
-function report_ibassessmentreport_extend_navigation_course($navigation, $course, $context) {
+function report_ibassessment_extend_navigation_course($navigation, $course, $context) {
     //has_capability('moodle/site:viewuseridentity', $context)
     if (has_capability('moodle/site:viewuseridentity', $context)) {
-        $url = new moodle_url('/report/ibassessmentreport/index.php', array('id' => $course->id));
-        $navigation->add(get_string('pluginname', 'report_ibassessmentreport'), $url, navigation_node::TYPE_SETTING, null, null, new pix_icon('i/report', ''));
+        $url = new moodle_url('/report/ibassessment/index.php', array('id' => $course->id));
+        $navigation->add(get_string('pluginname', 'report_ibassessment'), $url, navigation_node::TYPE_SETTING, null, null, new pix_icon('i/report', ''));
     }
 }
 

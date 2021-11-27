@@ -15,10 +15,10 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * A report to display the outcome of scheduled ibassessmentreport
+ * A report to display the outcome of scheduled ibassessment
  *
  * @package    report
- * @subpackage ibassessmentreport
+ * @subpackage ibassessment
  * @copyright  2021 Veronica Bermegui
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -29,15 +29,15 @@ require_once('lib.php');
 
 $id          = optional_param('id', 0, PARAM_INT);// Course ID.
 
-admin_externalpage_setup('report_ibassessmentreport', '', null, '', array('pagelayout'=>'report'));
+admin_externalpage_setup('report_ibassessment', '', null, '', array('pagelayout'=>'report'));
 
 // Display the backup report
 echo $OUTPUT->header();
-echo $OUTPUT->heading(get_string('heading', 'report_ibassessmentreport'));
+echo $OUTPUT->heading(get_string('heading', 'report_ibassessment'));
 
 if ($id == 0) {
    
-     \core\notification::add(get_string('cantdisplayerror', 'report_ibassessmentreport'),  core\output\notification::NOTIFY_ERROR); 
+     \core\notification::add(get_string('cantdisplayerror', 'report_ibassessment'),  core\output\notification::NOTIFY_ERROR); 
    
 } else {
 
@@ -45,7 +45,7 @@ if ($id == 0) {
     
     echo $OUTPUT->box_start();
     
-    $templatename = 'report_ibassessmentreport/user_table';
+    $templatename = 'report_ibassessment/user_table';
     
     echo $OUTPUT->render_from_template($templatename, $context);
     

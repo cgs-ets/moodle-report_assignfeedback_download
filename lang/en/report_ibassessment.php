@@ -15,16 +15,16 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Strings for component 'report_ibassessmentreport'
+ * Strings for component 'report_ibassessment'
  *
  * @package    report
- * @subpackage ibassessmentreport
+ * @subpackage ibassessment
  * @copyright  2021 Veronica Bermegui
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['pluginname'] = 'IBassessmentreport report';
-$string['privacy:metadata'] = 'The IBassessmentreport reports plugin does not store any personal data.';
+$string['pluginname'] = 'IB assessment report';
+$string['privacy:metadata'] = 'The IB assessment reports plugin does not store any personal data.';
 $string['cantdisplayerror'] = 'This report is meant to be displayed only in courses';
 $string['heading'] = 'IB assessment';
 $string['nameheader'] = 'First name / Surname';

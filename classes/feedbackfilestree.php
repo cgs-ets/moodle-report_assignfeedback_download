@@ -16,12 +16,12 @@
 
 /**
  *
- * @package    report_ibassessmentreport
+ * @package    report_ibassessment
  * @copyright  2021 Veronica Bermegui
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace report_ibassessmentreport;
+namespace report_ibassessment;
 
 use renderable;
 

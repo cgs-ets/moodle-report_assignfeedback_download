@@ -15,17 +15,17 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Settings for the ibassessmentreport report
+ * Settings for the ibassessment report
  *
  * @package    report
- * @subpackage ibassessmentreport
+ * @subpackage ibassessment
  * @copyright  2021 Veronica Bermegui
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die;
 
-$ADMIN->add('reports', new admin_externalpage('report_ibassessmentreport', get_string('pluginname', 'report_ibassessmentreport'), "$CFG->wwwroot/report/ibassessmentreport/index.php",'moodle/backup:backupcourse'));
+$ADMIN->add('reports', new admin_externalpage('report_ibassessment', get_string('pluginname', 'report_ibassessment'), "$CFG->wwwroot/report/ibassessment/index.php",'moodle/backup:backupcourse'));
 
 // no report settings
 $settings = null;

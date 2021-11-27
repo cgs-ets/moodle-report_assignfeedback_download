@@ -18,13 +18,13 @@
  * Version details.
  *
  * @package    report
- * @subpackage ibassessmentreport
+ * @subpackage ibassessment
  * @copyright  2021 Veronica Bermegui
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die;
 
-$plugin->version   = 2021112702;       // The current plugin version (Date: YYYYMMDDXX)
+$plugin->version   = 2021112700;       // The current plugin version (Date: YYYYMMDDXX)
 $plugin->requires  = 2021052500;       // Requires this Moodle version
-$plugin->component = 'report_ibassessmentreport'; // Full name of the plugin (used for diagnostics)
+$plugin->component = 'report_ibassessment'; // Full name of the plugin (used for diagnostics)
