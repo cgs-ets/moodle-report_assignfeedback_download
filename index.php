@@ -27,28 +27,30 @@ require_once('../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
 require_once('lib.php');
 
-$id          = optional_param('id', 0, PARAM_INT);// Course ID.
+$id          = optional_param('id', 0, PARAM_INT); // Course ID.
+$option      = optional_param('operation', '', PARAM_TEXT);
+$selectedusers = optional_param('selectedusers', '', PARAM_TEXT);
 
-admin_externalpage_setup('report_ibassessment', '', null, '', array('pagelayout'=>'report'));
+require_login();
+admin_externalpage_setup('report_ibassessment', '', null, '', array('pagelayout' => 'report'));
 
+$PAGE->add_body_class('report_ibassessment');
 // Display the backup report
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('heading', 'report_ibassessment'));
 
 if ($id == 0) {
-   
-     \core\notification::add(get_string('cantdisplayerror', 'report_ibassessment'),  core\output\notification::NOTIFY_ERROR); 
-   
+
+    \core\notification::add(get_string('cantdisplayerror', 'report_ibassessment'), core\output\notification::NOTIFY_ERROR);
+
 } else {
 
-    $context = get_table_context($id);
-    
     echo $OUTPUT->box_start();
-    
-    $templatename = 'report_ibassessment/user_table';
-    
-    echo $OUTPUT->render_from_template($templatename, $context);
-    
+
+    $renderer = $PAGE->get_renderer('report_ibassessment');
+
+    echo $renderer->render_ibassessmentreport($id);
+
     echo $OUTPUT->box_end();
 }
 echo $OUTPUT->footer();

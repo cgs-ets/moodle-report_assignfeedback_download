@@ -1,21 +1,26 @@
-
-<table class="table ">
+<table  class="flexible table ibasessment">
     <thead>
         <tr>
+            <th>{{#str}}select, report_ibassessment{{/str}} <br>
+                <input type="checkbox" name="select_all" id="selectall">
+            </th>
             <th>{{#str}}nameheader, report_ibassessment{{/str}}</th>
             <th>{{#str}}assessmentheader, report_ibassessment{{/str}}</th>
             <th>{{#str}}fileattach, report_ibassessment{{/str}}</th>
         </tr>
     </thead>
-    <tbody>
+    <tbody id = "ibasesstableb">
         {{#users}}
         <tr>
-            <td> {{firstname}}  {{lastname}}</td>
+            <td><input type="checkbox" name="" id="user_{{id}}"></td>
+            <td> {{firstname}} {{lastname}}</td>
             <td>Assesment name</td>
-            {{#files}}
-            <td>{{filename}}</td>
-            {{/files}}
+            <td>
+                {{{files}}}
+            </td>
+
         </tr>
         {{/users}}
     </tbody>
 </table>
+

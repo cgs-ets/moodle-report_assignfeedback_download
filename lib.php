@@ -23,10 +23,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-use ibassessment\Feedback_files_tree;
 
 defined('MOODLE_INTERNAL') || die;
-
 
 function report_ibassessment_extend_navigation_course($navigation, $course, $context) {
     //has_capability('moodle/site:viewuseridentity', $context)
@@ -34,37 +32,4 @@ function report_ibassessment_extend_navigation_course($navigation, $course, $con
         $url = new moodle_url('/report/ibassessment/index.php', array('id' => $course->id));
         $navigation->add(get_string('pluginname', 'report_ibassessment'), $url, navigation_node::TYPE_SETTING, null, null, new pix_icon('i/report', ''));
     }
-}
-
-function get_table_context($courseid) {
-    $context = context_course::instance($courseid);
-
-    $users = get_enrolled_users($context, 'mod/assignment:submit');
-    $userfiles = [];
-    foreach ($users as $user) {
-        $tree = get_assessment_files_tree($user->id, $courseid);
-        $user->files = $tree;
-    }
-
-    $context = ['users' => array_values(($users))];
-    print_object($context);
-    exit;
-
-    return $context;
-}
-
-// Collect the assessment that are already graded
-function get_assessment_files_tree($userid, $courseid) {
-    global $DB;
-
-    $sql = 'SELECT * FROM {files} 
-            WHERE filearea = ? AND component = ? AND itemid = ? AND userid = ? AND filename <> ?
-            ORDER BY filename';
-    $params_array = ['filearea' => 'submission_files', 'component' => 'assignsubmission_file', 'itemid' => $courseid, 'userid' => $userid, 'filename' => '.'];
-    $result = array_values($DB->get_records_sql($sql, $params_array));
-    foreach ($result as $result) {
-
-        $tree = new Feedback_files_tree($result->contextid, $result->itemid, $result->filearea, $result->component);
-    }
-    return $tree;
 }

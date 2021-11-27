@@ -26,6 +26,7 @@ define(["jquery", "core/ajax", "core/log"], function ($, Ajax, Log) {
   "use strict";
 
   function init() {
+    Y.log("ibassessmentreport control...");
     var control = new Controls();
     control.main();
   }
@@ -39,49 +40,35 @@ define(["jquery", "core/ajax", "core/log"], function ($, Ajax, Log) {
    *
    */
   Controls.prototype.main = function () {
-    self.init_tree("feedback_files_tree");
+    let self = this;
+    self.selectaction();
   };
 
-//   Controls.prototype.render_feedback_file_tree = function () {
-//     var self = this;
+  Controls.prototype.selectaction = function () {
+    var self = this;
+    var selectall = document.getElementById("selectall");
+    selectall.addEventListener("click", self.checkedhandler);
+  };
 
-//     $("#connectassignrep")
-//       .children()
-//       .each(function (e) {
-//         $(this)
-//           .find("td:last")
-//           .children()
-//           .each(function (i) {
-//             let treecol = $(this).first()[i];
-//             let htmlid = $(treecol).attr("id");
+  Controls.prototype.checkedhandler = function (e) {
+    Y.log(e);
 
-//             self.init_tree(htmlid);
-//           });
-//       });
-//   };
-
-  Controls.prototype.treeInit = function (htmlid) {
-    var treeElement = Y.one("#assign_files_tree");
-
-    if (treeElement) {
-      Y.use("yui2-treeview", "node-event-simulate", function (Y) {
-        var tree = new Y.YUI2.widget.TreeView(htmlid);
-        tree.subscribe("clickEvent", function (node, event) {
-          // We want normal clicking which redirects to url.
-          return false;
-        });
-
-        tree.subscribe("enterKeyPressed", function (node) {
-          // We want keyboard activation to trigger a click on the first link.
-          Y.one(node.getContentEl()).one("a").simulate("click");
-          return false;
-        });
-
-        tree.setNodesProperty("className", "feedbackfilestv", false);
-        tree.render();
+    //  Collect all the users ids
+    var t = document.getElementById("ibasesstableb");
+    if (t) {
+      var userids = [];
+      Array.from(t.rows).forEach((tr) => {
+        const checkbox = tr.cells[0].firstChild;
+        checkbox.setAttribute("checked", true);
+        const users = checkbox.getAttribute("id").split("_");
+        userids.push(users[users.length - 1]);
       });
+      Y.log(userids);
     }
+    var form = document.getElementById("ibassessmentform");
+    var selectedusers = form.querySelector('input[name="selectedusers"]');
+    selectedusers.value = userids;
   };
 
-  return {init: init};
+  return { init: init };
 });

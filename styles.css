@@ -1,0 +1,13 @@
+/* Rule so that the table tree view works with word-wrap: break-word. */
+.report_ibassessment  .content table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+table.feedbackfilestv th,
+table.feedbackfilestv td {
+    padding: 0;
+    background-color: white;
+    border-top: 0 !important;
+
+}
