@@ -1,0 +1,21 @@
+
+<table class="table ">
+    <thead>
+        <tr>
+            <th>{{#str}}nameheader, report_ibassessmentreport{{/str}}</th>
+            <th>{{#str}}assessmentheader, report_ibassessmentreport{{/str}}</th>
+            <th>{{#str}}fileattach, report_ibassessmentreport{{/str}}</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{#users}}
+        <tr>
+            <td> {{firstname}}  {{lastname}}</td>
+            <td>Assesment name</td>
+            {{#files}}
+            <td>{{filename}}</td>
+            {{/files}}
+        </tr>
+        {{/users}}
+    </tbody>
+</table>
