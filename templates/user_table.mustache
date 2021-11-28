@@ -12,12 +12,10 @@
     <tbody id = "ibasesstableb">
         {{#users}}
         <tr>
-            <td><input type="checkbox" name="" id="user_{{id}}"></td>
+            <td><input type="checkbox" id="user_{{id}}"></td>
             <td> {{firstname}} {{lastname}}</td>
-            <td>Assesment name</td>
-            <td>
-                {{{files}}}
-            </td>
+            <td>{{asessname}}</td>
+            <td>{{{files}}}</td>
 
         </tr>
         {{/users}}

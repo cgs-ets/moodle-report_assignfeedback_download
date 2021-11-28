@@ -34,3 +34,7 @@ $string['fileattach'] = 'File submissions';
 $string['chooseoperation'] = 'Choose operation';
 $string['withselectedlegend'] = 'With selected...';
 $string['downloadselectedsubmission'] = 'Download selected submissions';
+$string['allassessment'] = ' Choose one or more assessments';
+$string['all'] = 'All';
+$string['filterassess'] = 'Filter';
+$string['cancel'] = 'Cancel';

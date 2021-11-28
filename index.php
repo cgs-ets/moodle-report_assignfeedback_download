@@ -26,6 +26,7 @@
 require_once('../../config.php');
 require_once($CFG->libdir . '/adminlib.php');
 require_once('lib.php');
+require_once('ibassessment_form.php');
 
 $id          = optional_param('id', 0, PARAM_INT); // Course ID.
 $option      = optional_param('operation', '', PARAM_TEXT);
@@ -34,10 +35,34 @@ $selectedusers = optional_param('selectedusers', '', PARAM_TEXT);
 require_login();
 admin_externalpage_setup('report_ibassessment', '', null, '', array('pagelayout' => 'report'));
 
+// download
+if($selectedusers != '') {
+    $selectedusers = explode(',', $selectedusers);
+    // var_dump($selectedusers); exit;
+    // download_submissions($selectedusers, $id);
+}
+
 $PAGE->add_body_class('report_ibassessment');
 // Display the backup report
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('heading', 'report_ibassessment'));
+
+$mform = new ibassessment_form(null, ['id'=>$id]);
+
+//Form processing and displaying is done here
+if ($mform->is_cancelled()) {
+    //Handle form cancel operation, if cancel button is present on form
+} else if ($fromform = $mform->get_data()) {
+  //In this case you process validated data. $mform->get_data() returns data posted in form.
+} else {
+  // this branch is executed if the form is submitted but the data doesn't validate and the form should be redisplayed
+  // or on the first display of the form.
+
+  //Set default data (if any)
+ // $mform->set_data($toform);
+  //displays the form
+  $mform->display();
+}
 
 if ($id == 0) {
 

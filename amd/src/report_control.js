@@ -27,12 +27,14 @@ define(["jquery", "core/ajax", "core/log"], function ($, Ajax, Log) {
 
   function init() {
     Y.log("ibassessmentreport control...");
-    var control = new Controls();
+    let userids = [];
+    var control = new Controls(userids);
     control.main();
   }
 
-  function Controls() {
+  function Controls(userids) {
     let self = this;
+    self.userids = userids;
   }
 
   /**
@@ -41,33 +43,75 @@ define(["jquery", "core/ajax", "core/log"], function ($, Ajax, Log) {
    */
   Controls.prototype.main = function () {
     let self = this;
+
+    self.initeventhablers();
+    //self.selectbyone();
     self.selectaction();
+  };
+
+  Controls.prototype.initeventhablers = function () {
+    var self = this;
+    var t = document.getElementById("ibasesstableb");
+    if (t) {
+      //  Collect all the users ids
+      Array.from(t.rows).forEach((tr) => {
+        const checkbox = tr.cells[0].firstChild;
+        checkbox.addEventListener("click", self.selectbyone.bind(self, this));
+      });
+    }
   };
 
   Controls.prototype.selectaction = function () {
     var self = this;
     var selectall = document.getElementById("selectall");
-    selectall.addEventListener("click", self.checkedhandler);
+    selectall.addEventListener("click", self.checkedhandler.bind(self, this));
   };
 
-  Controls.prototype.checkedhandler = function (e) {
-    Y.log(e);
-
-    //  Collect all the users ids
+  Controls.prototype.checkedhandler = function (s, e) {
     var t = document.getElementById("ibasesstableb");
+    Y.log(s.userids);
     if (t) {
-      var userids = [];
+      //  Collect all the users ids
       Array.from(t.rows).forEach((tr) => {
         const checkbox = tr.cells[0].firstChild;
-        checkbox.setAttribute("checked", true);
+        checkbox.checked = !checkbox.checked;
         const users = checkbox.getAttribute("id").split("_");
-        userids.push(users[users.length - 1]);
+        const userid = users[users.length - 1];
+
+        if (!checkbox.checked && s.userids.includes(userid)) {
+          const index = s.userids.indexOf(userid);
+          if (index > -1) {
+            s.userids.splice(index, 1);
+          }
+        } else {
+          s.userids.push(users[users.length - 1]);
+        }
       });
-      Y.log(userids);
     }
     var form = document.getElementById("ibassessmentform");
     var selectedusers = form.querySelector('input[name="selectedusers"]');
-    selectedusers.value = userids;
+    selectedusers.value = s.userids;
+  };
+
+  Controls.prototype.selectbyone = function (s, e) {
+    Y.log(s);
+    Y.log(e);
+    let userid = e.target.id;
+    userid = userid.split("_");
+    userid = userid[userid.length - 1];
+
+    if (!e.target.checked && s.userids.includes(userid)) {
+      const index = s.userids.indexOf(userid);
+      if (index > -1) {
+        s.userids.splice(index, 1);
+      }
+    } else {
+      s.userids.push(userid);
+    }
+
+    var form = document.getElementById("ibassessmentform");
+    var selectedusers = form.querySelector('input[name="selectedusers"]');
+    selectedusers.value = s.userids;
   };
 
   return { init: init };

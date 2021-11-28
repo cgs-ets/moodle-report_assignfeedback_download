@@ -88,16 +88,25 @@ class report_ibassessment_renderer extends plugin_renderer_base {
     protected function get_table_context($courseid) {
         $context = context_course::instance($courseid);
 
-        $users = get_enrolled_users($context, 'mod/assignment:submit');
-
+        $users =  get_enrolled_users(
+           $context,
+            "mod/assign:submit",
+            null,
+            'u.*',
+            null,
+            null,
+            null,
+            show_only_active_users($context),
+        );
+        $assessmentname = '';
         foreach ($users as $i => $user) {
-            $tree = $this->get_assessment_files_tree($user->id, $courseid);
+            list($tree, $assessmentname) = $this->get_assessment_files_tree_and_name($user->id, $courseid);
             if ($tree != null) {
                 $user->files = $this->render_assessement_files_tree($tree);
             } else {
                 unset($users[$i]);  // Only render students that have files
-
             }
+            $user->asessname = $assessmentname;
         }
 
         $context = [
@@ -113,21 +122,24 @@ class report_ibassessment_renderer extends plugin_renderer_base {
     }
 
     // Collect the assessment that are already graded
-    protected function get_assessment_files_tree($userid, $courseid) {
+    protected function get_assessment_files_tree_and_name($userid, $courseid) {
         global $DB;
 
         $sql = 'SELECT * FROM {assign} AS assign
                 JOIN {assign_submission} AS asub
                 ON asub.assignment = assign.id
                 JOIN {files} as f  ON f.itemid = asub.id
-                WHERE f.userid = ? AND f.filearea = ?' ;
+                WHERE f.userid = ? AND f.filearea = ?
+                ORDER BY asub.attemptnumber DESC, f.filename ASC';
         $params_array = ['userid' => $userid, 'filearea' => 'submission_files'];
         $result = array_values($DB->get_records_sql($sql, $params_array));
         $tree = null;
+        $assessmentname = '';
         foreach ($result as $result) {
             $tree = new assessement_files_tree($result->contextid, $result->component, $result->filearea,  $result->itemid);
+            $assessmentname = $result->name;
         }
-        return $tree;
+        return [$tree, $assessmentname];
     }
 }
 
