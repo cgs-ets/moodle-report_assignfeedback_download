@@ -21,9 +21,9 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-M.report_ibassessment = {};
+M.report_assignfeedback_download = {};
 
-M.report_ibassessment.init_tree = function(Y, expand_all, htmlid) {
+M.report_assignfeedback_downloadt.init_tree = function(Y, expand_all, htmlid) {
     Y.use('yui2-treeview', 'node-event-simulate', function(Y) {
         var tree = new Y.YUI2.widget.TreeView(htmlid);
 

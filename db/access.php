@@ -19,7 +19,7 @@
  *
  * Defines capablities related to ibassessment
  *
- * @package    report_ibassessment
+ * @package    report_assignfeedback_download
  * @copyright  1999 onwards Martin Dougiamas (http://dougiamas.com)
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -28,7 +28,7 @@ defined('MOODLE_INTERNAL') || die();
 
 $capabilities = array(
 
-    'report/ibassessment:grade' => array(
+    'report/assignfeedback_download:grade' => array(
         'riskbitmask' => RISK_XSS,
 
         'captype' => 'write',

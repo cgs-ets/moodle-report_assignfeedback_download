@@ -26,7 +26,7 @@ define(["jquery", "core/ajax", "core/log"], function ($, Ajax, Log) {
   "use strict";
 
   function init() {
-    Y.log("ibassessmentreport control...");
+    Y.log("assignfeedback_download control...");
     let userids = [];
     var control = new Controls(userids);
     control.main();
@@ -51,7 +51,7 @@ define(["jquery", "core/ajax", "core/log"], function ($, Ajax, Log) {
 
   Controls.prototype.initeventhablers = function () {
     var self = this;
-    var t = document.getElementById("ibasesstableb");
+    var t = document.getElementById("iassignfeedbacktb");
     if (t) {
       //  Collect all the users ids
       Array.from(t.rows).forEach((tr) => {
@@ -68,7 +68,7 @@ define(["jquery", "core/ajax", "core/log"], function ($, Ajax, Log) {
   };
 
   Controls.prototype.checkedhandler = function (s, e) {
-    var t = document.getElementById("ibasesstableb");
+    var t = document.getElementById("iassignfeedbacktb");
     Y.log(s.userids);
     if (t) {
       //  Collect all the users ids
@@ -88,7 +88,7 @@ define(["jquery", "core/ajax", "core/log"], function ($, Ajax, Log) {
         }
       });
     }
-    var form = document.getElementById("ibassessmentform");
+    var form = document.getElementById("assignfeedbacktb");
     var selectedusers = form.querySelector('input[name="selectedusers"]');
     selectedusers.value = s.userids;
   };
@@ -109,7 +109,7 @@ define(["jquery", "core/ajax", "core/log"], function ($, Ajax, Log) {
       s.userids.push(userid);
     }
 
-    var form = document.getElementById("ibassessmentform");
+    var form = document.getElementById("assignfeedbacktb");
     var selectedusers = form.querySelector('input[name="selectedusers"]');
     selectedusers.value = s.userids;
   };

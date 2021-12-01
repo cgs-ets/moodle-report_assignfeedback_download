@@ -21,16 +21,16 @@
         </div>
         <div class="col-md-9 form-inline align-items-start felement" data-fieldtype="group">
             <fieldset class="w-100 m-0 p-0 border-0">
-                <legend class="sr-only"> {{#str}} withselectedlegend, report_ibassessment{{/str}}</legend>
+                <legend class="sr-only"> {{#str}} withselectedlegend, report_assignfeedback_download{{/str}}</legend>
                 <div class="d-flex flex-wrap align-items-center">
 
                     <div class="form-group  fitem">
                         <label class="col-form-label sr-only" for="id_operation">
-                            {{#str}} chooseoperation, report_ibassessment{{/str}}
+                            {{#str}} chooseoperation, report_assignfeedback_download{{/str}}
                         </label>
                         <span data-fieldtype="select">
                             <select class="custom-select" name="operation" id="id_operation">
-                                <option value="downloadselected">{{#str}} downloadselectedsubmission, report_ibassessment{{/str}}</option>
+                                <option value="downloadselected">{{#str}} downloadselectedsubmission, report_assignfeedback_download{{/str}}</option>
                             </select>
                         </span>
                         <div class="form-control-feedback invalid-feedback" id="id_error_operation"></div>
@@ -50,7 +50,7 @@
 </form>
 
 {{#js}} 
-require(['report_ibassessment/report_control'], function(module) {
+require(['report_assignfeedback_download/report_control'], function(module) {
     module.init();
 });
 {{/js}}

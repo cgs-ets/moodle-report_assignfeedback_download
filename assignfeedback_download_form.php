@@ -15,10 +15,10 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * A report to display the outcome of scheduled ibassessment
+ * A report to display the outcome of scheduled assignfeedback_download
  *
  * @package    report
- * @subpackage ibassessment
+ * @subpackage assignfeedback_download
  * @copyright  2021 Veronica Bermegui
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -29,20 +29,20 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/formslib.php');
 
-class ibassessment_form extends moodleform {
+class assignfeedback_download_form extends moodleform {
 
     function definition() {
         global $CFG, $DB;
 
         $mform = $this->_form;
-        $mform->addElement('hidden', 'id');
+        $mform->addElement('hidden', 'id', $this->_customdata['id']);
         $mform->settype('id', PARAM_INT); // To be able to pre-fill the form
 
-        // $mform->addElement('header', 'parameters', get_string('parameters', 'report_ibassessment'));
+        // $mform->addElement('header', 'parameters', get_string('parameters', 'report_assignfeedback_download'));
 
         $assessarray = array();
 
-        $assessarray[] = get_string('all', 'report_ibassessment');
+        $assessarray[] = get_string('all', 'report_assignfeedback_download');
 
         $result = $DB->get_records_select('assign', 'course = ?', array($this->_customdata['id']), 'name');
       
@@ -50,14 +50,14 @@ class ibassessment_form extends moodleform {
             $assessarray[$row->id] = $row->name;
         }
 
-        $mform->addElement('select', 'assessments', get_string('allassessment', 'report_ibassessment'), $assessarray);
+        $mform->addElement('select', 'assessments', get_string('allassessment', 'report_assignfeedback_download'), $assessarray);
         $mform->getElement('assessments')->setMultiple(true);
         $mform->setDefault('assessments', 0);
 
         $buttonarray = array();
 
-        $buttonarray[] = &$mform->createElement('submit', 'submitbutton', get_string('filterassess', 'report_ibassessment'));
-        $buttonarray[] = &$mform->createElement('cancel', 'canceltbutton', get_string('cancel', 'report_ibassessment'));
+        $buttonarray[] = &$mform->createElement('submit', 'submitbutton', get_string('filterassess', 'report_assignfeedback_download'));
+        $buttonarray[] = &$mform->createElement('cancel', 'canceltbutton', get_string('cancel', 'report_assignfeedback_download'));
 
         $mform->addGroup($buttonarray, 'buttonar', '', [' '], false);
         $mform->closeHeaderBefore('buttonar');

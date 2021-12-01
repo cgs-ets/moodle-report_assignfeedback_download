@@ -1,5 +1,5 @@
 /* Rule so that the table tree view works with word-wrap: break-word. */
-.report_ibassessment  .content table {
+.report_assignfeedback_download  .content table {
     table-layout: fixed;
     width: 100%;
 }

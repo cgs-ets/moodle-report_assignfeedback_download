@@ -17,38 +17,39 @@
 /**
  * Print private files tree
  *
- * @package    report_ibassessment
+ * @package    report_assignfeedback_download
  * @copyright  2010 Dongsheng Cai <dongsheng@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-class report_ibassessment_renderer extends plugin_renderer_base {
+class report_assignfeedback_download_renderer extends plugin_renderer_base {
 
     /**
      * Prints private files tree view
      * @return string
      */
-    public function ibassessement_table() {
+    public function assignfeedback_download_table() {
         // return $this->render(new assessement_files_tree);
     }
 
-    public function render_ibassessmentreport($courseid) {
+    public function render_assignfeedback_download($courseid, $assessmentids) {
 
-        $templatename = 'report_ibassessment/main';
+        $templatename = 'report_assignfeedback_download/main';
 
-        $context = $this->get_table_context($courseid);
+        $context = $this->get_table_context($courseid, $assessmentids);
+        
         echo $this->render_from_template($templatename, $context);
     }
 
     public function render_assessement_files_tree(assessement_files_tree $tree) {
-        $module = array('name' => 'report_ibassessment', 'fullpath' => '/report/ibassessment/module.js', 'requires' => array('yui2-treeview'));
+        $module = array('name' => 'report_assignfeedback_download', 'fullpath' => '/report/assignfeedback_download/module.js', 'requires' => array('yui2-treeview'));
         if (empty($tree->dir['subdirs']) && empty($tree->dir['files'])) {
             $html = $this->output->box(get_string('nofilesavailable', 'repository'));
         } else {
             $htmlid = 'assessement_files_tree_' . uniqid();
-            $this->page->requires->js_init_call('M.report_ibassessment.init_tree', array(false, $htmlid), true, $module);
+            $this->page->requires->js_init_call('M.report_assignfeedback_download.init_tree', array(false, $htmlid), true, $module);
             $html = '<div id="' . $htmlid . '">';
             $html .= $this->htmllize_tree($tree, $tree->dir);
             $html .= '</div>';
@@ -85,42 +86,121 @@ class report_ibassessment_renderer extends plugin_renderer_base {
         return $result;
     }
 
-    protected function get_table_context($courseid) {
+    protected function get_table_context($courseid, $assessmentids) {
         $context = context_course::instance($courseid);
 
         $users =  get_enrolled_users(
-           $context,
+            $context,
             "mod/assign:submit",
             null,
             'u.*',
             null,
             null,
             null,
-            show_only_active_users($context),
+            show_only_active_users($context)
         );
-        $assessmentname = '';
-        foreach ($users as $i => $user) {
-            list($tree, $assessmentname) = $this->get_assessment_files_tree_and_name($user->id, $courseid);
-            if ($tree != null) {
-                $user->files = $this->render_assessement_files_tree($tree);
-            } else {
-                unset($users[$i]);  // Only render students that have files
-            }
-            $user->asessname = $assessmentname;
-        }
 
+        $assessmentname = '';
+
+        // foreach ($users as $i => $user) {
+        //     list($tree, $assessmentname) = $this->get_assessment_files_tree_and_name($user->id, $courseid);
+        //     if ($tree != null) {
+        //         $user->files = $this->render_assessement_files_tree($tree);
+        //     } else {
+        //         unset($users[$i]);  // Only render students that have files
+        //     }
+        //     $user->asessname = $assessmentname;
+        // }
+
+        $users = $this->get_users_context($courseid, $assessmentids);
         $context = [
-            'users' => array_values(($users)),
+            'users' => $this->get_users_context($courseid, $assessmentids),
             'sessionkey' => sesskey(),
             'actionurl' => '',
             'id' => $courseid,
-            'formid' => 'ibassessmentform',
+            'formid' => 'assignfeedbacktb',
+            'noresult' => count($users) == 0,
         ];
 
 
         return $context;
     }
 
+    public function get_users_context($courseid, $assessmentids) {
+        global $OUTPUT;
+        $context = context_course::instance($courseid);
+
+        $users =  get_enrolled_users(
+            $context,
+            "mod/assign:submit",
+            null,
+            'u.id, u.username, u.firstname, u.lastname',
+            null,
+            null,
+            null,
+            show_only_active_users($context)
+        );
+
+        $assessments = $this->get_assessments_by_course($courseid, $assessmentids);
+        reset($users);
+        $users = ['users' => []];
+
+        foreach ($assessments as $assess) {
+
+            $user = new \stdclass();
+            $user->id = $assess->id;
+            $user->namelastname = $OUTPUT->user_picture($user, array(
+                'course' => $courseid,
+                'includefullname' => true, 'class' => 'userpicture'
+            ));
+
+            $userassessment = new \stdClass();
+            $userassessment->assignmentid =  $assess->assignmentid;
+            $userassessment->assignmentid =  $assess->assignmentid;
+            $userassessment->assignmentname = $assess->assignmentname;
+
+            if (!isset($users['users'][$assess->id])) {
+                $user->assessments[] = $userassessment;
+                $users['users'][$assess->id] = $user;
+            } else {
+                ($users['users'][$assess->id]->assessments)[] = $userassessment;
+            }
+        }
+
+        $users = array_values($users['users']);
+
+        return $users;
+    }
+
+    private function get_assessments_by_course($courseid, $assessmentids) {
+        global $DB;
+
+        $assessids = $assessmentids;
+       
+        if ($assessmentids == '') {
+             // Get the assessment ids.
+             $sql = 'SELECT id FROM  {assign} WHERE course = ? order by id';
+             $params_array = ['course' => $courseid];
+             $result = $DB->get_records_sql($sql, $params_array);
+             $assessids = array_column($result, 'id');
+             $assessids = implode(',', $assessids);
+        } else {
+            $assessids = implode(',', $assessmentids);
+        }
+//print_object($assessids); exit;
+        unset($result);
+        unset($sql);
+        $sql = "SELECT grades.id as gradeid, u.id, u.firstname, u.lastname, grades.assignment as assignmentid, assign.name as 'assignmentname'
+                FROM {assign_grades} AS grades
+                JOIN {assign} as assign ON grades.assignment = assign.id
+                JOIN {user} as u ON grades.userid = u.id
+                WHERE grades.assignment  IN ($assessids)
+                AND grades.grade != -1.00000
+                ORDER BY grades.assignment";
+        $result = ($DB->get_records_sql($sql));
+       //  var_dump($result); exit;
+        return $result;
+    }
     // Collect the assessment that are already graded
     protected function get_assessment_files_tree_and_name($userid, $courseid) {
         global $DB;
@@ -140,6 +220,38 @@ class report_ibassessment_renderer extends plugin_renderer_base {
             $assessmentname = $result->name;
         }
         return [$tree, $assessmentname];
+    }
+
+    private function get_all_course_assessments($courseid, $assessmentids) {
+        global  $DB;
+        
+        // var_dump($assessmentids); exit;
+     
+        
+        if (in_array(0, $assessmentids) || $assessmentids == '') {  // return everything
+            // Get the assessment ids.
+            $sql = 'SELECT id FROM  {assign} WHERE course = ? order by id';
+            $params_array = ['course' => $courseid];
+
+        } else {
+            // $assessmentids = impl(',')
+            $assessmentids = implode(',', $assessmentids);
+
+            $sql = "SELECT id FROM  {assign} WHERE course = ? AND  id in ($assessmentids) order by id";
+            $params_array = ['course' => $courseid];
+           
+        }
+
+        return $DB->get_records_sql($sql, $params_array);
+    }
+
+    private function get_course_assessments_by_d($courseid, $assessids = array()) {
+        global  $DB;
+        // Get the assessment ids.
+        $sql = 'SELECT id FROM  {assign} WHERE course = ? and id IN ($assessids) asorder by id';
+        $params_array = ['course' => $courseid];
+
+        return $DB->get_records_sql($sql, $params_array);
     }
 }
 

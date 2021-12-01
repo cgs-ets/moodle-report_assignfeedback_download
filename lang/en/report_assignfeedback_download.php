@@ -15,26 +15,29 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Strings for component 'report_ibassessment'
+ * Strings for component 'report_assignfeedback_download'
  *
  * @package    report
- * @subpackage ibassessment
+ * @subpackage assignfeedback_download
  * @copyright  2021 Veronica Bermegui
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['pluginname'] = 'IB assessment report';
-$string['privacy:metadata'] = 'The IB assessment reports plugin does not store any personal data.';
+$string['pluginname'] = 'Assessment feedback download report';
+$string['privacy:metadata'] = 'The Assessment feedback download repor plugin does not store any personal data.';
 $string['cantdisplayerror'] = 'This report is meant to be displayed only in courses';
-$string['heading'] = 'IB assessment';
+$string['heading'] = 'Assessment feedback downloader';
 $string['select'] = 'Select';
 $string['nameheader'] = 'First name / Surname';
 $string['assessmentheader'] = 'Assessment';
 $string['fileattach'] = 'File submissions';
+$string['annotatepdf'] = 'Annotate PDF';
+$string['feedbackfiles'] = 'Feedback files';
 $string['chooseoperation'] = 'Choose operation';
 $string['withselectedlegend'] = 'With selected...';
-$string['downloadselectedsubmission'] = 'Download selected submissions';
+$string['downloadselectedsubmission'] = 'Download selected submissions feedback';
 $string['allassessment'] = ' Choose one or more assessments';
 $string['all'] = 'All';
 $string['filterassess'] = 'Filter';
 $string['cancel'] = 'Cancel';
+$string['noresult'] = 'Graded assessments not found';

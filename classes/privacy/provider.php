@@ -15,19 +15,19 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Privacy Subsystem implementation for report_ibassessment.
+ * Privacy Subsystem implementation for report_assignfeedback_download.
  *
- * @package    report_ibassessment
+ * @package    report_assignfeedback_download
  * @copyright  2021 Veronica Bermegui
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace report_ibassessment\privacy;
+namespace report_assignfeedback_download\privacy;
 
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Privacy Subsystem for report_ibassessment implementing null_provider.
+ * Privacy Subsystem for report_assignfeedback_download implementing null_provider.
  *
  * @copyright  2021 Veronica Bermegui
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
