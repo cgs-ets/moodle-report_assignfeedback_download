@@ -29,7 +29,7 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
 
     const SUBMISSION     = 'submission';
     const FEEDBACK       = 'feedback';
-    const ANNOTATEPDF       = 'annotatedpdf';
+    const ANNOTATEPDF    = 'annotatedpdf';
 
 
 

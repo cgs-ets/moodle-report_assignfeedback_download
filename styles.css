@@ -1,40 +1,37 @@
 /* Rule so that the table tree view works with word-wrap: break-word. */
 .report_assignfeedback_download .content table {
-  table-layout: fixed;
-  width: 100%;
+    table-layout: fixed;
+    width: 100%;
 }
 
-table.flexible.table.assignfeedback_download > thead > tr > th:first-of-type {
-  vertical-align: bottom;
+table.flexible.table.assignfeedback_download>thead>tr>th:first-of-type {
+    vertical-align: bottom;
 }
 
-table.flexible.table.assignfeedback_download > thead > tr > th:nth-of-type(2) {
-  vertical-align: top;
+table.flexible.table.assignfeedback_download>thead>tr>th:nth-of-type(2) {
+    vertical-align: top;
 }
 
-tbody#iassignfeedbacktb > tr > td {
-  vertical-align: middle;
+tbody#iassignfeedbacktb>tr>td {
+    vertical-align: middle;
 }
 
 table.feedbackfilestv th,
 table.feedbackfilestv td {
-  padding: 0;
-  background-color: white;
-  border-top: 0 !important;
+    padding: 0;
+    background-color: white;
+    border-top: 0 !important;
 }
 
 select#id_assessments {
-  width: 18rem;
+    width: 18rem;
 }
 
 table.innertable {
-  width: 100%;
+    width: 100%;
 }
 
-.report-container {
-  width: min-content;
-}
 
 tbody#iassignfeedbacktb > tr {
-  vertical-align: middle;
+    vertical-align: middle;
 }
