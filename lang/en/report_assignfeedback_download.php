@@ -23,9 +23,9 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['pluginname'] = 'Assessment feedback download report';
+$string['pluginname'] = 'Assessment feedback downloader';
 $string['privacy:metadata'] = 'The Assessment feedback download repor plugin does not store any personal data.';
-$string['cantdisplayerror'] = 'This report is meant to be displayed only in courses';
+$string['cantdisplayerror'] = 'This report is only functional in  courses.';
 $string['heading'] = 'Assessment feedback downloader';
 $string['select'] = 'Select';
 $string['nameheader'] = 'First name / Surname';
@@ -35,7 +35,9 @@ $string['annotatepdf'] = 'Annotate PDF';
 $string['feedbackfiles'] = 'Feedback files';
 $string['chooseoperation'] = 'Choose operation';
 $string['withselectedlegend'] = 'With selected...';
-$string['downloadselectedsubmission'] = 'Download selected submissions feedback';
+$string['dldsubmission'] = 'Download selected submissions files';
+$string['dldanotated'] = 'Download annotate PDF';
+$string['dldfeedbackf'] = 'Download feedback files';
 $string['allassessment'] = ' Choose one or more assessments';
 $string['all'] = 'All';
 $string['filterassess'] = 'Filter';

@@ -6,6 +6,8 @@
         <input name="id" type="hidden" value="{{id}}">
         <input class="selectedusers" name="selectedusers" type="hidden" value="">
         <input name="sesskey" type="hidden" value="{{sessionkey}}">
+        <input name="instanceids" type="hidden" value="">
+        <input name="itemids" type="hidden" value="">
    
     </div>
 
@@ -29,8 +31,10 @@
                             {{#str}} chooseoperation, report_assignfeedback_download{{/str}}
                         </label>
                         <span data-fieldtype="select">
-                            <select class="custom-select" name="operation" id="id_operation">
-                                <option value="downloadselected">{{#str}} downloadselectedsubmission, report_assignfeedback_download{{/str}}</option>
+                            <select class="custom-select" disabled name="operation" id="id_operation">
+                                <option value="dldsubmission">{{#str}} dldsubmission, report_assignfeedback_download{{/str}}</option>
+                                <option value="dldanotated">{{#str}} dldanotated, report_assignfeedback_download{{/str}}</option>
+                                <option value="dldfeedbackf">{{#str}} dldfeedbackf, report_assignfeedback_download{{/str}}</option>
                             </select>
                         </span>
                         <div class="form-control-feedback invalid-feedback" id="id_error_operation"></div>
@@ -38,7 +42,7 @@
 
                     <div class="form-group  fitem  ">
                         <span data-fieldtype="submit">
-                            <input type="submit" class="btn btn-primary" name="submit" id="id_submit" value="Go">
+                            <input type="submit" class="btn btn-primary" disabled name="submit" id="id_submit" value="Go">
                         </span>
                         <div class="form-control-feedback invalid-feedback" id="id_error_submit"></div>
                     </div>

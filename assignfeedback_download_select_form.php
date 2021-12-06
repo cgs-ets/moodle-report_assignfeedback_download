@@ -23,31 +23,31 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
- 
 
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/formslib.php');
 
-class assignfeedback_download_form extends moodleform {
+class assignfeedback_download_select_form extends moodleform {
 
-    function definition() {
-        global $CFG, $DB;
-
+    public function definition() {
         $mform = $this->_form;
         $mform->addElement('hidden', 'id', $this->_customdata['id']);
-        $mform->settype('id', PARAM_INT); // To be able to pre-fill the form
-
-        // $mform->addElement('header', 'parameters', get_string('parameters', 'report_assignfeedback_download'));
+        $mform->settype('id', PARAM_INT); // To be able to pre-fill the form.
+        $mform->addElement('hidden', 'cmid', $this->_customdata['cmid']);
+        $mform->settype('cmid', PARAM_INT); // To be able to pre-fill the form.
 
         $assessarray = array();
 
         $assessarray[] = get_string('all', 'report_assignfeedback_download');
+        $manager = new report_assignfeedback_download\reportmanager();
 
-        $result = $DB->get_records_select('assign', 'course = ?', array($this->_customdata['id']), 'name');
-      
+        //aids
+        $this->_customdata['aids'];
+        $result =   $this->_customdata['aids']; //$manager->get_assesments_with_grades($this->_customdata['id']);
+
         foreach ($result as $row) {
-            $assessarray[$row->id] = $row->name;
+            $assessarray[$row->assignmentid] = $row->assignmentname;
         }
 
         $mform->addElement('select', 'assessments', get_string('allassessment', 'report_assignfeedback_download'), $assessarray);
@@ -60,7 +60,7 @@ class assignfeedback_download_form extends moodleform {
         $buttonarray[] = &$mform->createElement('cancel', 'canceltbutton', get_string('cancel', 'report_assignfeedback_download'));
 
         $mform->addGroup($buttonarray, 'buttonar', '', [' '], false);
+
         $mform->closeHeaderBefore('buttonar');
     }
-
 }

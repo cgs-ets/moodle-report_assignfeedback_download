@@ -25,9 +25,9 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-$plugin->version   = 2021120100;       // The current plugin version (Date: YYYYMMDDXX)
-$plugin->requires  = 2014111100;       // Requires this Moodle version
-$plugin->component = 'report_assignfeedback_download'; // Full name of the plugin (used for diagnostics)
+$plugin->version   = 2021120500;       // The current plugin version (Date: YYYYMMDDXX).
+$plugin->requires  = 2014111100;       // Requires this Moodle version.
+$plugin->component = 'report_assignfeedback_download'; // Full name of the plugin (used for diagnostics).
 $plugin->dependencies = array(
     'mod_assign' => ANY_VERSION,   // The assign activity must be present (any version).    
 );

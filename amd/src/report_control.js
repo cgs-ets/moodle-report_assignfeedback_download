@@ -27,14 +27,17 @@ define(["jquery", "core/ajax", "core/log"], function ($, Ajax, Log) {
 
   function init() {
     Y.log("assignfeedback_download control...");
+
     let userids = [];
-    var control = new Controls(userids);
+    let useritemids = [];
+    var control = new Controls(userids, useritemids);
     control.main();
   }
 
-  function Controls(userids) {
+  function Controls(userids, useritemids) {
     let self = this;
     self.userids = userids;
+    self.useritemids = useritemids;
   }
 
   /**
@@ -44,74 +47,130 @@ define(["jquery", "core/ajax", "core/log"], function ($, Ajax, Log) {
   Controls.prototype.main = function () {
     let self = this;
 
-    self.initeventhablers();
-    //self.selectbyone();
-    self.selectaction();
+    self.selectbyone();
+    self.selectallaction();
+
+    const instanceids = document
+      .querySelector("table.assignfeedback_download")
+      .getAttribute("data-selected-assign");
+    document
+      .getElementById("downloadactionform")
+      .querySelector('input[name="instanceids"]').value = instanceids;
   };
 
-  Controls.prototype.initeventhablers = function () {
-    var self = this;
-    var t = document.getElementById("iassignfeedbacktb");
+  Controls.prototype.selectbyone = function () {
+    let self = this;
+    let t = document.getElementById("iassignfeedbacktb");
     if (t) {
       //  Collect all the users ids
       Array.from(t.rows).forEach((tr) => {
         const checkbox = tr.cells[0].firstChild;
-        checkbox.addEventListener("click", self.selectbyone.bind(self, this));
+        checkbox.addEventListener(
+          "click",
+          self.selectbyonehandler.bind(self, this)
+        );
       });
     }
   };
 
-  Controls.prototype.selectaction = function () {
-    var self = this;
-    var selectall = document.getElementById("selectall");
-    selectall.addEventListener("click", self.checkedhandler.bind(self, this));
+  Controls.prototype.selectallaction = function () {
+    let self = this;
+    let selectall = document.getElementById("selectall");
+    selectall.addEventListener("click", self.selectallhandler.bind(self, this));
   };
 
-  Controls.prototype.checkedhandler = function (s, e) {
-    var t = document.getElementById("iassignfeedbacktb");
-    Y.log(s.userids);
+  Controls.prototype.selectallhandler = function (s, e) {
+    let t = document.getElementById("iassignfeedbacktb");
     if (t) {
-      //  Collect all the users ids
       Array.from(t.rows).forEach((tr) => {
         const checkbox = tr.cells[0].firstChild;
         checkbox.checked = !checkbox.checked;
         const users = checkbox.getAttribute("id").split("_");
         const userid = users[users.length - 1];
-
+        const innertable = document.getElementById(`innertable_${userid}`);
+        const uitemids = innertable
+          .getAttribute("data-user-grade-id")
+          .split(",");
+        uitemids.pop(); // Remove the last empty item.
+        const usersummary = { userid: userid, uitemids: uitemids };
+        s.useritemids.push(usersummary);
         if (!checkbox.checked && s.userids.includes(userid)) {
           const index = s.userids.indexOf(userid);
           if (index > -1) {
             s.userids.splice(index, 1);
+
+            const aux = s.useritemids;
+            s.useritemids = aux.filter(function (el) {
+              if (el.userid != userid) {
+                return el;
+              }
+            }, userid);
           }
         } else {
           s.userids.push(users[users.length - 1]);
         }
       });
     }
-    var form = document.getElementById("assignfeedbacktb");
-    var selectedusers = form.querySelector('input[name="selectedusers"]');
+
+    let form = document.getElementById("downloadactionform");
+    let selectedusers = form.querySelector('input[name="selectedusers"]');
+    let useritemids = form.querySelector('input[name="itemids"]');
     selectedusers.value = s.userids;
+    useritemids.value = JSON.stringify(s.useritemids);
+
+    // Enable the download select only if there are selected users.
+    if (selectedusers.value) {
+      document.getElementById("id_operation").disabled = false;
+      document.getElementById("id_submit").disabled = false;
+    } else {
+      document.getElementById("id_operation").disabled = true;
+      document.getElementById("id_submit").disabled = true;
+    }
   };
 
-  Controls.prototype.selectbyone = function (s, e) {
-    Y.log(s);
-    Y.log(e);
+  Controls.prototype.selectbyonehandler = function (s, e) {
     let userid = e.target.id;
     userid = userid.split("_");
     userid = userid[userid.length - 1];
+    const innertable = document.getElementById(`innertable_${userid}`);
+    const uitemids = innertable.getAttribute("data-user-grade-id").split(",");
+    uitemids.pop(); // Remove the last empty item.
+    const usersummary = { userid: userid, uitemids: uitemids };
+    s.useritemids.push(usersummary);
+    const selectedall = document.getElementById("selectall");
+
+    if (selectedall.checked) {
+      document.getElementById("selectall").checked = false;
+    }
 
     if (!e.target.checked && s.userids.includes(userid)) {
       const index = s.userids.indexOf(userid);
       if (index > -1) {
         s.userids.splice(index, 1);
+        const aux = s.useritemids;
+            s.useritemids = aux.filter(function (el) {
+              if (el.userid != userid) {
+                return el;
+              }
+            }, userid);
       }
     } else {
       s.userids.push(userid);
     }
 
-    var form = document.getElementById("assignfeedbacktb");
-    var selectedusers = form.querySelector('input[name="selectedusers"]');
+    let form = document.getElementById("downloadactionform");
+    let selectedusers = form.querySelector('input[name="selectedusers"]');
+    let useritemids = form.querySelector('input[name="itemids"]');
     selectedusers.value = s.userids;
+    useritemids.value = JSON.stringify(s.useritemids);
+
+    if (selectedusers.value) {
+      document.getElementById("id_operation").disabled = false;
+      document.getElementById("id_submit").disabled = false;
+    } else {
+      document.getElementById("id_operation").disabled = true;
+      document.getElementById("id_submit").disabled = true;
+    }
   };
 
   return { init: init };

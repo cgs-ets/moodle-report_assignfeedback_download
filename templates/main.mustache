@@ -1,9 +1,11 @@
+<div class = 'report-container'>
 {{^noresult}}
+    {{#filter}}
     {{> report_assignfeedback_download/user_table }}
     <hr>
     {{> report_assignfeedback_download/action_form }}
+    {{/filter}}
 {{/noresult}}
 
-{{#noresult}}
-{{> report_assignfeedback_download/no_result }}
-{{/noresult}}
+
+</div>

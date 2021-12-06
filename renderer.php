@@ -15,43 +15,53 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Print private files tree
- *
  * @package    report_assignfeedback_download
- * @copyright  2010 Dongsheng Cai <dongsheng@moodle.com>
+ * @copyright  2021 Veronica Bermegui
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
+use report_assignfeedback_download\reportmanager;
+
+
 class report_assignfeedback_download_renderer extends plugin_renderer_base {
 
-    /**
-     * Prints private files tree view
-     * @return string
-     */
-    public function assignfeedback_download_table() {
-        // return $this->render(new assessement_files_tree);
+    const SUBMISSION     = 'submission';
+    const FEEDBACK       = 'feedback';
+    const ANNOTATEPDF       = 'annotatedpdf';
+
+
+
+    public function __construct(moodle_page $page, $target) {
+
+        $this->manager = new reportmanager();
+
+        parent::__construct($page, $target);
     }
 
-    public function render_assignfeedback_download($courseid, $assessmentids) {
+    public function render_no_assessment_in_course() {
+        $templatename = 'report_assignfeedback_download/no_result';
+        echo $this->render_from_template($templatename, '');
+    }
+
+    public function render_assignfeedback_download($courseid, $assessmentids, $url, $moduleid, $filter = false) {
 
         $templatename = 'report_assignfeedback_download/main';
 
-        $context = $this->get_table_context($courseid, $assessmentids);
-        
+        $context = $this->get_table_context($courseid, $assessmentids, $url, $moduleid, $filter);
+
         echo $this->render_from_template($templatename, $context);
     }
 
-    public function render_assessement_files_tree(assessement_files_tree $tree) {
-        $module = array('name' => 'report_assignfeedback_download', 'fullpath' => '/report/assignfeedback_download/module.js', 'requires' => array('yui2-treeview'));
+    public function render_assessement_files_tree(assessement_files_tree $tree, $htmlid, $filetype) {
+
         if (empty($tree->dir['subdirs']) && empty($tree->dir['files'])) {
             $html = $this->output->box(get_string('nofilesavailable', 'repository'));
         } else {
-            $htmlid = 'assessement_files_tree_' . uniqid();
-            $this->page->requires->js_init_call('M.report_assignfeedback_download.init_tree', array(false, $htmlid), true, $module);
+            $this->page->requires->js_init_call('M.report_assignfeedback_download.init_tree', array(false, $htmlid), true); //$module
             $html = '<div id="' . $htmlid . '">';
-            $html .= $this->htmllize_tree($tree, $tree->dir);
+            $html .= $this->htmllize_tree($tree, $tree->dir, $filetype);
             $html .= '</div>';
         }
         return $html;
@@ -60,7 +70,7 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
     /**
      * Internal function - creates htmls structure suitable for YUI tree.
      */
-    protected function htmllize_tree($tree, $dir) {
+    protected function htmllize_tree($tree, $dir, $filetype) {
 
         global $CFG;
         $yuiconfig = array();
@@ -72,11 +82,24 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
         $result = '<ul>';
         foreach ($dir['subdirs'] as $subdir) {
             $image = $this->output->pix_icon(file_folder_icon(), $subdir['dirname'], 'moodle', array('class' => 'icon'));
-            $result .= '<li yuiConfig=\'' . json_encode($yuiconfig) . '\'><div>' . $image . s($subdir['dirname']) . '</div> ' . $this->htmllize_tree($tree, $subdir) . '</li>';
+            $result .= '<li yuiConfig=\'' . json_encode($yuiconfig) . '\'><div>' . $image . s($subdir['dirname']) . '</div> ' . $this->htmllize_tree($tree, $subdir, $filetype) . '</li>';
         }
         foreach ($dir['files'] as $file) {
 
-            $url = file_encode_url("$CFG->wwwroot/pluginfile.php", '/' . $tree->contextid . '/assignsubmission_file/' . $tree->filearea . '/' . $tree->itemid . $file->get_filepath() . $file->get_filename(), true);
+            switch ($filetype) {
+                case self::SUBMISSION:
+                    $url = moodle_url::make_file_url("{$CFG->wwwroot}/pluginfile.php", "/{$tree->contextid}/assignsubmission_file/{$tree->filearea}/{$tree->itemid}" . $file->get_filepath() . $file->get_filename(), true);
+                    break;
+                case self::FEEDBACK:
+                    $url = moodle_url::make_file_url("{$CFG->wwwroot}/pluginfile.php", "/{$tree->contextid}/assignfeedback_file/{$tree->filearea}/{$tree->itemid}" . $file->get_filepath() . $file->get_filename(), true);
+
+                    break;
+                case self::ANNOTATEPDF:
+                    $url = moodle_url::make_file_url("{$CFG->wwwroot}/pluginfile.php", "/{$tree->contextid}/assignfeedback_editpdf/{$tree->filearea}/{$tree->itemid}" . $file->get_filepath() . $file->get_filename(), true);
+
+                    break;
+            }
+
             $filename = $file->get_filename();
             $image = $this->output->pix_icon(file_file_icon($file), $filename, 'moodle', array('class' => 'icon'));
             $result .= '<li yuiConfig=\'' . json_encode($yuiconfig) . '\'><div>' . html_writer::link($url, $image . $filename) . '</div></li>';
@@ -86,172 +109,152 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
         return $result;
     }
 
-    protected function get_table_context($courseid, $assessmentids) {
-        $context = context_course::instance($courseid);
-
-        $users =  get_enrolled_users(
+    private function get_active_users($context) {
+        return  get_enrolled_users(
             $context,
             "mod/assign:submit",
             null,
             'u.*',
-            null,
+            'firstname',
             null,
             null,
             show_only_active_users($context)
         );
+    }
 
-        $assessmentname = '';
+    protected function get_table_context($courseid, $assessmentids, $url, $moduleid, $filter = false) {
+        $context = context_course::instance($courseid);
 
-        // foreach ($users as $i => $user) {
-        //     list($tree, $assessmentname) = $this->get_assessment_files_tree_and_name($user->id, $courseid);
-        //     if ($tree != null) {
-        //         $user->files = $this->render_assessement_files_tree($tree);
-        //     } else {
-        //         unset($users[$i]);  // Only render students that have files
-        //     }
-        //     $user->asessname = $assessmentname;
-        // }
+        $users = $this->get_active_users($context);
 
-        $users = $this->get_users_context($courseid, $assessmentids);
+        $userscontext = $this->get_users_context($courseid, $assessmentids);
+
         $context = [
-            'users' => $this->get_users_context($courseid, $assessmentids),
+            'users' => $userscontext['users'],
             'sessionkey' => sesskey(),
-            'actionurl' => '',
+            'actionurl' => $url,
             'id' => $courseid,
-            'formid' => 'assignfeedbacktb',
+            'cmid' => $moduleid,
+            'formid' => 'downloadactionform',
             'noresult' => count($users) == 0,
+            'assignids' => $userscontext['assignids'],
+            'filter' => $filter
         ];
-
 
         return $context;
     }
 
     public function get_users_context($courseid, $assessmentids) {
-        global $OUTPUT;
+        global  $CFG;
         $context = context_course::instance($courseid);
 
-        $users =  get_enrolled_users(
-            $context,
-            "mod/assign:submit",
-            null,
-            'u.id, u.username, u.firstname, u.lastname',
-            null,
-            null,
-            null,
-            show_only_active_users($context)
-        );
+        $activeusers = $this->get_active_users($context);
+        $assessids = $this->manager->get_assessment_ids($courseid, $assessmentids);
+        $assessments = $this->manager->get_assessments_by_course($assessids);
 
-        $assessments = $this->get_assessments_by_course($courseid, $assessmentids);
-        reset($users);
+        $cmids = $this->manager->get_course_module($courseid, $assessids);
+
         $users = ['users' => []];
 
         foreach ($assessments as $assess) {
 
-            $user = new \stdclass();
-            $user->id = $assess->id;
-            $user->namelastname = $OUTPUT->user_picture($user, array(
+            $user = $activeusers[$assess->userid];
+            $user->namelastname = $this->output->user_picture($user, array(
                 'course' => $courseid,
                 'includefullname' => true, 'class' => 'userpicture'
             ));
 
+
             $userassessment = new \stdClass();
             $userassessment->assignmentid =  $assess->assignmentid;
-            $userassessment->assignmentid =  $assess->assignmentid;
             $userassessment->assignmentname = $assess->assignmentname;
+            $cmid = $cmids[$assess->assignmentid]->cmid;
+            $userassessment->assignmentnameurl = new moodle_url("$CFG->wwwroot/mod/assign/view.php", ['id' => $cmid]);
+            $userassessment->submtree = $this->get_assessment_submission_files_tree($user->id, $courseid, $assess->assignmentid);
+            $userassessment->annottedpdftree = $this->get_assessment_anotatepdf_files_tree($assess->gradeid);
+            $userassessment->feedbackfiletree = $this->get_assessment_feedback_files_tree($assess->gradeid);
+            if (!isset($user->itemids)) {
+                $user->itemids = '';
+            }
+            $user->itemids .= $assess->gradeid . ','; // Call it itemid because it is called like that in other tables.
 
-            if (!isset($users['users'][$assess->id])) {
-                $user->assessments[] = $userassessment;
-                $users['users'][$assess->id] = $user;
+            // If there are no files at all, dont show the student. TODO
+            if (empty($userassessment->submtree['tree']) && empty($userassessment->annottedpdftree['tree'])  && empty($userassessment->feedbackfiletree['tree'])) {
+                // if (isset($users['users'][$assess->userid])) {
+                //     unset($users['users'][$assess->userid]);
+                // }
             } else {
-                ($users['users'][$assess->id]->assessments)[] = $userassessment;
+
+                if (!isset($users['users'][$assess->userid])) {
+                    $user->assessments[] = $userassessment;
+                    $users['users'][$assess->userid] = $user;
+                } else {
+                    ($users['users'][$assess->userid]->assessments)[] = $userassessment;
+                }
             }
         }
 
         $users = array_values($users['users']);
+        usort($users, "sort_by_firstname");
 
-        return $users;
+        $context = [
+            'users' =>  $users,
+            'assignids' => $assessids
+        ];
+        return $context;
     }
 
-    private function get_assessments_by_course($courseid, $assessmentids) {
-        global $DB;
 
-        $assessids = $assessmentids;
-       
-        if ($assessmentids == '') {
-             // Get the assessment ids.
-             $sql = 'SELECT id FROM  {assign} WHERE course = ? order by id';
-             $params_array = ['course' => $courseid];
-             $result = $DB->get_records_sql($sql, $params_array);
-             $assessids = array_column($result, 'id');
-             $assessids = implode(',', $assessids);
-        } else {
-            $assessids = implode(',', $assessmentids);
-        }
-//print_object($assessids); exit;
-        unset($result);
-        unset($sql);
-        $sql = "SELECT grades.id as gradeid, u.id, u.firstname, u.lastname, grades.assignment as assignmentid, assign.name as 'assignmentname'
-                FROM {assign_grades} AS grades
-                JOIN {assign} as assign ON grades.assignment = assign.id
-                JOIN {user} as u ON grades.userid = u.id
-                WHERE grades.assignment  IN ($assessids)
-                AND grades.grade != -1.00000
-                ORDER BY grades.assignment";
-        $result = ($DB->get_records_sql($sql));
-       //  var_dump($result); exit;
-        return $result;
-    }
-    // Collect the assessment that are already graded
-    protected function get_assessment_files_tree_and_name($userid, $courseid) {
-        global $DB;
 
-        $sql = 'SELECT * FROM {assign} AS assign
-                JOIN {assign_submission} AS asub
-                ON asub.assignment = assign.id
-                JOIN {files} as f  ON f.itemid = asub.id
-                WHERE f.userid = ? AND f.filearea = ?
-                ORDER BY asub.attemptnumber DESC, f.filename ASC';
-        $params_array = ['userid' => $userid, 'filearea' => 'submission_files'];
-        $result = array_values($DB->get_records_sql($sql, $params_array));
-        $tree = null;
-        $assessmentname = '';
-        foreach ($result as $result) {
-            $tree = new assessement_files_tree($result->contextid, $result->component, $result->filearea,  $result->itemid);
-            $assessmentname = $result->name;
-        }
-        return [$tree, $assessmentname];
-    }
+    protected function get_assessment_submission_files_tree($userid, $courseid, $assignmentid) {
 
-    private function get_all_course_assessments($courseid, $assessmentids) {
-        global  $DB;
-        
-        // var_dump($assessmentids); exit;
-     
-        
-        if (in_array(0, $assessmentids) || $assessmentids == '') {  // return everything
-            // Get the assessment ids.
-            $sql = 'SELECT id FROM  {assign} WHERE course = ? order by id';
-            $params_array = ['course' => $courseid];
+        $results = $this->manager->get_assessment_submission_records($userid, $courseid, $assignmentid);
 
-        } else {
-            // $assessmentids = impl(',')
-            $assessmentids = implode(',', $assessmentids);
+        $trees = ['tree' => []];
 
-            $sql = "SELECT id FROM  {assign} WHERE course = ? AND  id in ($assessmentids) order by id";
-            $params_array = ['course' => $courseid];
-           
+        foreach ($results as $result) {
+            $t = new assessement_files_tree($result->contextid, $result->component, $result->filearea,  $result->itemid);
+            $tree = new \stdClass();
+            $htmlid = 'assessement_files_tree_' . uniqid();
+            $tree->submissionfiletree =  $this->render_assessement_files_tree($t, $htmlid, self::SUBMISSION);
+            $trees['tree'] = $tree;
         }
 
-        return $DB->get_records_sql($sql, $params_array);
+        return $trees;
     }
 
-    private function get_course_assessments_by_d($courseid, $assessids = array()) {
-        global  $DB;
-        // Get the assessment ids.
-        $sql = 'SELECT id FROM  {assign} WHERE course = ? and id IN ($assessids) asorder by id';
-        $params_array = ['course' => $courseid];
+    protected function get_assessment_anotatepdf_files_tree($itemid) {
 
-        return $DB->get_records_sql($sql, $params_array);
+
+        $results = $this->manager->get_assessment_anotatepdf_files($itemid);
+        $trees = ['tree' => []];
+
+        foreach ($results as $result) {
+            $t = new assessement_files_tree($result->contextid, $result->component, $result->filearea,  $result->itemid);
+            $tree = new \stdClass();
+            $htmlid = 'assessement_feedback_files_tree_' . uniqid();
+            $tree->feedbackfiletree =  $this->render_assessement_files_tree($t, $htmlid, self::ANNOTATEPDF);
+            $trees['tree'] = $tree;
+        }
+
+
+        return $trees;
+    }
+
+    protected function get_assessment_feedback_files_tree($itemid) {
+
+        $results =  $this->manager->get_assessment_feedback_files($itemid);
+        $trees = ['tree' => []];
+
+        foreach ($results as $result) {
+            $t = new assessement_files_tree($result->contextid, $result->component, $result->filearea,  $result->itemid);
+            $tree = new \stdClass();
+            $htmlid = 'assessement_feedback_files_tree_' . uniqid();
+            $tree->feedbackfiletree =  $this->render_assessement_files_tree($t, $htmlid, self::FEEDBACK);
+            $trees['tree'] = $tree;
+        }
+
+        return $trees;
     }
 }
 
@@ -263,8 +266,6 @@ class assessement_files_tree implements renderable {
     public $filearea;
 
     public function __construct($contextid, $component, $filearea, $itemid) {
-        global $USER;
-        // $this->context = context_user::instance($USER->id);
         $fs = get_file_storage();
         $this->dir = $fs->get_area_tree($contextid, $component, $filearea, $itemid);
         $this->contextid = $contextid;

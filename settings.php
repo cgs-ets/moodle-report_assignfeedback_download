@@ -25,7 +25,7 @@
 
 defined('MOODLE_INTERNAL') || die;
 
-$ADMIN->add('reports', new admin_externalpage('report_assignfeedback_download', get_string('pluginname', 'report_assignfeedback_download'), "$CFG->wwwroot/report/assignfeedback_download/index.php",'moodle/backup:backupcourse'));
+$ADMIN->add('reports', new admin_externalpage('report_assignfeedback_download', get_string('pluginname', 'report_assignfeedback_download'), "$CFG->wwwroot/report/assignfeedback_download/index.php", 'moodle/backup:backupcourse'));
 
-// no report settings
+// No report settings.
 $settings = null;

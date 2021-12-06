@@ -1,34 +1,67 @@
-<table  class="flexible table assignfeedback_download">
+<table class="flexible table assignfeedback_download" data-selected-assign="{{assignids}}">
     <thead>
         <tr>
             <th>{{#str}}select, report_assignfeedback_download{{/str}} <br>
                 <input type="checkbox" name="select_all" id="selectall">
             </th>
-            <th>{{#str}}nameheader, report_assignfeedback_download{{/str}}</th>
-            <th>{{#str}}assessmentheader, report_assignfeedback_download{{/str}}</th>
-            <th>{{#str}}fileattach, report_assignfeedback_download{{/str}}</th>
-            <th>{{#str}}annotatepdf, report_assignfeedback_download{{/str}}</th>
-            <th>{{#str}}feedbackfiles, report_assignfeedback_download{{/str}}</th>
-            
+            <th colspan="4">{{#str}}nameheader, report_assignfeedback_download{{/str}}</th>
+
         </tr>
     </thead>
-    <tbody id = "iassignfeedbacktb">
+    <tbody id="iassignfeedbacktb">
         {{#users}}
         <tr>
             <td><input type="checkbox" id="user_{{id}}"></td>
             <td> {{{namelastname}}}</td>
-             <td>
-            {{#assessments}} 
-                <ul>
-                    <li>
-                        {{assignmentname}}
-                    </li>
-                </ul>
-             {{/assessments}}
-             </td>
+            <td>
+                <table id='innertable_{{id}}' class='table-borderless innertable' data-user-grade-id="{{{itemids}}}">
+                    <thead>
+                        <tr>
+                            <th>{{#str}}assessmentheader, report_assignfeedback_download{{/str}}</th>
+                            <th>{{#str}}fileattach, report_assignfeedback_download{{/str}}</th>
+                            <th>{{#str}}annotatepdf, report_assignfeedback_download{{/str}}</th>
+                            <th>{{#str}}feedbackfiles, report_assignfeedback_download{{/str}}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#assessments}}
+                        <tr>
+                            <td>
+                                <a href="{{assignmentnameurl}}" target="_blank">{{assignmentname}}</a>
+
+                            </td>
+                            <td>
+                                {{#submtree}}
+                                {{#tree}}
+                                {{{submissionfiletree}}}
+                                {{/tree}}
+                                {{/submtree}}
+                            </td>
+                            <td>
+                                {{#annottedpdftree}}
+                                {{#tree}}
+                                {{{feedbackfiletree}}}
+                                {{/tree}}
+                                {{/annottedpdftree}}
+                            </td>
+                            <td>
+                                {{#feedbackfiletree}}
+                                {{#tree}}
+                                {{{feedbackfiletree}}}
+                                {{/tree}}
+                                {{/feedbackfiletree}}
+                            </td>
+                        </tr>
+                        {{/assessments}}
+                    </tbody>
+                </table>
+
+            </td>
+
+
+
         </tr>
 
         {{/users}}
     </tbody>
 </table>
-
