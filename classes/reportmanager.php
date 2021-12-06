@@ -204,7 +204,7 @@ class reportmanager {
                         $date->setTimestamp(intval($file->get_timecreated()));
                         $year =  userdate($date->getTimestamp(), '%Y');
                         $extension = '.' . pathinfo($file->get_filename(), PATHINFO_EXTENSION);
-                        $notname  = $user->lastname . ' ' . $user->firstname . ' ' . $year . ' ' . $assessname . $extension;
+                        $notname  = $user->lastname . ' ' . $user->firstname . ' ' . $year . ' ' . $course->fullname .' '. $assessname . $extension;
                         $pathfilename = $user->firstname . $user->lastname . '/' . $assessname . $file->get_filepath() . $notname;
 
                         $filesforzipping[$pathfilename] = $file;

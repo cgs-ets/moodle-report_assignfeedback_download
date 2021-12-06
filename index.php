@@ -41,76 +41,71 @@ $selectedaction          = optional_param('operation', '', PARAM_TEXT);
 require_login();
 admin_externalpage_setup('report_assignfeedback_download', '', null, '', array('pagelayout' => 'report'));
 
+$manager = new report_assignfeedback_download\reportmanager();
+// download
+if ($selectedusers != '') {
+    $selectedusers = explode(',', $selectedusers);
+    
+    switch ($selectedaction) {
+        case 'dldsubmission':
+            $manager->download_submission_files($instaceids, $id, $selectedusers);
+            break;
+        case 'dldanotated':
+            $nofilestozip = $manager->download_anotatepdf_files($itemids, $id);
+            break;
+        case 'dldfeedbackf':
+           $manager->download_feedback_files($itemids, $id);
+            break;
+    }
+  
+}
+
 $PAGE->add_body_class('report_assignfeedback_download');
+// Display the backup report
+echo $OUTPUT->header();
+echo $OUTPUT->heading(get_string('heading', 'report_assignfeedback_download'));
 
+$aids = $manager->get_assesments_with_grades($id);
+$mform = new assignfeedback_download_select_form(null, ['id' => $id, 'cmid' => $cmid, 'aids' => $aids]);
 
-if ($id != 0) {
-    $context = context_course::instance($id);
-    require_capability('report/assignfeedback_download:grade', $context);
-    $manager = new report_assignfeedback_download\reportmanager();
-    // download
-    if ($selectedusers != '') {
-        $selectedusers = explode(',', $selectedusers);
+$assessmentids = '';
+$filter = false;
+$noasses = 0;
+//Form processing and displaying is done here
+if ($mform->is_cancelled()) {
+    //Handle form cancel operation, if cancel button is present on form
+} else if ($data = $mform->get_data()) {
+
+    //In this case you process validated data. $mform->get_data() returns data posted in form.
+    $assessmentids = $data->assessments; // get the selected assessments.
+    $filter = true;
+
+} else {
     
-        switch ($selectedaction) {
-            case 'dldsubmission':
-                $manager->download_submission_files($instaceids, $id, $selectedusers);
-                break;
-            case 'dldanotated':
-                $nofilestozip = $manager->download_anotatepdf_files($itemids, $id);
-                break;
-            case 'dldfeedbackf':
-                $manager->download_feedback_files($itemids, $id);
-                break;
-        }
+    if (count($aids) == 0) {
+        $noasses = 1;
     }
+}
 
-    // Display the backup report
-    echo $OUTPUT->header();
-    echo $OUTPUT->heading(get_string('heading', 'report_assignfeedback_download'));
-        
- 
-    
-    $aids = $manager->get_assesments_with_grades($id);
-    $mform = new assignfeedback_download_select_form(null, ['id' => $id, 'cmid' => $cmid, 'aids' => $aids]);
-    
-    $assessmentids = '';
-    $filter = false;
-    $noasses = 0;
-    
-    //Form processing and displaying is done here
-    if ($mform->is_cancelled()) {
-        //Handle form cancel operation, if cancel button is present on form
-    } else if ($data = $mform->get_data()) {
-    
-        //In this case you process validated data. $mform->get_data() returns data posted in form.
-        $assessmentids = $data->assessments; // get the selected assessments.
-        $filter = true;
-    } else {
-    
-        if (count($aids) == 0) {
-            $noasses = 1;
-        }
-    }
+if ($id == 0) {
+    \core\notification::add(get_string('cantdisplayerror', 'report_assignfeedback_download'), core\output\notification::NOTIFY_ERROR);
+} else {
+
     echo $OUTPUT->box_start();
+
+    $mform->display();
     $renderer = $PAGE->get_renderer('report_assignfeedback_download');
-    
+    $url =  $PAGE->url;
     if ($noasses) {
         echo $renderer->render_no_assessment_in_course();
     } else {
-        $mform->display();
-    
-    
-        $url =  $PAGE->url;
-    
+
         echo $renderer->render_assignfeedback_download($id, $assessmentids, $url, $cmid, $filter);
     }
-    
-    echo $OUTPUT->box_end();
-} else {
-    \core\notification::add(get_string('cantdisplayerror', 'report_assignfeedback_download'), core\output\notification::NOTIFY_ERROR);
 
+    echo $OUTPUT->box_end();
 }
+
 
 
 echo $OUTPUT->footer();
