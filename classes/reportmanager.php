@@ -204,7 +204,7 @@ class reportmanager {
                         $date->setTimestamp(intval($file->get_timecreated()));
                         $year =  userdate($date->getTimestamp(), '%Y');
                         $extension = '.' . pathinfo($file->get_filename(), PATHINFO_EXTENSION);
-                        $notname  = $this->clean_custom($user->lastname . ' ' . $user->firstname . ' ' . $year . ' ' . $assessname . $extension);
+                        $notname  = $user->lastname . ' ' . $user->firstname . ' ' . $year . ' ' . $assessname . $extension;
                         $pathfilename = $user->firstname . $user->lastname . '/' . $assessname . $file->get_filepath() . $notname;
 
                         $filesforzipping[$pathfilename] = $file;
@@ -291,27 +291,5 @@ class reportmanager {
         return false;
     }
 
-
-
-    /**
-     * Helper function to replace "special" characters with regular ones in filenames.
-     *
-     * @param String $filename filename which to clean up
-     * @return String the clean filename, without special characters
-     */
-    protected function clean_custom($filename) {
-
-        $cleanfilenameuserpref = get_user_preferences('clean_filerenaming', '');
-
-        if ((isset($cleanfilenameuserpref) && $cleanfilenameuserpref)) {
-            $replace = array(
-                'Ä' => 'Ae', 'Ö' => 'Oe', 'Ü' => 'Ue', 'ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'ß' => 's', ' ' => '_'
-            );
-
-            $o = preg_replace('/[^A-Za-z0-9\_\-\.]/', '', strtr($filename, $replace));
-            return clean_filename($o);
-        } else {
-            return clean_filename($filename);
-        }
-    }
+ 
 }
