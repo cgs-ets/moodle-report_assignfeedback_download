@@ -42,9 +42,7 @@ require_login();
 admin_externalpage_setup('report_assignfeedback_download', '', null, '', array('pagelayout' => 'report'));
 
 $PAGE->add_body_class('report_assignfeedback_download');
-// Display the backup report
-echo $OUTPUT->header();
-echo $OUTPUT->heading(get_string('heading', 'report_assignfeedback_download'));
+
 
 if ($id != 0) {
     $context = context_course::instance($id);
@@ -66,7 +64,11 @@ if ($id != 0) {
                 break;
         }
     }
-    
+
+    // Display the backup report
+    echo $OUTPUT->header();
+    echo $OUTPUT->heading(get_string('heading', 'report_assignfeedback_download'));
+        
  
     
     $aids = $manager->get_assesments_with_grades($id);
@@ -109,14 +111,6 @@ if ($id != 0) {
     \core\notification::add(get_string('cantdisplayerror', 'report_assignfeedback_download'), core\output\notification::NOTIFY_ERROR);
 
 }
-
-
-
-// if ($id == 0) {
-// } else {
-
-// }
-
 
 
 echo $OUTPUT->footer();
