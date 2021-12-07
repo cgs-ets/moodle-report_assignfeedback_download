@@ -17,10 +17,10 @@
                 <table id='innertable_{{id}}' class='table-borderless innertable' data-user-grade-id="{{{itemids}}}">
                     <thead>
                         <tr>
-                            <th>{{#str}}assessmentheader, report_assignfeedback_download{{/str}}</th>
-                            <th>{{#str}}fileattach, report_assignfeedback_download{{/str}}</th>
-                            <th>{{#str}}annotatepdf, report_assignfeedback_download{{/str}}</th>
-                            <th>{{#str}}feedbackfiles, report_assignfeedback_download{{/str}}</th>
+                            <th>{{#firstuser}} {{#str}}assessmentheader, report_assignfeedback_download{{/str}} {{/firstuser}}</th>
+                            <th>{{#firstuser}} {{#str}}fileattach, report_assignfeedback_download{{/str}} {{/firstuser}}</th>
+                            <th>{{#firstuser}} {{#str}}annotatepdf, report_assignfeedback_download{{/str}} {{/firstuser}}</th>
+                            <th>{{#firstuser}} {{#str}}feedbackfiles, report_assignfeedback_download{{/str}} {{/firstuser}}</th>
                         </tr>
                     </thead>
                     <tbody>

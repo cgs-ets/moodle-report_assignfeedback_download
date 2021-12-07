@@ -196,7 +196,11 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
 
         $users = array_values($users['users']);
         usort($users, "sort_by_firstname");
-
+        
+        if (isset($users[0])) {
+            ($users[0])->firstuser = 1; // Only display the inner table's header on the first user.
+        }
+   
         $context = [
             'users' =>  $users,
             'assignids' => $assessids
