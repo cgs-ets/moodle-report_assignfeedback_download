@@ -19,37 +19,57 @@
                         <tr>
                             <th>{{#firstuser}} {{#str}}assessmentheader, report_assignfeedback_download{{/str}} {{/firstuser}}</th>
                             <th>{{#firstuser}} {{#str}}fileattach, report_assignfeedback_download{{/str}} {{/firstuser}}</th>
-                            <th>{{#firstuser}} {{#str}}annotatepdf, report_assignfeedback_download{{/str}} {{/firstuser}}</th>
                             <th>{{#firstuser}} {{#str}}feedbackfiles, report_assignfeedback_download{{/str}} {{/firstuser}}</th>
+                            <th title = "{{#str}}commenthelp, report_assignfeedback_download{{/str}}">
+                                {{#firstuser}} {{#str}}feedbackcomments, report_assignfeedback_download{{/str}} 
+                                <i class="fa fa-question-circle qcomment" aria-hidden="true"></i>
+                                {{/firstuser}}
+                            </th>
+                            <th>{{#firstuser}} {{#str}}annotatepdf, report_assignfeedback_download{{/str}} {{/firstuser}}</th>
+                            <th>{{#firstuser}} {{#str}}rubric, report_assignfeedback_download{{/str}} {{/firstuser}}</th>
+                            <th>{{#firstuser}} {{#str}}finalgrade, report_assignfeedback_download{{/str}} {{/firstuser}}</th>
                         </tr>
                     </thead>
                     <tbody>
                         {{#assessments}}
-                        <tr>
-                            <td style="width:25%;">
+                        <tr class ='innertabletr'>
+                            <td style="width:14%;">
                                 <a href="{{assignmentnameurl}}" target="_blank">{{assignmentname}}</a>
-
                             </td>
-                            <td style="width:25%;">
+                            <td style="width:14%;">
                                 {{#submtree}}
                                 {{#tree}}
                                 {{{submissionfiletree}}}
                                 {{/tree}}
                                 {{/submtree}}
                             </td>
-                            <td style="width:25%;">
+                            <td style="width:14%;">
+                                {{#feedbackfiletree}}
+                                {{#tree}}
+                                {{{feedbackfiletree}}}
+                                {{/tree}}
+                                {{/feedbackfiletree}}
+                            </td>
+                            <td style="width:14%;">
+                                {{{feedbackcommentxt}}}
+                                 {{#feedbackcomment}}
+                                {{#tree}}
+                                {{{feedbackfiletree}}}
+                                {{/tree}}
+                                {{/feedbackcomment}}
+
+                            </td>
+                            <td style="width:14%;">
                                 {{#annottedpdftree}}
                                 {{#tree}}
                                 {{{feedbackfiletree}}}
                                 {{/tree}}
                                 {{/annottedpdftree}}
                             </td>
-                            <td style="width:25%;">
-                                {{#feedbackfiletree}}
-                                {{#tree}}
-                                {{{feedbackfiletree}}}
-                                {{/tree}}
-                                {{/feedbackfiletree}}
+                            <td style="width:14%;">
+                            </td>
+                            <td style="width:14%;">
+                               {{finalgrade}}
                             </td>
                         </tr>
                         {{/assessments}}

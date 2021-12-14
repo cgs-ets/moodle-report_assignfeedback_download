@@ -94,6 +94,60 @@ class reportmanager {
         return $results;
     }
 
+
+    public function get_assessment_feedback_comments($itemid, $userid) {
+        global $DB, $USER;
+
+        $result1 = $this->get_assessment_feedback_comment_helper($itemid);
+
+        // Comments can have files embedded. Get them here.
+        $sql = "SELECT f.id, f.contextid, f.component, f.filearea, f.itemid,  afc.commenttext FROM {files} as f
+                JOIN {assign_grades} as ag ON f.itemid = ag.id
+                JOIN {assignfeedback_comments} as afc ON  afc.grade = ag.id
+                WHERE f.itemid = ? AND f.component = ? AND f.filearea = ? AND f.userid = $USER->id AND ag.userid = $userid";
+
+        $params_array = ['itemid' => $itemid, 'component' => 'assignfeedback_comments', 'filearea' => 'feedback'];
+        $result2 = $DB->get_records_sql($sql, $params_array);
+
+        return [$result1, $result2];
+    }
+
+    private function get_assessment_feedback_comment_helper($itemid) {
+        global $DB;
+
+        $sql = "SELECT * FROM {assignfeedback_comments} AS ac
+                WHERE ac.grade = ?";
+
+        $params_array = ['grade' => $itemid];
+        $result = $DB->get_records_sql($sql, $params_array);
+      
+        return $result;
+    }
+
+    public function get_final_grade($itemid, $userid) {
+        global $DB;
+
+        $result = $this->get_assessment_feedback_comment_helper($itemid);
+        $assignmentinstance = array_column($result, 'assignment');
+        $assignmentinstance = end($assignmentinstance);
+
+        // get the itemid
+        $sql = "SELECT id FROM {grade_items} WHERE iteminstance = ?";
+        $params_array = ['iteminstance' => $assignmentinstance];
+        $itemid = $DB->get_records_sql($sql, $params_array);
+        $itemid = array_column($itemid, 'id');
+        $itemid = end($itemid);
+
+        $sql = "SELECT finalgrade from {grade_grades} WHERE itemid = ? AND userid = ?";
+        $params_array = ['itemid' => $itemid, 'userid' => $userid];
+        $finalgrade = $DB->get_records_sql($sql, $params_array);
+        $finalgrade = array_column($finalgrade,'finalgrade');
+        $finalgrade = number_format(end($finalgrade), 2);
+
+        return $finalgrade;
+
+
+    }
     public function get_assessment_ids($courseid, $assessmentids) {
 
         $assessids = $assessmentids;
@@ -106,7 +160,7 @@ class reportmanager {
         } else {
             $assessids = implode(',', $assessmentids);
         }
-     
+
         return $assessids;
     }
 
@@ -199,12 +253,12 @@ class reportmanager {
                     $files = $fs->get_area_files($fr->contextid, $fr->component, $fr->filearea,  $fr->itemid);
                     foreach ($files as $file) {
 
-                        // Naming convention would be LAST Name, FirstName, Year, Subject, Level Component.
+                        // Naming convention would be LAST Name, FirstName, Year, Subject, Level, Component.
                         $date = new \DateTime();
                         $date->setTimestamp(intval($file->get_timecreated()));
                         $year =  userdate($date->getTimestamp(), '%Y');
                         $extension = '.' . pathinfo($file->get_filename(), PATHINFO_EXTENSION);
-                        $notname  = $user->lastname . ' ' . $user->firstname . ' ' . $year . ' ' . $course->fullname .' '. $assessname . $extension;
+                        $notname  = $user->lastname . ' ' . $user->firstname . ' ' . $year . ' ' . $course->fullname . ' ' . $assessname . $extension;
                         $pathfilename = $user->firstname . $user->lastname . '/' . $assessname . $file->get_filepath() . $notname;
 
                         $filesforzipping[$pathfilename] = $file;
@@ -247,7 +301,7 @@ class reportmanager {
 
         foreach ($uitemids as $uitemid) {
             $user = $DB->get_record('user', ['id' => $uitemid->userid], 'firstname, lastname');
-            //print_object($itemid); exit;
+          
             foreach ($uitemid->uitemids as $itemid) {
                 $assessname = $assesmentsdetails[$itemid]->assignmentname;
                 $filerecords =  $this->get_assessment_feedback_files($itemid);
@@ -290,6 +344,4 @@ class reportmanager {
         }
         return false;
     }
-
- 
 }

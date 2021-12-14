@@ -28,9 +28,45 @@ function report_assignfeedback_download_extend_navigation_course($navigation, $c
 
     if (has_capability('moodle/site:viewuseridentity', $context)) {
         $url = new moodle_url('/report/assignfeedback_download/index.php', array('id' => $course->id, 'cmid' => $context->id));
-        $navigation->add(get_string('pluginname', 'report_assignfeedback_download'), $url, navigation_node::TYPE_SETTING, null, null, new pix_icon('i/report', ''));
+        $navigation->add(get_string('pluginname', 'report_assignfeedback_download'), $url, navigation_node::COURSE_INDEX_PAGE, null, null, new pix_icon('i/report', ''));
     }
 }
+
+
+// function report_assignfeedback_download_extends_settings_navigation($settingsnav, $context) {
+//     global $CFG, $PAGE, $USER;
+//     // Setup navigation for Admin metadata
+//     if (is_null($PAGE->course)) {
+//         //return;
+//     } else {
+//         if ($categorynode = $settingsnav->find('categorysettings', null)) {
+//             $url = new moodle_url('/local/metadata/admview_knowledge.php', array('categoryid' => $PAGE->category->id));
+//             $foonode = navigation_node::create(get_string('manage_pluginname', 'local_metadata'), $url, navigation_node::NODETYPE_LEAF, 'metadata', 'metadata', new pix_icon('i/report', ''));
+//             if ($PAGE->url->compare($url, URL_MATCH_BASE)) {
+//                 $foonode->make_active();
+//             }
+//             $categorynode->add_node($foonode);
+//             //$categorynode->add(get_string('manage_pluginname', 'local_metadata'), $url, self::TYPE_SETTING, null, 'permissions', new pix_icon('i/permissions', ''));
+//         }
+//     }
+//     // Only add this settings item on non-site course pages.
+//     if (!$PAGE->course or $PAGE->course->id == 1) {
+//         return;
+//     }
+//     // TODO: Only let users with the appropriate capability see this settings item.
+//     //if (!has_capability('local/metadata:ins_view', context_course::instance($PAGE->course->id))) {
+//     //    return;
+//     //}
+//     if ($settingnode = $settingsnav->find('courseadmin', navigation_node::TYPE_COURSE)) {
+//         $url = new moodle_url('/report/assignfeedback_download/index.php', array('id' => $PAGE->course->id));
+//         // TODO: Should change the name to something more descriptive
+//         $foonode = navigation_node::create(get_string('pluginname', 'report_assignfeedback_download'), $url, navigation_node::NODETYPE_LEAF, 'metadata', 'metadata', new pix_icon('i/report', ''));
+//         if ($PAGE->url->compare($url, URL_MATCH_BASE)) {
+//             $foonode->make_active();
+//         }
+//         $settingnode->add_node($foonode);
+//     }
+// }
 
 
 function show_only_active_users($context) {
@@ -52,4 +88,3 @@ function show_only_active_users($context) {
 function sort_by_firstname($param1, $param2) {
     return strcmp($param1->firstname, $param2->firstname);
 }
-

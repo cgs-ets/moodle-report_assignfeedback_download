@@ -30,6 +30,7 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
     const SUBMISSION     = 'submission';
     const FEEDBACK       = 'feedback';
     const ANNOTATEPDF    = 'annotatedpdf';
+    const EMBEDDEDFILEINCOMMENT = 'embeddedfileincomment';
 
 
 
@@ -92,11 +93,12 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
                     break;
                 case self::FEEDBACK:
                     $url = moodle_url::make_file_url("{$CFG->wwwroot}/pluginfile.php", "/{$tree->contextid}/assignfeedback_file/{$tree->filearea}/{$tree->itemid}" . $file->get_filepath() . $file->get_filename(), true);
-
                     break;
                 case self::ANNOTATEPDF:
                     $url = moodle_url::make_file_url("{$CFG->wwwroot}/pluginfile.php", "/{$tree->contextid}/assignfeedback_editpdf/{$tree->filearea}/{$tree->itemid}" . $file->get_filepath() . $file->get_filename(), true);
-
+                    break;
+                case self::EMBEDDEDFILEINCOMMENT:
+                    $url = moodle_url::make_file_url("{$CFG->wwwroot}/pluginfile.php", "/{$tree->contextid}/assignfeedback_comments/{$tree->filearea}/{$tree->itemid}" . $file->get_filepath() . $file->get_filename(), true);
                     break;
             }
 
@@ -173,9 +175,20 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
             $userassessment->submtree = $this->get_assessment_submission_files_tree($user->id, $courseid, $assess->assignmentid);
             $userassessment->annottedpdftree = $this->get_assessment_anotatepdf_files_tree($assess->gradeid);
             $userassessment->feedbackfiletree = $this->get_assessment_feedback_files_tree($assess->gradeid);
+            $feedbackcomment = $this->get_assessment_feedback_comments($assess->gradeid, $assess->userid);
+            
+            if (gettype($feedbackcomment) == "array") {
+                $userassessment->feedbackcomment = $this->get_assessment_feedback_comments($assess->gradeid, $assess->userid);
+            } else {
+                $userassessment->feedbackcommentxt = $this->get_assessment_feedback_comments($assess->gradeid, $assess->userid);
+            }
+
+            $userassessment->finalgrade = $this->manager->get_final_grade($assess->gradeid, $assess->userid);
+           
             if (!isset($user->itemids)) {
                 $user->itemids = '';
             }
+            
             $user->itemids .= $assess->gradeid . ','; // Call it itemid because it is called like that in other tables.
 
             // If there are no files at all, dont show the student. TODO
@@ -196,15 +209,16 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
 
         $users = array_values($users['users']);
         usort($users, "sort_by_firstname");
-        
+
         if (isset($users[0])) {
             ($users[0])->firstuser = 1; // Only display the inner table's header on the first user.
         }
-   
+
         $context = [
             'users' =>  $users,
             'assignids' => $assessids
         ];
+      
         return $context;
     }
 
@@ -259,6 +273,30 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
         }
 
         return $trees;
+    }
+
+    protected function get_assessment_feedback_comments($itemid, $userid) {
+     
+        list($commentonlytext, $commentwithfile) = $this->manager->get_assessment_feedback_comments($itemid, $userid);
+        $comments = '';
+        if (count($commentwithfile) > 0) {
+            $trees = ['tree' => []];
+            foreach ($commentwithfile as $result) {
+                $t = new assessement_files_tree($result->contextid, $result->component, $result->filearea,  $itemid);
+                $tree = new \stdClass();
+                $htmlid = 'assessement_feedback_files_tree_' . uniqid();
+                $tree->feedbackfiletree =  $this->render_assessement_files_tree($t, $htmlid, self::EMBEDDEDFILEINCOMMENT);
+                $trees['tree'] = $tree;
+            }
+
+            return $trees;
+
+        } else if (count($commentonlytext) > 0) {
+            foreach($commentonlytext as $comment) {
+                $comments .= $comment->commenttext;
+            }
+           return $comments;
+        }
     }
 }
 

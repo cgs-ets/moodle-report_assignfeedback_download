@@ -4,15 +4,15 @@
     width: 100%;
 }
 
-table.flexible.table.assignfeedback_download>thead>tr>th:first-of-type {
+table.flexible.table.assignfeedback_download > thead > tr > th:first-of-type {
     vertical-align: bottom;
 }
 
-table.flexible.table.assignfeedback_download>thead>tr>th:nth-of-type(2) {
+table.flexible.table.assignfeedback_download > thead > tr > th:nth-of-type(2) {
     vertical-align: top;
 }
 
-tbody#iassignfeedbacktb>tr>td {
+tbody#iassignfeedbacktb > tr > td {
     vertical-align: middle;
 }
 
@@ -23,10 +23,6 @@ table.feedbackfilestv td {
     border-top: 0 !important;
 }
 
-select#id_assessments {
-    width: 18rem;
-}
-
 table.innertable {
     width: 100%;
 }
@@ -34,4 +30,8 @@ table.innertable {
 
 tbody#iassignfeedbacktb > tr {
     vertical-align: middle;
+}
+
+i.fa.fa-question-circle.qcomment {
+    color: #66A8D8;
 }
