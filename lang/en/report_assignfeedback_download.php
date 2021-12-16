@@ -37,6 +37,7 @@ $string['feedbackcomments'] = 'Feedback comments';
 $string['commenthelp'] = 'Comments with embedded files only display files';
 $string['finalgrade'] = 'Final grade';
 $string['rubric'] = 'Rubric';
+$string['rubrictitle'] = 'Download rubric';
 $string['chooseoperation'] = 'Choose operation';
 $string['withselectedlegend'] = 'With selected...';
 $string['dldsubmission'] = 'Download selected submissions';

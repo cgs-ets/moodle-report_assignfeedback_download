@@ -66,10 +66,15 @@
                                 {{/tree}}
                                 {{/annottedpdftree}}
                             </td>
-                            <td style="width:14%;">
+                            <td style="width:14%;"  class ="rubric-cell">
+                            {{#frubric}}
+                                <div class = 'frubric-container' data-frubric-filling = "{{rubric}}" data-rubric-file-name = "{{rubricfilename}}"> 
+                                     {{{frubrictree}}}
+                                </div>
+                             {{/frubric}}
                             </td>
                             <td style="width:14%;">
-                               {{finalgrade}}
+                                <strong> {{finalgrade}} </strong>
                             </td>
                         </tr>
                         {{/assessments}}
@@ -77,11 +82,7 @@
                 </table>
 
             </td>
-
-
-
         </tr>
-
         {{/users}}
     </tbody>
 </table>

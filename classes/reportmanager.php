@@ -27,6 +27,7 @@ use zip_packer;
 
 defined('MOODLE_INTERNAL') || die();
 
+require_once($CFG->libdir . '/gradelib.php');
 /**
  *
  * @package       report
@@ -94,7 +95,6 @@ class reportmanager {
         return $results;
     }
 
-
     public function get_assessment_feedback_comments($itemid, $userid) {
         global $DB, $USER;
 
@@ -120,7 +120,7 @@ class reportmanager {
 
         $params_array = ['grade' => $itemid];
         $result = $DB->get_records_sql($sql, $params_array);
-      
+
         return $result;
     }
 
@@ -138,16 +138,23 @@ class reportmanager {
         $itemid = array_column($itemid, 'id');
         $itemid = end($itemid);
 
-        $sql = "SELECT finalgrade from {grade_grades} WHERE itemid = ? AND userid = ?";
+        $sql = "SELECT finalgrade, rawgrademax from {grade_grades} WHERE itemid = ? AND userid = ?";
         $params_array = ['itemid' => $itemid, 'userid' => $userid];
-        $finalgrade = $DB->get_records_sql($sql, $params_array);
-        $finalgrade = array_column($finalgrade,'finalgrade');
-        $finalgrade = number_format(end($finalgrade), 2);
+        $finalgrade = array_values($DB->get_records_sql($sql, $params_array));
+        $fg = '';
+        if ($finalgrade) {
 
-        return $finalgrade;
+            $final = $finalgrade[0]->finalgrade;
+            $final = number_format($final, 2);
+            $maxgrade = $finalgrade[0]->rawgrademax;
+            $maxgrade = number_format($maxgrade, 2);
+          
+            $fg =  $final . ' / ' . $maxgrade;
+        }
 
-
+        return $fg;
     }
+
     public function get_assessment_ids($courseid, $assessmentids) {
 
         $assessids = $assessmentids;
@@ -167,7 +174,7 @@ class reportmanager {
     public function get_assessments_by_course($assessmentids) {
         global $DB;
 
-        $sql = "SELECT grades.id as gradeid, u.id as userid, u.firstname, u.lastname, grades.assignment as assignmentid, assign.name as 'assignmentname'
+        $sql = "SELECT grades.id as gradeid, u.id as userid, u.firstname, u.lastname, grades.assignment as assignmentid, assign.name as 'assignmentname', assign.duedate
                 FROM {assign_grades} AS grades
                 JOIN {assign} as assign ON grades.assignment = assign.id
                 JOIN {user} as u ON grades.userid = u.id
@@ -226,7 +233,6 @@ class reportmanager {
             send_temp_file($zipfile, $filename);
         }
     }
-
 
     public function download_anotatepdf_files($itemids, $id) {
         global $DB;
@@ -301,7 +307,7 @@ class reportmanager {
 
         foreach ($uitemids as $uitemid) {
             $user = $DB->get_record('user', ['id' => $uitemid->userid], 'firstname, lastname');
-          
+
             foreach ($uitemid->uitemids as $itemid) {
                 $assessname = $assesmentsdetails[$itemid]->assignmentname;
                 $filerecords =  $this->get_assessment_feedback_files($itemid);
@@ -323,6 +329,50 @@ class reportmanager {
         }
     }
 
+    public function get_rubric($cmid, $itemid, $courseid, $userid, $instanceid) {
+        global $DB, $PAGE;
+        $context = \context_module::instance($cmid);
+
+        $gradingmanager = get_grading_manager($context, 'mod_assign', 'submissions');
+
+        if ($controller = $gradingmanager->get_active_controller()) {
+            $methodname =  $DB->get_record('grading_areas', ['id' => $controller->get_areaid()], 'activemethod', IGNORE_MISSING);
+
+            if ($methodname->activemethod == 'frubric') {  // Only works for flexible rubric.
+
+                $params = array('assignment' => $instanceid, 'userid' => $userid);
+                $grade = array_values($DB->get_records('assign_grades', $params, 'attemptnumber DESC', '*', 0, 1));
+
+                $gradinginfo = grade_get_grades(
+                    $courseid,
+                    'mod',
+                    'assign',
+                    $instanceid,
+                    $userid
+                );
+
+                $gradingitem = null;
+                $gradebookgrade = null;
+
+                if (isset($gradinginfo->items[0])) {
+                    $gradingitem = $gradinginfo->items[0];
+                    $gradebookgrade = $gradingitem->grades[$userid];
+                }
+
+                $fr = json_encode($controller->render_grade(
+                    $PAGE,
+                    $grade[0]->id,
+                    $gradinginfo,
+                    $gradebookgrade->str_long_grade,
+                    true
+                ));
+
+                return $fr;
+            }
+        }
+       
+        return '';
+    }
     /**
      * Generate zip file from array of given files - copied from mod_assign 3.10
      *

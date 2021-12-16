@@ -35,3 +35,7 @@ tbody#iassignfeedbacktb > tr {
 i.fa.fa-question-circle.qcomment {
     color: #66A8D8;
 }
+
+.frubric-container {
+    cursor: pointer;
+}
