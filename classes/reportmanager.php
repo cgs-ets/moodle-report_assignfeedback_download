@@ -350,7 +350,7 @@ class reportmanager {
                     $instanceid,
                     $userid
                 );
-
+      
                 $gradingitem = null;
                 $gradebookgrade = null;
 

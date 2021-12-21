@@ -114,8 +114,8 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
     protected function htmlize_rubric($tree, $rubricname, $img) {
         $yuiconfig = array();
         $yuiconfig['type'] = 'html';
-        $result = '<ul>'; 
-        $image = $this->output->pix_icon('icon','frubric', 'report_assignfeedback_download');
+        $result = '<ul>';
+        $image = $this->output->pix_icon('icon', 'frubric', 'report_assignfeedback_download');
         $result .= '<li yuiConfig=\'' . json_encode($yuiconfig) . '\'><div>' . html_writer::span($image . $rubricname, 'frubric-container') . '</div></li>';
 
         return $result;
@@ -169,13 +169,12 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
         $users = ['users' => []];
 
         foreach ($assessments as $assess) {
-          
+
             $user = $activeusers[$assess->userid];
             $user->namelastname = $this->output->user_picture($user, array(
                 'course' => $courseid,
                 'includefullname' => true, 'class' => 'userpicture'
             ));
-
 
             $userassessment = new \stdClass();
             $userassessment->assignmentid =  $assess->assignmentid;
@@ -195,17 +194,8 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
 
             $userassessment->finalgrade = $this->manager->get_final_grade($assess->gradeid, $assess->userid);
             $userassessment->frubric = 0;
-            //$rubric = $this->manager->get_rubric($cmid, $assess->gradeid, $courseid, $assess->userid, $assess->assignmentid);
-             $this->get_assessment_frubric_tree($cmid, $courseid, $assess, $userassessment, $user);
-            // if ($rubric != '') {
-            //     $userassessment->frubric = 1;
-            //     $userassessment->frubricicon = $this->output->image_url('icon', 'report_assignfeedback_download');
-            //     $userassessment->rubric = $rubric;
-            //     $date = new \DateTime();
-            //     $date->setTimestamp(intval($assess->duedate));
-            //     $year =  userdate($date->getTimestamp(), '%Y');
-            //     $userassessment->rubricfilename = $user->firstname . $user->lastname . $year . 'FinalCriteria';
-            // }
+            $this->get_assessment_frubric_tree($cmid, $courseid, $assess, $userassessment, $user);
+
             if (!isset($user->itemids)) {
                 $user->itemids = '';
             }
@@ -323,8 +313,7 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
         $rubric = $this->manager->get_rubric($cmid, $assess->gradeid, $courseid, $assess->userid, $assess->assignmentid);
 
         if ($rubric != '') {
-
-            $trees = ['tree' => []]; 
+         
             $userassessment->frubric = 1;
             $userassessment->frubricicon = $this->output->image_url('icon', 'report_assignfeedback_download');
             $userassessment->rubric = $rubric;
@@ -339,8 +328,7 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
             $html .= $this->htmlize_rubric($tree, $userassessment->rubricfilename, $this->output->image_url('icon', 'report_assignfeedback_download'));
             $html .= '</div>';
             $userassessment->frubrictree = $html;
-            //print_object($html);
-        }  
+        }
     }
 }
 
