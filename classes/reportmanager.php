@@ -333,13 +333,13 @@ class reportmanager {
     }
 
     public function download_rubric($itemids, $cmids, $instaceids, $courseid, $frubricselection) {
-        global $DB;
+        global $DB, $CFG;
 
         $cmids = (array) json_decode($cmids);
         $instaceids = explode(',', $instaceids);
         $userpdfs = [];
         $frubricselection = (array) json_decode($frubricselection);
-      //  print_object($frubricselection); exit;
+       
         // Construct the zip file name.
         $course = $DB->get_record('course', array('id' => $courseid));
         $dirname = clean_filename($course->fullname . '.zip'); // Main folder.
@@ -349,29 +349,29 @@ class reportmanager {
         $sql = "SELECT id, firstname, lastname FROM {user} WHERE id in ($userids)";
         $users = $DB->get_records_sql($sql);
         $assesmentsdetails = $this->get_assesments_with_grades($courseid);
-      
-        foreach($frubricselection as $userid => $frubrics) {
-            foreach($frubrics as $frubric) {
+
+        foreach ($frubricselection as $userid => $frubrics) {
+            foreach ($frubrics as $frubric) {
                 $frubric = json_decode($frubric);
-                
+
                 $assessname = $assesmentsdetails[$frubric->gradeid]->assignmentname;
                 $rubric = $this->get_rubric($frubric->cmid, $courseid, $frubric->userid, $frubric->assignmentid);
-// $frubric->rubricfilename;
-                if ($rubric != '' ) {
+                // $frubric->rubricfilename;
+                if ($rubric != '') {
                     $rubric = json_decode($rubric);
-                    $jsonparts = explode('</div>',$rubric);
+                    $jsonparts = explode('</div>', $rubric);
                     $table = $jsonparts[0];
                     $totalgrade = $jsonparts[count($jsonparts) - 1];
                     $totalgrade = "<br> <strong>TOTAL:  $totalgrade </strong>";
                     $rubric = $table . '<br> ' . $totalgrade;
-                   
-                    $mpdf = new \Mpdf\Mpdf();
+
+                    $mpdf = new \Mpdf\Mpdf(['tempDir'=> $CFG->tempdir . '/', 'assignment_']);
                     $mpdf->WriteHTML($rubric);
-                
+
                     $u = $users[$frubric->userid];
-                    
+
                     $pathfilename = $u->firstname . $u->lastname . '/' . $assessname;
-                //    $filename = $u->firstname . $u->lastname . 'finalCriteria.pdf';
+                    //    $filename = $u->firstname . $u->lastname . 'finalCriteria.pdf';
                     $fd = new \stdClass();
                     $fd->filename = $frubric->rubricfilename;;
                     $fd->pathfilename = $pathfilename;
@@ -381,49 +381,15 @@ class reportmanager {
             }
         }
 
-        // foreach ($uitemids as $i => $uitem) {
-        //     foreach ($uitem->uitemids as $itemid) {
-        //         $assessname = $assesmentsdetails[$itemid]->assignmentname;
-
-        //         foreach ($instaceids as $instaceid) {
-        //             if (isset($cmids[$instaceid])) {
-
-        //                 $rubric = $this->get_rubric($cmids[$instaceid], $courseid, $uitem->userid, $instaceid);
-                        
-        //                 if ($rubric != '' ) {
-        //                     $rubric = json_decode($rubric);
-        //                     $jsonparts = explode('</div>',$rubric);
-        //                     $table = $jsonparts[0];
-        //                     $totalgrade = $jsonparts[count($jsonparts) - 1];
-        //                     $totalgrade = "<br> <strong>TOTAL:  $totalgrade </strong>";
-        //                     $rubric = $table . '<br> ' . $totalgrade;
-                           
-        //                     $mpdf = new \Mpdf\Mpdf();
-        //                     $mpdf->WriteHTML($rubric);
-                        
-        //                     $u = $users[$uitem->userid];
-                            
-        //                     $pathfilename = $u->firstname . $u->lastname . '/' . $assessname;
-        //                     $filename = $u->firstname . $u->lastname . 'finalCriteria.pdf';
-        //                     $fd = new \stdClass();
-        //                     $fd->filename = $filename;
-        //                     $fd->pathfilename = $pathfilename;
-        //                     $fd->pdf = $mpdf;
-        //                     $userpdfs[$uitem->userid][] = $fd;
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
 
         $this->save_rubricfiles($userpdfs, $dirname);
     }
 
     public function get_rubric($cmid, $courseid, $userid, $instanceid) {
-        
+
         global $DB, $PAGE, $CFG;
         require_once($CFG->libdir . '/gradelib.php');
-       
+
         $context = \context_module::instance($cmid);
         $gradingmanager = get_grading_manager($context, 'mod_assign', 'submissions');
 
@@ -452,7 +418,7 @@ class reportmanager {
                     $gradingitem = $gradinginfo->items[0];
                     $gradebookgrade = $gradingitem->grades[$userid];
                 }
-                
+
 
                 $fr = json_encode($controller->render_grade(
                     $PAGE,
@@ -461,7 +427,7 @@ class reportmanager {
                     $gradebookgrade->str_long_grade,
                     true
                 ));
-        
+
                 return $fr;
             }
         }
@@ -470,7 +436,7 @@ class reportmanager {
         return '';
     }
 
-    
+
     /**
      * Generate zip file from array of given files - copied from mod_assign 3.10
      *
@@ -514,5 +480,4 @@ class reportmanager {
         readfile("$workdir/$dirname");
         unlink("$workdir/$dirname");
     }
-
 }
