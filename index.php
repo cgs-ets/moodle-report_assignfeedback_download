@@ -34,9 +34,11 @@ $id                      = optional_param('id', 0, PARAM_INT); // Course ID.
 $cmid                    = optional_param('cmid', 0, PARAM_INT); // Course module ID.
 $option                  = optional_param('operation', '', PARAM_TEXT);
 $itemids                 = optional_param('itemids', '', PARAM_TEXT);
+$cmids                    = optional_param('cmids', '', PARAM_TEXT);  
 $instaceids              = optional_param('instanceids', '', PARAM_TEXT);
 $selectedusers           = optional_param('selectedusers', '', PARAM_TEXT);
 $selectedaction          = optional_param('operation', '', PARAM_TEXT);
+$frubricselection        = optional_param('frubricdetails', '', PARAM_TEXT);
 
 require_login();
 admin_externalpage_setup('report_assignfeedback_download', '', null, '', array('pagelayout' => 'report'));
@@ -55,6 +57,12 @@ if ($selectedusers != '') {
             break;
         case 'dldfeedbackf':
            $manager->download_feedback_files($itemids, $id);
+            break;
+        case 'dldrubric':
+            $manager->download_rubric($itemids, $cmids, $instaceids, $id, $frubricselection);
+            break;
+        case 'dldall' :
+            $manager->download_all_files($itemids,$id);
             break;
     }
   

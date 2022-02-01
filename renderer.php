@@ -115,8 +115,8 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
         $yuiconfig = array();
         $yuiconfig['type'] = 'html';
         $result = '<ul>';
-        $image = $this->output->pix_icon('icon', 'frubric', 'report_assignfeedback_download');
-        $result .= '<li yuiConfig=\'' . json_encode($yuiconfig) . '\'><div>' . html_writer::span($image . $rubricname, 'frubric-container') . '</div></li>';
+        $image = $this->output->pix_icon('icon', '', 'report_assignfeedback_download');
+        $result .= '<li yuiConfig=\'' . json_encode($yuiconfig) . '\'><div>' . html_writer::span($image . $rubricname, 'frubric-container', ['title' => get_string('frubric_desc', 'report_assignfeedback_download')]) . '</div></li>';
 
         return $result;
     }
@@ -150,6 +150,7 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
             'formid' => 'downloadactionform',
             'noresult' => count($users) == 0,
             'assignids' => $userscontext['assignids'],
+            'cmids' => $userscontext['cmids'],
             'filter' => $filter
         ];
 
@@ -165,11 +166,13 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
         $assessments = $this->manager->get_assessments_by_course($assessids);
 
         $cmids = $this->manager->get_course_module($courseid, $assessids);
+        $cmidsaux = [];
+
+        $rubricparams = [];
 
         $users = ['users' => []];
 
         foreach ($assessments as $assess) {
-
             $user = $activeusers[$assess->userid];
             $user->namelastname = $this->output->user_picture($user, array(
                 'course' => $courseid,
@@ -184,6 +187,7 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
             $userassessment->submtree = $this->get_assessment_submission_files_tree($user->id, $courseid, $assess->assignmentid);
             $userassessment->annottedpdftree = $this->get_assessment_anotatepdf_files_tree($assess->gradeid);
             $userassessment->feedbackfiletree = $this->get_assessment_feedback_files_tree($assess->gradeid);
+
             $feedbackcomment = $this->get_assessment_feedback_comments($assess->gradeid, $assess->userid);
 
             if (gettype($feedbackcomment) == "array") {
@@ -192,9 +196,12 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
                 $userassessment->feedbackcommentxt = $this->get_assessment_feedback_comments($assess->gradeid, $assess->userid);
             }
 
-            $userassessment->finalgrade = $this->manager->get_final_grade($assess->gradeid, $assess->userid);
+            $userassessment->finalgrade = $this->manager->get_final_grade($assess->assignmentid, $assess->userid);
             $userassessment->frubric = 0;
-            $this->get_assessment_frubric_tree($cmid, $courseid, $assess, $userassessment, $user);
+            $fr = $this->get_assessment_frubric_tree($cmid, $courseid, $assess, $userassessment, $user, $cmidsaux);
+            if ($fr != '') {
+                $rubricparams[] = $fr;
+            }
 
             if (!isset($user->itemids)) {
                 $user->itemids = '';
@@ -220,16 +227,19 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
 
         $users = array_values($users['users']);
         usort($users, "sort_by_firstname");
-
+        $cmidsaux = json_encode($cmidsaux);
+       
+        $rubricparams = json_encode($rubricparams);
         if (isset($users[0])) {
             ($users[0])->firstuser = 1; // Only display the inner table's header on the first user.
         }
 
         $context = [
             'users' =>  $users,
-            'assignids' => $assessids
+            'assignids' => $assessids,
+            'cmids' => $cmidsaux,
         ];
-
+       
         return $context;
     }
 
@@ -309,25 +319,39 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
         }
     }
 
-    protected function get_assessment_frubric_tree($cmid,  $courseid, $assess, &$userassessment, $user) {
-        $rubric = $this->manager->get_rubric($cmid, $assess->gradeid, $courseid, $assess->userid, $assess->assignmentid);
+    protected function get_assessment_frubric_tree($cmid,  $courseid, $assess, &$userassessment, $user, &$cmidcollection) {
+
+        $rubric = $this->manager->get_rubric($cmid, $courseid, $assess->userid, $assess->assignmentid);
+        $rubricparams = new \stdClass();
+        $rubricparams->cmid = $cmid;
+        $rubricparams->courseid = $courseid;
+        $rubricparams->userid = $assess->userid;
+        $rubricparams->assignmentid = $assess->assignmentid;
+        $rubricparams->gradeid = $assess->gradeid;
 
         if ($rubric != '') {
-         
+
             $userassessment->frubric = 1;
             $userassessment->frubricicon = $this->output->image_url('icon', 'report_assignfeedback_download');
-            $userassessment->rubric = $rubric;
+            //  $userassessment->rubric = $rubric;
+
             $date = new \DateTime();
+
             $date->setTimestamp(intval($assess->duedate));
             $year =  userdate($date->getTimestamp(), '%Y');
-            $userassessment->rubricfilename = $user->firstname . $user->lastname . $year . 'FinalCriteria';
+            $year = $year == 1970 ? date("Y") : $year; // When the assessment doesnt have a due date.
+            $userassessment->rubricfilename = $user->firstname . $user->lastname . $year . 'FinalCriteria.pdf';
+            $rubricparams->rubricfilename = $userassessment->rubricfilename;
+            $userassessment->rubricparams = json_encode($rubricparams);
             $tree = new \stdClass();
             $htmlid = 'assessement_frubric_tree_' . uniqid();
             $this->page->requires->js_init_call('M.report_assignfeedback_download.init_tree', array(false, $htmlid), true);
             $html = '<div id="' . $htmlid . '">';
-            $html .= $this->htmlize_rubric($tree, $userassessment->rubricfilename, $this->output->image_url('icon', 'report_assignfeedback_download'));
+            $html .= $this->htmlize_rubric($tree, shorten_text($userassessment->rubricfilename, 20), $this->output->image_url('icon', 'report_assignfeedback_download'));
             $html .= '</div>';
             $userassessment->frubrictree = $html;
+            $cmidcollection[$assess->assignmentid] = $cmid;
+            return $rubricparams;
         }
     }
 }

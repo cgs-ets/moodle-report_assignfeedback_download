@@ -27,7 +27,10 @@ use zip_packer;
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->libdir . '/gradelib.php');
+//require_once($CFG->libdir . '/gradelib.php');
+// require_once($CFG->libdir . '/tcpdf/tcpdf.php');
+require_once($CFG->libdir . '/filestorage/zip_archive.php');
+require_once($CFG->dirroot . '/report/assignfeedback_download/vendor/autoload.php');
 /**
  *
  * @package       report
@@ -124,12 +127,8 @@ class reportmanager {
         return $result;
     }
 
-    public function get_final_grade($itemid, $userid) {
+    public function get_final_grade($assignmentinstance, $userid) {
         global $DB;
-
-        $result = $this->get_assessment_feedback_comment_helper($itemid);
-        $assignmentinstance = array_column($result, 'assignment');
-        $assignmentinstance = end($assignmentinstance);
 
         // get the itemid
         $sql = "SELECT id FROM {grade_items} WHERE iteminstance = ?";
@@ -142,13 +141,14 @@ class reportmanager {
         $params_array = ['itemid' => $itemid, 'userid' => $userid];
         $finalgrade = array_values($DB->get_records_sql($sql, $params_array));
         $fg = '';
+
         if ($finalgrade) {
 
             $final = $finalgrade[0]->finalgrade;
             $final = number_format($final, 2);
             $maxgrade = $finalgrade[0]->rawgrademax;
             $maxgrade = number_format($maxgrade, 2);
-          
+
             $fg =  $final . ' / ' . $maxgrade;
         }
 
@@ -329,10 +329,102 @@ class reportmanager {
         }
     }
 
-    public function get_rubric($cmid, $itemid, $courseid, $userid, $instanceid) {
-        global $DB, $PAGE;
-        $context = \context_module::instance($cmid);
+    public function download_all_files($itemids, $id) {
+    }
 
+    public function download_rubric($itemids, $cmids, $instaceids, $courseid, $frubricselection) {
+        global $DB;
+
+        $cmids = (array) json_decode($cmids);
+        $instaceids = explode(',', $instaceids);
+        $userpdfs = [];
+        $frubricselection = (array) json_decode($frubricselection);
+      //  print_object($frubricselection); exit;
+        // Construct the zip file name.
+        $course = $DB->get_record('course', array('id' => $courseid));
+        $dirname = clean_filename($course->fullname . '.zip'); // Main folder.
+
+        $uitemids = json_decode($itemids);
+        $userids = implode(',', array_column($uitemids, 'userid'));
+        $sql = "SELECT id, firstname, lastname FROM {user} WHERE id in ($userids)";
+        $users = $DB->get_records_sql($sql);
+        $assesmentsdetails = $this->get_assesments_with_grades($courseid);
+      
+        foreach($frubricselection as $userid => $frubrics) {
+            foreach($frubrics as $frubric) {
+                $frubric = json_decode($frubric);
+                
+                $assessname = $assesmentsdetails[$frubric->gradeid]->assignmentname;
+                $rubric = $this->get_rubric($frubric->cmid, $courseid, $frubric->userid, $frubric->assignmentid);
+// $frubric->rubricfilename;
+                if ($rubric != '' ) {
+                    $rubric = json_decode($rubric);
+                    $jsonparts = explode('</div>',$rubric);
+                    $table = $jsonparts[0];
+                    $totalgrade = $jsonparts[count($jsonparts) - 1];
+                    $totalgrade = "<br> <strong>TOTAL:  $totalgrade </strong>";
+                    $rubric = $table . '<br> ' . $totalgrade;
+                   
+                    $mpdf = new \Mpdf\Mpdf();
+                    $mpdf->WriteHTML($rubric);
+                
+                    $u = $users[$frubric->userid];
+                    
+                    $pathfilename = $u->firstname . $u->lastname . '/' . $assessname;
+                //    $filename = $u->firstname . $u->lastname . 'finalCriteria.pdf';
+                    $fd = new \stdClass();
+                    $fd->filename = $frubric->rubricfilename;;
+                    $fd->pathfilename = $pathfilename;
+                    $fd->pdf = $mpdf;
+                    $userpdfs[$frubric->userid][] = $fd;
+                }
+            }
+        }
+
+        // foreach ($uitemids as $i => $uitem) {
+        //     foreach ($uitem->uitemids as $itemid) {
+        //         $assessname = $assesmentsdetails[$itemid]->assignmentname;
+
+        //         foreach ($instaceids as $instaceid) {
+        //             if (isset($cmids[$instaceid])) {
+
+        //                 $rubric = $this->get_rubric($cmids[$instaceid], $courseid, $uitem->userid, $instaceid);
+                        
+        //                 if ($rubric != '' ) {
+        //                     $rubric = json_decode($rubric);
+        //                     $jsonparts = explode('</div>',$rubric);
+        //                     $table = $jsonparts[0];
+        //                     $totalgrade = $jsonparts[count($jsonparts) - 1];
+        //                     $totalgrade = "<br> <strong>TOTAL:  $totalgrade </strong>";
+        //                     $rubric = $table . '<br> ' . $totalgrade;
+                           
+        //                     $mpdf = new \Mpdf\Mpdf();
+        //                     $mpdf->WriteHTML($rubric);
+                        
+        //                     $u = $users[$uitem->userid];
+                            
+        //                     $pathfilename = $u->firstname . $u->lastname . '/' . $assessname;
+        //                     $filename = $u->firstname . $u->lastname . 'finalCriteria.pdf';
+        //                     $fd = new \stdClass();
+        //                     $fd->filename = $filename;
+        //                     $fd->pathfilename = $pathfilename;
+        //                     $fd->pdf = $mpdf;
+        //                     $userpdfs[$uitem->userid][] = $fd;
+        //                 }
+        //             }
+        //         }
+        //     }
+        // }
+
+        $this->save_rubricfiles($userpdfs, $dirname);
+    }
+
+    public function get_rubric($cmid, $courseid, $userid, $instanceid) {
+        
+        global $DB, $PAGE, $CFG;
+        require_once($CFG->libdir . '/gradelib.php');
+       
+        $context = \context_module::instance($cmid);
         $gradingmanager = get_grading_manager($context, 'mod_assign', 'submissions');
 
         if ($controller = $gradingmanager->get_active_controller()) {
@@ -343,6 +435,9 @@ class reportmanager {
                 $params = array('assignment' => $instanceid, 'userid' => $userid);
                 $grade = array_values($DB->get_records('assign_grades', $params, 'attemptnumber DESC', '*', 0, 1));
 
+                if (count($grade) == 0) {
+                    return '';
+                }
                 $gradinginfo = grade_get_grades(
                     $courseid,
                     'mod',
@@ -350,14 +445,14 @@ class reportmanager {
                     $instanceid,
                     $userid
                 );
-      
+
                 $gradingitem = null;
-                $gradebookgrade = null;
 
                 if (isset($gradinginfo->items[0])) {
                     $gradingitem = $gradinginfo->items[0];
                     $gradebookgrade = $gradingitem->grades[$userid];
                 }
+                
 
                 $fr = json_encode($controller->render_grade(
                     $PAGE,
@@ -366,13 +461,16 @@ class reportmanager {
                     $gradebookgrade->str_long_grade,
                     true
                 ));
-
+        
                 return $fr;
             }
         }
-       
+
+
         return '';
     }
+
+    
     /**
      * Generate zip file from array of given files - copied from mod_assign 3.10
      *
@@ -389,9 +487,32 @@ class reportmanager {
         $tempzip = tempnam($CFG->tempdir . '/', 'assignment_');
         // Zip files.
         $zipper = new zip_packer();
+
         if ($zipper->archive_to_pathname($filesforzipping, $tempzip)) {
             return $tempzip;
         }
         return false;
     }
+
+    private function save_rubricfiles($pdfs, $dirname) {
+        $workdir = make_temp_directory('report_assing_fdownloader/zipfrubric');
+
+        // Create the zip
+        $zipfile = new \zip_archive();
+        @unlink($workdir . '/' . $dirname);
+        $zipfile->open($workdir . '/' . $dirname);
+
+        foreach ($pdfs as $pdfarray) {
+            foreach ($pdfarray as $pdf) {
+                $zipfile->add_file_from_string($pdf->pathfilename . "\\" . $pdf->filename, $pdf->pdf->Output($pdf->filename, 'S'));
+            }
+        }
+        $zipfile->close();
+        header("Content-Type: application/zip");
+        header("Content-Disposition: attachment; filename=$dirname");
+        header("Content-Length: " . filesize("$workdir/$dirname"));
+        readfile("$workdir/$dirname");
+        unlink("$workdir/$dirname");
+    }
+
 }

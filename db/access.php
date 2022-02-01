@@ -20,7 +20,7 @@
  * Defines capablities related to ibassessment
  *
  * @package    report_assignfeedback_download
- * @copyright  1999 onwards Martin Dougiamas (http://dougiamas.com)
+ * @copyright  Veronica Bermegui
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 

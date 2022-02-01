@@ -14,7 +14,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Defines the APIs used by log reports
+ * 
  *
  * @package    report
  * @subpackage ibassessmentreport
@@ -38,6 +38,8 @@ define(["jquery", "core/ajax", "core/log", "report_assignfeedback_download/html2
         let self = this;
         self.userids = userids;
         self.useritemids = useritemids;
+        self.frcollection = new Map();
+
     }
 
     /**
@@ -49,7 +51,7 @@ define(["jquery", "core/ajax", "core/log", "report_assignfeedback_download/html2
 
         self.selectbyone();
         self.selectallaction();
-        self.rubricaction();
+        //  self.rubricaction();  TODO: The  framework isnt downloading with the same style as the one in PHP. First version wont download
 
         const instanceids = document
             .querySelector("table.assignfeedback_download")
@@ -57,6 +59,12 @@ define(["jquery", "core/ajax", "core/log", "report_assignfeedback_download/html2
         document
             .getElementById("downloadactionform")
             .querySelector('input[name="instanceids"]').value = instanceids;
+        const cmids = document
+            .querySelector("table.assignfeedback_download")
+            .getAttribute("data-selected-cmid");
+        document
+            .getElementById("downloadactionform")
+            .querySelector('input[name="cmids"]').value = cmids;
 
         //  self.downloadrubric();
 
@@ -87,10 +95,18 @@ define(["jquery", "core/ajax", "core/log", "report_assignfeedback_download/html2
 
     Controls.prototype.selectallhandler = function (s, e) {
         let t = document.getElementById("iassignfeedbacktb");
+        let countusers = 0;
+        const selectallcheckstatus = document.getElementById("selectall").checked;
+        //let frcollection = new Map();
+        let form = document.getElementById("downloadactionform");
+        let selectedusers = form.querySelector('input[name="selectedusers"]');
+        let useritemids = form.querySelector('input[name="itemids"]');
+        let frubricdetails = form.querySelector('input[name="frubricdetails"]');
+
         if (t) {
             Array.from(t.rows).forEach((tr) => {
                 const checkbox = tr.cells[0].firstChild;
-                checkbox.checked = !checkbox.checked;
+                checkbox.checked = selectallcheckstatus;
                 const users = checkbox.getAttribute("id").split("_");
                 const userid = users[users.length - 1];
                 const innertable = document.getElementById(`innertable_${userid}`);
@@ -100,32 +116,65 @@ define(["jquery", "core/ajax", "core/log", "report_assignfeedback_download/html2
                 uitemids.pop(); // Remove the last empty item.
                 const usersummary = {
                     userid: userid,
-                    uitemids: uitemids
+                    uitemids: uitemids,
+
                 };
+
                 s.useritemids.push(usersummary);
+                countusers++;
+
                 if (!checkbox.checked && s.userids.includes(userid)) {
                     const index = s.userids.indexOf(userid);
                     if (index > -1) {
                         s.userids.splice(index, 1);
-
                         const aux = s.useritemids;
+
                         s.useritemids = aux.filter(function (el) {
                             if (el.userid != userid) {
                                 return el;
                             }
                         }, userid);
+                        // Remove from Frubric
+                        s.frcollection.delete(userid);
+                        frubricdetails.value = JSON.stringify(Object.fromEntries(s.frcollection));
                     }
-                } else {
+
+                } else if (checkbox.checked && !s.userids.includes(userid)) {
                     s.userids.push(users[users.length - 1]);
+                    // Check FRubric
+                    const innertabletr = document.getElementById(`innertable_${userid}`).querySelector('tbody');
+                    for (let i = 0; i < innertabletr.rows.length; i++) {
+                        if (innertabletr.rows[i].cells[5].children.length > 0) { // It has  a rubric
+                            if (!s.frcollection.has(userid)) {
+                                s.frcollection.set(userid, []);
+                            }
+                            const frcontainer = innertabletr.rows[i].cells[5].firstElementChild;
+                            s.frcollection.get(userid).push(frcontainer.getAttribute('data-frubric-params'));
+                        }
+                    }
+
+                    frubricdetails.value = JSON.stringify(Object.fromEntries(s.frcollection));
                 }
+
+
             });
+
+            if (!selectallcheckstatus) {
+                s.userids = []; // Clear the array.
+            }
+
+            if (countusers == s.userids.length) {
+                (document.getElementById("id_operation").children[0]).disabled = false;
+            } else {
+                (document.getElementById("id_operation").children[0]).disabled = true;
+            }
+
         }
 
-        let form = document.getElementById("downloadactionform");
-        let selectedusers = form.querySelector('input[name="selectedusers"]');
-        let useritemids = form.querySelector('input[name="itemids"]');
         selectedusers.value = s.userids;
         useritemids.value = JSON.stringify(s.useritemids);
+
+
 
         // Enable the download select only if there are selected users.
         if (selectedusers.value) {
@@ -148,8 +197,12 @@ define(["jquery", "core/ajax", "core/log", "report_assignfeedback_download/html2
             userid: userid,
             uitemids: uitemids
         };
+
         s.useritemids.push(usersummary);
         const selectedall = document.getElementById("selectall");
+
+        let form = document.getElementById("downloadactionform");
+        let frubricdetails = form.querySelector('input[name="frubricdetails"]');
 
         if (selectedall.checked) {
             document.getElementById("selectall").checked = false;
@@ -165,16 +218,34 @@ define(["jquery", "core/ajax", "core/log", "report_assignfeedback_download/html2
                         return el;
                     }
                 }, userid);
+
+                // Remove from Frubric
+                s.frcollection.delete(userid);
+                frubricdetails.value = JSON.stringify(Object.fromEntries(s.frcollection));
             }
         } else {
             s.userids.push(userid);
+            // Check FRubric
+            for (let i = 0; i < innertable.rows.length; i++) {
+                if (innertable.rows[i].cells[5].children.length > 0) { // It has  a rubric
+                    if (!s.frcollection.has(userid)) {
+                        s.frcollection.set(userid, []);
+                    }
+                    const frcontainer = innertable.rows[i].cells[5].firstElementChild;
+                    s.frcollection.get(userid).push(frcontainer.getAttribute('data-frubric-params'));
+                }
+            }
+
+
+            frubricdetails.value = JSON.stringify(Object.fromEntries(s.frcollection));
         }
 
-        let form = document.getElementById("downloadactionform");
+
         let selectedusers = form.querySelector('input[name="selectedusers"]');
         let useritemids = form.querySelector('input[name="itemids"]');
         selectedusers.value = s.userids;
         useritemids.value = JSON.stringify(s.useritemids);
+
 
         if (selectedusers.value) {
             document.getElementById("id_operation").disabled = false;
@@ -185,59 +256,29 @@ define(["jquery", "core/ajax", "core/log", "report_assignfeedback_download/html2
         }
     };
 
-    Controls.prototype.rubricaction = function () {
-        Y.log('rubricaction');
-        const self = this;
-        let t = document.getElementById("iassignfeedbacktb");
-       
-        if (t) {
+    // Controls.prototype.rubricaction = function () {
+    //     Y.log('rubricaction');
+    //     const self = this;
+    //     let t = document.getElementById("iassignfeedbacktb");
 
-            Array.from(t.rows).forEach((tr) => {
-                const checkbox = tr.cells[0].firstChild;
-                const user = checkbox.getAttribute("id").split("_");
-                const userid = user[user.length - 1];
-                const innertabletr = document.getElementById(`innertable_${userid}`).querySelector('tbody');
-                
-                for(let i = 0; i < innertabletr.rows.length; i++) {
-                    if (innertabletr.rows[i].cells[5].children.length > 0) { // It has  a rubric
-                        const frcontainer = innertabletr.rows[i].cells[5].firstElementChild;
-                        frcontainer.addEventListener('click', self.downloadrubric);
+    //     if (t) {
 
-                    }
-                }
-            }, self);
-        }
-    }
-    Controls.prototype.downloadrubric = function (e) {
-        let frubric = e.currentTarget.getAttribute('data-frubric-filling');
-        const filename = e.currentTarget.getAttribute('data-rubric-file-name');
-        
-        if (frubric != '') {
-            frubric = JSON.parse(frubric);
+    //         Array.from(t.rows).forEach((tr) => {
+    //             const checkbox = tr.cells[0].firstChild;
+    //             const user = checkbox.getAttribute("id").split("_");
+    //             const userid = user[user.length - 1];
+    //             const innertabletr = document.getElementById(`innertable_${userid}`).querySelector('tbody');
 
-            // Format the end of the file, to display the grade as TOTAL: min/max
-            const spl = frubric.split('</div>');;
-            let total = spl[spl.length - 1];
-            const rept = "<br> <strong>TOTAL: " + total + "</strong>";
-            frubric = frubric.replace(total, rept);
+    //             for (let i = 0; i < innertabletr.rows.length; i++) {
+    //                 if (innertabletr.rows[i].cells[5].children.length > 0) { // It has  a rubric
+    //                     const frcontainer = innertabletr.rows[i].cells[5].firstElementChild;
+    //                     frcontainer.addEventListener('click', self.downloadrubric);
 
-            let opt = {
-                margin: 1,
-                filename: filename,
-                pagebreak: {
-                    mode: 'legacy'
-                },
-                html2canvas: {
-                    scrollX: 0,
-                    scrollY: 0,
-                }
-
-            }
-
-            html2pdf().set(opt).from(frubric).save();
-        }
-
-    };
+    //                 }
+    //             }
+    //         }, self);
+    //     }
+    // }
 
     return {
         init: init
