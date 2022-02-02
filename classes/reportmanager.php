@@ -356,24 +356,29 @@ class reportmanager {
 
                 $assessname = $assesmentsdetails[$frubric->gradeid]->assignmentname;
                 $rubric = $this->get_rubric($frubric->cmid, $courseid, $frubric->userid, $frubric->assignmentid);
-                // $frubric->rubricfilename;
+
                 if ($rubric != '') {
                     $rubric = json_decode($rubric);
+
                     $jsonparts = explode('</div>', $rubric);
                     $table = $jsonparts[0];
+                    $table = str_replace('<table class="criteria-table table-light ">', '<table "style=\'font-family:helvetica\'"> ', $table);
+                    $table = str_replace('<input disabled type="checkbox" id ="" name = ""  value = "1" checked = "checked"  >', 
+                        '<span style=\'font-family:helvetica\'>&#9745;</span>', $table);
+                   
                     $totalgrade = $jsonparts[count($jsonparts) - 1];
-                    $totalgrade = "<br> <strong>TOTAL:  $totalgrade </strong>";
+                    $totalgrade = "<strong>TOTAL:  $totalgrade </strong>";
                     $rubric = $table . '<br> ' . $totalgrade;
-
-                    $mpdf = new \Mpdf\Mpdf(['tempDir'=> $CFG->tempdir . '/', 'assignment_']);
+                   
+                    $mpdf = new \Mpdf\Mpdf(['tempDir'=> $CFG->tempdir . '/', 'assignment_', 'mode' => 's']);
+                    $mpdf->backupSubsFont = ['dejavusanscondensed'];
                     $mpdf->WriteHTML($rubric);
-
+                    $mpdf->Output();exit;
+                    
                     $u = $users[$frubric->userid];
-
                     $pathfilename = $u->firstname . $u->lastname . '/' . $assessname;
-                    //    $filename = $u->firstname . $u->lastname . 'finalCriteria.pdf';
                     $fd = new \stdClass();
-                    $fd->filename = $frubric->rubricfilename;;
+                    $fd->filename = $frubric->rubricfilename;
                     $fd->pathfilename = $pathfilename;
                     $fd->pdf = $mpdf;
                     $userpdfs[$frubric->userid][] = $fd;
@@ -381,8 +386,7 @@ class reportmanager {
             }
         }
 
-
-        $this->save_rubricfiles($userpdfs, $dirname);
+         $this->save_rubricfiles($userpdfs, $dirname);
     }
 
     public function get_rubric($cmid, $courseid, $userid, $instanceid) {

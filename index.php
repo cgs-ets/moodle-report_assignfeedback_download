@@ -95,7 +95,7 @@ if ($mform->is_cancelled()) {
     }
 }
 
-if ($id == 0) {
+if ($id == 0 || $id == 1) {  // $id = 1 is the main page.
     \core\notification::add(get_string('cantdisplayerror', 'report_assignfeedback_download'), core\output\notification::NOTIFY_ERROR);
 } else {
 
