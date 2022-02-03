@@ -373,7 +373,6 @@ class reportmanager {
                     $mpdf = new \Mpdf\Mpdf(['tempDir'=> $CFG->tempdir . '/', 'assignment_', 'mode' => 's']);
                     $mpdf->backupSubsFont = ['dejavusanscondensed'];
                     $mpdf->WriteHTML($rubric);
-                    $mpdf->Output();exit;
                     
                     $u = $users[$frubric->userid];
                     $pathfilename = $u->firstname . $u->lastname . '/' . $assessname;
@@ -483,5 +482,6 @@ class reportmanager {
         header("Content-Length: " . filesize("$workdir/$dirname"));
         readfile("$workdir/$dirname");
         unlink("$workdir/$dirname");
+        die(); // if not set, a invalid zip file error is thrown.
     }
 }
