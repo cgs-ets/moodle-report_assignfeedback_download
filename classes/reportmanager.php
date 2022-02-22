@@ -70,7 +70,7 @@ class reportmanager {
         $params_array = ['userid' => $userid, 'filearea' => 'submission_files', 'course' => $courseid];
 
         $results = array_values($DB->get_records_sql($sql, $params_array));
-
+      
         return $results;
     }
 

@@ -100,13 +100,13 @@ if ($id == 0 || $id == 1) {  // $id = 1 is the main page.
 } else {
 
     echo $OUTPUT->box_start();
-
-    $mform->display();
     $renderer = $PAGE->get_renderer('report_assignfeedback_download');
-    $url =  $PAGE->url;
+
     if ($noasses) {
         echo $renderer->render_no_assessment_in_course();
     } else {
+        $mform->display();
+        $url =  $PAGE->url;
 
         echo $renderer->render_assignfeedback_download($id, $assessmentids, $url, $cmid, $filter);
     }

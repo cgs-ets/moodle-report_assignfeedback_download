@@ -49,5 +49,5 @@ $string['allassessment'] = ' Choose one or more assessments';
 $string['all'] = 'All';
 $string['filterassess'] = 'Filter';
 $string['cancel'] = 'Cancel';
-$string['noresult'] = 'Graded assessments not found';
+$string['noresult'] = 'No Graded assessments found';
 $string['frubric_desc'] = 'Frubric result. To Download use select option ';
