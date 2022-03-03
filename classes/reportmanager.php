@@ -70,7 +70,7 @@ class reportmanager {
         $params_array = ['userid' => $userid, 'filearea' => 'submission_files', 'course' => $courseid];
 
         $results = array_values($DB->get_records_sql($sql, $params_array));
-      
+
         return $results;
     }
 
@@ -222,7 +222,10 @@ class reportmanager {
                 $files = $fs->get_area_files($fr->contextid, $fr->component, $fr->filearea,  $fr->itemid);
 
                 foreach ($files as $file) {
-                    $pathfilename = $user->firstname . $user->lastname . '/' . $fr->name . $file->get_filepath() . $file->get_filename();
+
+                    if ($file->get_filename() == '.') continue;
+                    $fname  =  $fr->name . '/' . $user->lastname . ' ' . $user->firstname . ' ' . $course->fullname . ' ' . $file->get_filename();
+                    $pathfilename =    $fname;
                     $filesforzipping[$pathfilename] = $file;
                 }
             }
@@ -260,12 +263,9 @@ class reportmanager {
                     foreach ($files as $file) {
 
                         // Naming convention would be LAST Name, FirstName, Year, Subject, Level, Component.
-                        $date = new \DateTime();
-                        $date->setTimestamp(intval($file->get_timecreated()));
-                        $year =  userdate($date->getTimestamp(), '%Y');
                         $extension = '.' . pathinfo($file->get_filename(), PATHINFO_EXTENSION);
-                        $notname  = $user->lastname . ' ' . $user->firstname . ' ' . $year . ' ' . $course->fullname . ' ' . $assessname . $extension;
-                        $pathfilename = $user->firstname . $user->lastname . '/' . $assessname . $file->get_filepath() . $notname;
+                        $notname  = $user->lastname . ' ' . $user->firstname . ' ' . $course->fullname . ' ' . $assessname . $extension;
+                        $pathfilename =   $assessname . '/' . $notname;
 
                         $filesforzipping[$pathfilename] = $file;
                     }
@@ -314,8 +314,12 @@ class reportmanager {
                 foreach ($filerecords as $fr) {
                     $files = $fs->get_area_files($fr->contextid, $fr->component, $fr->filearea,  $fr->itemid);
                     foreach ($files as $file) {
-                        $pathfilename = $user->firstname . $user->lastname . '/' . $assessname . $file->get_filepath() . $file->get_filename();
+                        
+                        if ($file->get_filename() == '.') continue;
+                        $fname  =  $assessname . '/' . $user->lastname . ' ' . $user->firstname . ' ' . $course->fullname . ' ' . $file->get_filename();
+                        $pathfilename =    $fname;
                         $filesforzipping[$pathfilename] = $file;
+
                     }
                 }
             }
@@ -330,16 +334,19 @@ class reportmanager {
     }
 
     public function download_all_files($itemids, $id) {
+        \core_php_time_limit::raise();
     }
 
     public function download_rubric($itemids, $cmids, $instaceids, $courseid, $frubricselection) {
         global $DB, $CFG;
 
+        \core_php_time_limit::raise();
+
         $cmids = (array) json_decode($cmids);
         $instaceids = explode(',', $instaceids);
         $userpdfs = [];
         $frubricselection = (array) json_decode($frubricselection);
-       
+
         // Construct the zip file name.
         $course = $DB->get_record('course', array('id' => $courseid));
         $dirname = clean_filename($course->fullname . '.zip'); // Main folder.
@@ -348,6 +355,9 @@ class reportmanager {
         $userids = implode(',', array_column($uitemids, 'userid'));
         $sql = "SELECT id, firstname, lastname FROM {user} WHERE id in ($userids)";
         $users = $DB->get_records_sql($sql);
+        $coursedetails = new \stdClass();
+        $coursedetails->courseid = $courseid;
+        $coursedetails->name  = $course->fullname;
         $assesmentsdetails = $this->get_assesments_with_grades($courseid);
 
         foreach ($frubricselection as $userid => $frubrics) {
@@ -363,19 +373,22 @@ class reportmanager {
                     $jsonparts = explode('</div>', $rubric);
                     $table = $jsonparts[0];
                     $table = str_replace('<table class="criteria-table table-light ">', '<table "style=\'font-family:helvetica\'"> ', $table);
-                    $table = str_replace('<input disabled type="checkbox" id ="" name = ""  value = "1" checked = "checked"  >', 
-                        '<span style=\'font-family:helvetica\'>&#9745;</span>', $table);
-                   
+                    $table = str_replace(
+                        '<input disabled type="checkbox" id ="" name = ""  value = "1" checked = "checked"  >',
+                        '<span style=\'font-family:helvetica\'>&#9745;</span>',
+                        $table
+                    );
+
                     $totalgrade = $jsonparts[count($jsonparts) - 1];
                     $totalgrade = "<strong>TOTAL:  $totalgrade </strong>";
                     $rubric = $table . '<br> ' . $totalgrade;
-                   
-                    $mpdf = new \Mpdf\Mpdf(['tempDir'=> $CFG->tempdir . '/', 'assignment_', 'mode' => 's']);
+
+                    $mpdf = new \Mpdf\Mpdf(['tempDir' => $CFG->tempdir . '/', 'assignment_', 'mode' => 's']);
                     $mpdf->backupSubsFont = ['dejavusanscondensed'];
                     $mpdf->WriteHTML($rubric);
-                    
+
                     $u = $users[$frubric->userid];
-                    $pathfilename = $u->firstname . $u->lastname . '/' . $assessname;
+                    $pathfilename =  $assessname; //$u->firstname . $u->lastname . '/' .
                     $fd = new \stdClass();
                     $fd->filename = $frubric->rubricfilename;
                     $fd->pathfilename = $pathfilename;
@@ -385,7 +398,7 @@ class reportmanager {
             }
         }
 
-         $this->save_rubricfiles($userpdfs, $dirname);
+        $this->save_rubricfiles($userpdfs, $dirname);
     }
 
     public function get_rubric($cmid, $courseid, $userid, $instanceid) {
