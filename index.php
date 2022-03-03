@@ -34,7 +34,7 @@ $id                      = optional_param('id', 0, PARAM_INT); // Course ID.
 $cmid                    = optional_param('cmid', 0, PARAM_INT); // Course module ID.
 $option                  = optional_param('operation', '', PARAM_TEXT);
 $itemids                 = optional_param('itemids', '', PARAM_TEXT);
-$cmids                    = optional_param('cmids', '', PARAM_TEXT);  
+$cmids                   = optional_param('cmids', '', PARAM_TEXT);  
 $instaceids              = optional_param('instanceids', '', PARAM_TEXT);
 $selectedusers           = optional_param('selectedusers', '', PARAM_TEXT);
 $selectedaction          = optional_param('operation', '', PARAM_TEXT);
@@ -107,8 +107,8 @@ if ($id == 0 || $id == 1) {  // $id = 1 is the main page.
     } else {
         $mform->display();
         $url =  $PAGE->url;
-
-        echo $renderer->render_assignfeedback_download($id, $assessmentids, $url, $cmid, $filter);
+        $coursename = $DB->get_field('course', 'fullname', ['id' => $id], $strictness=IGNORE_MISSING);
+        echo $renderer->render_assignfeedback_download($id, $assessmentids, $url, $cmid, $filter, $coursename);
     }
 
     echo $OUTPUT->box_end();
