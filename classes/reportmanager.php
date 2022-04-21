@@ -27,8 +27,6 @@ use zip_packer;
 
 defined('MOODLE_INTERNAL') || die();
 
-//require_once($CFG->libdir . '/gradelib.php');
-// require_once($CFG->libdir . '/tcpdf/tcpdf.php');
 require_once($CFG->libdir . '/filestorage/zip_archive.php');
 require_once($CFG->dirroot . '/report/assignfeedback_download/vendor/autoload.php');
 /**
@@ -372,19 +370,22 @@ class reportmanager {
 
                     $jsonparts = explode('</div>', $rubric);
                     $table = $jsonparts[0];
+                   
                     $table = str_replace('<table class="criteria-table table-light ">', '<table "style=\'font-family:helvetica\'"> ', $table);
                     $table = str_replace(
                         '<input disabled type="checkbox" id ="" name = ""  value = "1" checked = "checked"  >',
                         '<span style=\'font-family:helvetica\'>&#9745;</span>',
                         $table
                     );
-
+                 
                     $totalgrade = $jsonparts[count($jsonparts) - 1];
                     $totalgrade = "<strong>TOTAL:  $totalgrade </strong>";
                     $rubric = $table . '<br> ' . $totalgrade;
 
                     $mpdf = new \Mpdf\Mpdf(['tempDir' => $CFG->tempdir . '/', 'assignment_', 'mode' => 's']);
-                    $mpdf->backupSubsFont = ['dejavusanscondensed'];
+                    $mpdf->SetFont('DejaVuSans', '', 9);
+                 //   $mpdf->backupSubsFont = ['dejavusans'];
+                    $mpdf->allow_charset_conversion = true;
                     $mpdf->WriteHTML($rubric);
 
                     $u = $users[$frubric->userid];

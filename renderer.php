@@ -137,7 +137,7 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
     protected function get_table_context($courseid, $assessmentids, $url, $moduleid, $filter = false, $coursename) {
         $context = context_course::instance($courseid);
 
-        $users = $this->get_active_users($context);
+       // $users = $this->get_active_users($context);
 
         $userscontext = $this->get_users_context($courseid, $assessmentids, $coursename);
 
@@ -148,7 +148,7 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
             'id' => $courseid,
             'cmid' => $moduleid,
             'formid' => 'downloadactionform',
-            'noresult' => count($users) == 0,
+            'noresult' => count($userscontext['users']) == 0, // get the students that have assigments graded
             'assignids' => $userscontext['assignids'],
             'cmids' => $userscontext['cmids'],
             'filter' => $filter
