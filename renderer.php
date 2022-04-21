@@ -174,6 +174,7 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
 
         foreach ($assessments as $assess) {
             $user = $activeusers[$assess->userid];
+            if (!isset($user)) continue;  
             $user->namelastname = $this->output->user_picture($user, array(
                 'course' => $courseid,
                 'includefullname' => true, 'class' => 'userpicture'
