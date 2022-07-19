@@ -360,6 +360,7 @@ class reportmanager {
 
         foreach ($frubricselection as $userid => $frubrics) {
             foreach ($frubrics as $frubric) {
+                if ($frubric == null) continue;
                 $frubric = json_decode($frubric);
 
                 $assessname = $assesmentsdetails[$frubric->gradeid]->assignmentname;

@@ -111,6 +111,7 @@ if ($id == 0 || $id == 1) {  // $id = 1 is the main page.
         echo $renderer->render_assignfeedback_download($id, $assessmentids, $url, $cmid, $filter, $coursename);
     }
 
+    echo html_writer::link(new moodle_url('/course/view.php', array('id'=>$id)), get_string('returntocourse', 'report_assignfeedback_download'));
     echo $OUTPUT->box_end();
 }
 

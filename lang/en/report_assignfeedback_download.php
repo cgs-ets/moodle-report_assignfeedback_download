@@ -51,3 +51,4 @@ $string['filterassess'] = 'Filter';
 $string['cancel'] = 'Cancel';
 $string['noresult'] = 'No graded assessments found';
 $string['frubric_desc'] = 'Frubric result. To Download use select option ';
+$string['returntocourse'] = 'Return to course';

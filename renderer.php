@@ -171,7 +171,7 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
         $rubricparams = [];
 
         $users = ['users' => []];
-
+        
         foreach ($assessments as $assess) {
             $user = $activeusers[$assess->userid];
             if (!isset($user)) continue;  
