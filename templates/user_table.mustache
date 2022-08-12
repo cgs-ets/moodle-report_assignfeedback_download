@@ -25,7 +25,7 @@
                                 {{#firstuser}} {{#str}}feedbackcomments, report_assignfeedback_download{{/str}}{{/firstuser}}
                             </th>
                             <th>{{#firstuser}} {{#str}}annotatepdf, report_assignfeedback_download{{/str}} {{/firstuser}}</th>
-                            <th>{{#firstuser}} <span hidden> {{#str}}rubric, report_assignfeedback_download{{/str}} </span> {{/firstuser}}</th>
+                            <th>{{#firstuser}} <span> {{#str}}rubric, report_assignfeedback_download{{/str}} </span> {{/firstuser}}</th>
                             <th>{{#firstuser}} {{#str}}finalgrade, report_assignfeedback_download{{/str}} {{/firstuser}}</th>
                         </tr>
                     </thead>
@@ -50,13 +50,12 @@
                                 {{/feedbackfiletree}}
                             </td>
                             <td style="width:14%;">
+                                {{#feedbackview}}
+                                <a href="{{{url}}}" target ="_blank">
+                                    <i class="icon fa fa-search-plus fa-fw " title="View feedback" aria-label="View feedback"></i>
+                                </a>
+                                {{/feedbackview}}
                                 {{{feedbackcommentxt}}}
-                                 {{#feedbackcomment}}
-                                {{#tree}}
-                                {{{feedbackfiletree}}}
-                                {{/tree}}
-                                {{/feedbackcomment}}
-
                             </td>
                             <td style="width:14%;">
                                 {{#annottedpdftree}}

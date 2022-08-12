@@ -97,32 +97,26 @@ class reportmanager {
     }
 
     public function get_assessment_feedback_comments($itemid, $userid) {
-        global $DB, $USER;
-
-        $result1 = $this->get_assessment_feedback_comment_helper($itemid);
-
-        // Comments can have files embedded. Get them here.
-        $sql = "SELECT f.id, f.contextid, f.component, f.filearea, f.itemid,  afc.commenttext FROM {files} as f
-                JOIN {assign_grades} as ag ON f.itemid = ag.id
-                JOIN {assignfeedback_comments} as afc ON  afc.grade = ag.id
-                WHERE f.itemid = ? AND f.component = ? AND f.filearea = ? AND f.userid = $USER->id AND ag.userid = $userid";
-
-        $params_array = ['itemid' => $itemid, 'component' => 'assignfeedback_comments', 'filearea' => 'feedback'];
-        $result2 = $DB->get_records_sql($sql, $params_array);
-
-        return [$result1, $result2];
-    }
-
-    private function get_assessment_feedback_comment_helper($itemid) {
         global $DB;
 
-        $sql = "SELECT * FROM {assignfeedback_comments} AS ac
-                WHERE ac.grade = ?";
+        $sql = "SELECT  distinct ac.*, f.* FROM {assignfeedback_comments} AS ac
+                JOIN {files} as f on f.itemid = ac.grade
+                JOIN {assign_grades} as ag ON f.itemid = ag.id
+                WHERE f.itemid = ? AND f.component = ? AND f.filearea = ? AND  ac.grade = ? AND ag.userid = ?
+                AND f.filename <> '.'
+                GROUP BY ac.id";
+      
+        $params_array = ['itemid' => $itemid, 'component' => 'assignfeedback_comments', 'filearea' => 'feedback', 'grade' => $itemid, 'userid' => $userid];
+       
+        $results = array_values($DB->get_records_sql($sql, $params_array));
+        $comments = [];
 
-        $params_array = ['grade' => $itemid];
-        $result = $DB->get_records_sql($sql, $params_array);
 
-        return $result;
+        foreach ($results as $i => $r) {
+            $comments[] = shorten_text(file_rewrite_pluginfile_urls($r->commenttext, 'pluginfile.php', $r->contextid, 'assignfeedback_comments', 'feedback', $itemid));
+        }
+
+        return $comments;
     }
 
     public function get_final_grade($assignmentinstance, $userid) {
@@ -312,12 +306,11 @@ class reportmanager {
                 foreach ($filerecords as $fr) {
                     $files = $fs->get_area_files($fr->contextid, $fr->component, $fr->filearea,  $fr->itemid);
                     foreach ($files as $file) {
-                        
+
                         if ($file->get_filename() == '.') continue;
                         $fname  =  $assessname . '/' . $user->lastname . ' ' . $user->firstname . ' ' . $course->fullname . ' ' . $file->get_filename();
                         $pathfilename =    $fname;
                         $filesforzipping[$pathfilename] = $file;
-
                     }
                 }
             }
@@ -371,21 +364,21 @@ class reportmanager {
 
                     $jsonparts = explode('</div>', $rubric);
                     $table = $jsonparts[0];
-                   
+
                     $table = str_replace('<table class="criteria-table table-light ">', '<table "style=\'font-family:helvetica\'"> ', $table);
                     $table = str_replace(
                         '<input disabled type="checkbox" id ="" name = ""  value = "1" checked = "checked"  >',
                         '<span style=\'font-family:helvetica\'>&#9745;</span>',
                         $table
                     );
-                 
+
                     $totalgrade = $jsonparts[count($jsonparts) - 1];
                     $totalgrade = "<strong>TOTAL:  $totalgrade </strong>";
                     $rubric = $table . '<br> ' . $totalgrade;
 
                     $mpdf = new \Mpdf\Mpdf(['tempDir' => $CFG->tempdir . '/', 'assignment_', 'mode' => 's']);
                     $mpdf->SetFont('DejaVuSans', '', 9);
-                 //   $mpdf->backupSubsFont = ['dejavusans'];
+                    //   $mpdf->backupSubsFont = ['dejavusans'];
                     $mpdf->allow_charset_conversion = true;
                     $mpdf->WriteHTML($rubric);
 

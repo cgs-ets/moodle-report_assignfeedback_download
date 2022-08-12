@@ -135,10 +135,8 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
     }
 
     protected function get_table_context($courseid, $assessmentids, $url, $moduleid, $filter = false, $coursename) {
+
         $context = context_course::instance($courseid);
-
-       // $users = $this->get_active_users($context);
-
         $userscontext = $this->get_users_context($courseid, $assessmentids, $coursename);
 
         $context = [
@@ -171,10 +169,10 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
         $rubricparams = [];
 
         $users = ['users' => []];
-        
+
         foreach ($assessments as $assess) {
             $user = $activeusers[$assess->userid];
-            if (!isset($user)) continue;  
+            if (!isset($user)) continue;
             $user->namelastname = $this->output->user_picture($user, array(
                 'course' => $courseid,
                 'includefullname' => true, 'class' => 'userpicture'
@@ -188,18 +186,29 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
             $userassessment->submtree = $this->get_assessment_submission_files_tree($user->id, $courseid, $assess->assignmentid);
             $userassessment->annottedpdftree = $this->get_assessment_anotatepdf_files_tree($assess->gradeid);
             $userassessment->feedbackfiletree = $this->get_assessment_feedback_files_tree($assess->gradeid);
+            $userassessment->feedbackcommentxt = $this->get_assessment_feedback_comments($assess->gradeid, $assess->userid);
+            if ($userassessment->feedbackcommentxt != '') {
 
-            $feedbackcomment = $this->get_assessment_feedback_comments($assess->gradeid, $assess->userid);
-
-            if (gettype($feedbackcomment) == "array") {
-                $userassessment->feedbackcomment = $this->get_assessment_feedback_comments($assess->gradeid, $assess->userid);
-            } else {
-                $userassessment->feedbackcommentxt = $this->get_assessment_feedback_comments($assess->gradeid, $assess->userid);
+                $userassessment->feedbackview = true;
+                $returnaction =  new moodle_url('/report/assignfeedback_download/index.php', array('id' => $courseid, 'cmid' => $cmid));
+                $returnparams = array('id' => $courseid, 'cmid' => $cmid);
+                $urlparams = array(
+                    'id' => $cmid,
+                    'sid' => $assess->gradeid,
+                    'gid' => $assess->gradeid,
+                    'plugin' => 'comments',
+                    'action' => 'viewpluginassignfeedback',
+                    // 'returnaction' => $returnaction,
+                    // 'returnparams' => http_build_query($returnparams)
+                );
+                $url = new moodle_url('/mod/assign/view.php', $urlparams);
+                $userassessment->url = $url;
             }
-
             $userassessment->finalgrade = $this->manager->get_final_grade($assess->assignmentid, $assess->userid);
             $userassessment->frubric = 0;
+
             $fr = $this->get_assessment_frubric_tree($cmid, $courseid, $assess, $userassessment, $user, $cmidsaux, $coursename);
+
             if ($fr != '') {
                 $rubricparams[] = $fr;
             }
@@ -229,7 +238,7 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
         $users = array_values($users['users']);
         usort($users, "sort_by_firstname");
         $cmidsaux = json_encode($cmidsaux);
-       
+
         $rubricparams = json_encode($rubricparams);
         if (isset($users[0])) {
             ($users[0])->firstuser = 1; // Only display the inner table's header on the first user.
@@ -240,7 +249,7 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
             'assignids' => $assessids,
             'cmids' => $cmidsaux,
         ];
-       
+
         return $context;
     }
 
@@ -299,25 +308,14 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
 
     protected function get_assessment_feedback_comments($itemid, $userid) {
 
-        list($commentonlytext, $commentwithfile) = $this->manager->get_assessment_feedback_comments($itemid, $userid);
+        $arraycomments = $this->manager->get_assessment_feedback_comments($itemid, $userid);
         $comments = '';
-        if (count($commentwithfile) > 0) {
-            $trees = ['tree' => []];
-            foreach ($commentwithfile as $result) {
-                $t = new assessement_files_tree($result->contextid, $result->component, $result->filearea,  $itemid);
-                $tree = new \stdClass();
-                $htmlid = 'assessement_feedback_files_tree_' . uniqid();
-                $tree->feedbackfiletree =  $this->render_assessement_files_tree($t, $htmlid, self::EMBEDDEDFILEINCOMMENT);
-                $trees['tree'] = $tree;
-            }
 
-            return $trees;
-        } else if (count($commentonlytext) > 0) {
-            foreach ($commentonlytext as $comment) {
-                $comments .= $comment->commenttext;
-            }
-            return $comments;
+        foreach ($arraycomments as $ac) {
+
+            $comments .= $ac;
         }
+        return $comments;
     }
 
     protected function get_assessment_frubric_tree($cmid,  $courseid, $assess, &$userassessment, $user, &$cmidcollection, $coursename) {
@@ -341,7 +339,7 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
             $year =  userdate($date->getTimestamp(), '%Y');
             $year = $year == 1970 ? date("Y") : $year; // When the assessment doesnt have a due date.
             //Naming convention: Student name_CourseName_AssessmentName
-            $userassessment->rubricfilename = $user->firstname . ' ' . $user->lastname . ' '. $coursename . ' ' . $assess->assignmentname . '.pdf';
+            $userassessment->rubricfilename = $user->firstname . ' ' . $user->lastname . ' ' . $coursename . ' ' . $assess->assignmentname . '.pdf';
             $rubricparams->rubricfilename = $userassessment->rubricfilename;
             $userassessment->rubricparams = json_encode($rubricparams);
             $tree = new \stdClass();

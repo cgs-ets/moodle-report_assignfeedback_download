@@ -39,11 +39,8 @@ $instaceids              = optional_param('instanceids', '', PARAM_TEXT);
 $selectedusers           = optional_param('selectedusers', '', PARAM_TEXT);
 $selectedaction          = optional_param('operation', '', PARAM_TEXT);
 $frubricselection        = optional_param('frubricdetails', '', PARAM_TEXT);
-
-require_login();
-admin_externalpage_setup('report_assignfeedback_download', '', null, '', array('pagelayout' => 'report'));
-
 $manager = new report_assignfeedback_download\reportmanager();
+
 // download
 if ($selectedusers != '') {
     $selectedusers = explode(',', $selectedusers);
@@ -68,10 +65,23 @@ if ($selectedusers != '') {
   
 }
 
+$url = new moodle_url('/report/assignfeedback_download/index.php', array('id'=>$id, 'cmid' => $cmid));
+$PAGE->set_url($url);
+$PAGE->set_pagelayout('admin');
 $PAGE->add_body_class('report_assignfeedback_download');
+
+if (!$course = $DB->get_record('course', array('id'=>$id))) {
+    print_error('invalidcourse');
+}
+
+require_login($course);
+$context = context_course::instance($course->id);
+require_capability('report/assignfeedback_download:grade', $context);
 // Display the backup report
+$PAGE->set_title(format_string($course->shortname, true, array('context' => $context)));
+$PAGE->set_heading(format_string($course->fullname, true, array('context' => $context)));
 echo $OUTPUT->header();
-echo $OUTPUT->heading(get_string('heading', 'report_assignfeedback_download'));
+//echo $OUTPUT->heading(get_string('heading', 'report_assignfeedback_download'));
 
 $aids = $manager->get_assesments_with_grades($id);
 $mform = new assignfeedback_download_select_form(null, ['id' => $id, 'cmid' => $cmid, 'aids' => $aids]);
@@ -111,7 +121,6 @@ if ($id == 0 || $id == 1) {  // $id = 1 is the main page.
         echo $renderer->render_assignfeedback_download($id, $assessmentids, $url, $cmid, $filter, $coursename);
     }
 
-    echo html_writer::link(new moodle_url('/course/view.php', array('id'=>$id)), get_string('returntocourse', 'report_assignfeedback_download'));
     echo $OUTPUT->box_end();
 }
 
