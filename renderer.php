@@ -196,8 +196,6 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
                     'gid' => $assess->gradeid,
                     'plugin' => 'comments',
                     'action' => 'viewpluginassignfeedback',
-                    // 'returnaction' => $returnaction,
-                    // 'returnparams' => http_build_query($returnparams)
                 );
                 $url = new moodle_url('/mod/assign/view.php', $urlparams);
                 $userassessment->url = $url;
