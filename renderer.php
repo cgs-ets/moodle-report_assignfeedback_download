@@ -190,8 +190,6 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
             if ($userassessment->feedbackcommentxt != '') {
 
                 $userassessment->feedbackview = true;
-                $returnaction =  new moodle_url('/report/assignfeedback_download/index.php', array('id' => $courseid, 'cmid' => $cmid));
-                $returnparams = array('id' => $courseid, 'cmid' => $cmid);
                 $urlparams = array(
                     'id' => $cmid,
                     'sid' => $assess->gradeid,

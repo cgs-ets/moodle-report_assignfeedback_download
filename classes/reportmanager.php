@@ -99,18 +99,16 @@ class reportmanager {
     public function get_assessment_feedback_comments($itemid, $userid) {
         global $DB;
 
-        $sql = "SELECT  distinct ac.*, f.* FROM {assignfeedback_comments} AS ac
+        $sql = "SELECT  distinct ac.id, ac.commenttext, f.contextid FROM {assignfeedback_comments} AS ac
                 JOIN {files} as f on f.itemid = ac.grade
                 JOIN {assign_grades} as ag ON f.itemid = ag.id
                 WHERE f.itemid = ? AND f.component = ? AND f.filearea = ? AND  ac.grade = ? AND ag.userid = ?
-                AND f.filename <> '.'
-                GROUP BY ac.id";
+                AND f.filename <> '.'";
       
         $params_array = ['itemid' => $itemid, 'component' => 'assignfeedback_comments', 'filearea' => 'feedback', 'grade' => $itemid, 'userid' => $userid];
        
         $results = array_values($DB->get_records_sql($sql, $params_array));
         $comments = [];
-
 
         foreach ($results as $i => $r) {
             $comments[] = shorten_text(file_rewrite_pluginfile_urls($r->commenttext, 'pluginfile.php', $r->contextid, 'assignfeedback_comments', 'feedback', $itemid));

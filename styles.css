@@ -39,3 +39,8 @@ i.fa.fa-question-circle.qcomment {
 .frubric-container {
     cursor: pointer;
 }
+
+select#id_assessments {
+    width: max-content;
+    height: 25vh;
+}
