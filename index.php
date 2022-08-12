@@ -81,7 +81,6 @@ require_capability('report/assignfeedback_download:grade', $context);
 $PAGE->set_title(format_string($course->shortname, true, array('context' => $context)));
 $PAGE->set_heading(format_string($course->fullname, true, array('context' => $context)));
 echo $OUTPUT->header();
-//echo $OUTPUT->heading(get_string('heading', 'report_assignfeedback_download'));
 
 $aids = $manager->get_assesments_with_grades($id);
 $mform = new assignfeedback_download_select_form(null, ['id' => $id, 'cmid' => $cmid, 'aids' => $aids]);

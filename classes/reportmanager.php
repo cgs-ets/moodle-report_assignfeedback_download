@@ -214,7 +214,10 @@ class reportmanager {
                 foreach ($files as $file) {
 
                     if ($file->get_filename() == '.') continue;
-                    $fname  =  $fr->name . '/' . $user->lastname . ' ' . $user->firstname . ' ' . $course->fullname . ' ' . $file->get_filename();
+                    // In case there are files really long names
+                    $extension = '.' . pathinfo($file->get_filename(), PATHINFO_EXTENSION);
+                    $n = shorten_text($file->get_filename(), 30, false, $extension);
+                    $fname  =  $fr->name . '/' . $user->lastname . ' ' . $user->firstname . ' ' . $course->fullname . ' ' . $n;
                     $pathfilename =    $fname;
                     $filesforzipping[$pathfilename] = $file;
                 }
@@ -254,7 +257,8 @@ class reportmanager {
 
                         // Naming convention would be LAST Name, FirstName, Year, Subject, Level, Component.
                         $extension = '.' . pathinfo($file->get_filename(), PATHINFO_EXTENSION);
-                        $notname  = $user->lastname . ' ' . $user->firstname . ' ' . $course->fullname . ' ' . $assessname . $extension;
+                        $n = shorten_text($file->get_filename(), 30, false, $extension);
+                        $notname  = $user->lastname . ' ' . $user->firstname . ' ' . $course->fullname . ' ' . $n;
                         $pathfilename =   $assessname . '/' . $notname;
 
                         $filesforzipping[$pathfilename] = $file;
@@ -306,7 +310,9 @@ class reportmanager {
                     foreach ($files as $file) {
 
                         if ($file->get_filename() == '.') continue;
-                        $fname  =  $assessname . '/' . $user->lastname . ' ' . $user->firstname . ' ' . $course->fullname . ' ' . $file->get_filename();
+                        $extension = '.' . pathinfo($file->get_filename(), PATHINFO_EXTENSION);
+                        $n = shorten_text($file->get_filename(), 30, false, $extension);
+                        $fname  =  $assessname . '/' . $user->lastname . ' ' . $user->firstname . ' ' . $course->fullname . ' ' . $n;
                         $pathfilename =    $fname;
                         $filesforzipping[$pathfilename] = $file;
                     }
