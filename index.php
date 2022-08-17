@@ -34,7 +34,7 @@ $id                      = optional_param('id', 0, PARAM_INT); // Course ID.
 $cmid                    = optional_param('cmid', 0, PARAM_INT); // Course module ID.
 $option                  = optional_param('operation', '', PARAM_TEXT);
 $itemids                 = optional_param('itemids', '', PARAM_TEXT);
-$cmids                   = optional_param('cmids', '', PARAM_TEXT);  
+$cmids                   = optional_param('cmids', '', PARAM_TEXT);
 $instaceids              = optional_param('instanceids', '', PARAM_TEXT);
 $selectedusers           = optional_param('selectedusers', '', PARAM_TEXT);
 $selectedaction          = optional_param('operation', '', PARAM_TEXT);
@@ -44,7 +44,7 @@ $manager = new report_assignfeedback_download\reportmanager();
 // download
 if ($selectedusers != '') {
     $selectedusers = explode(',', $selectedusers);
-    
+
     switch ($selectedaction) {
         case 'dldsubmission':
             $manager->download_submission_files($instaceids, $id, $selectedusers);
@@ -53,24 +53,23 @@ if ($selectedusers != '') {
             $nofilestozip = $manager->download_anotatepdf_files($itemids, $id);
             break;
         case 'dldfeedbackf':
-           $manager->download_feedback_files($itemids, $id);
+            $manager->download_feedback_files($itemids, $id);
             break;
         case 'dldrubric':
             $manager->download_rubric($itemids, $cmids, $instaceids, $id, $frubricselection);
             break;
-        case 'dldall' :
-            $manager->download_all_files($itemids,$id);
+        case 'dldall':
+            $manager->download_all_files($itemids, $id);
             break;
     }
-  
 }
 
-$url = new moodle_url('/report/assignfeedback_download/index.php', array('id'=>$id, 'cmid' => $cmid));
+$url = new moodle_url('/report/assignfeedback_download/index.php', array('id' => $id, 'cmid' => $cmid));
 $PAGE->set_url($url);
 $PAGE->set_pagelayout('admin');
 $PAGE->add_body_class('report_assignfeedback_download');
 
-if (!$course = $DB->get_record('course', array('id'=>$id))) {
+if (!$course = $DB->get_record('course', array('id' => $id))) {
     print_error('invalidcourse');
 }
 
@@ -82,9 +81,8 @@ $PAGE->set_title(format_string($course->shortname, true, array('context' => $con
 $PAGE->set_heading(format_string($course->fullname, true, array('context' => $context)));
 echo $OUTPUT->header();
 
-$aids = $manager->get_assesments_with_grades($id);
+$aids = $manager->get_submitted_assessments($id);
 $mform = new assignfeedback_download_select_form(null, ['id' => $id, 'cmid' => $cmid, 'aids' => $aids]);
-
 $assessmentids = '';
 $filter = false;
 $noasses = 0;
@@ -94,11 +92,10 @@ if ($mform->is_cancelled()) {
 } else if ($data = $mform->get_data()) {
 
     //In this case you process validated data. $mform->get_data() returns data posted in form.
-    $assessmentids = $data->assessments; // get the selected assessments.
+    $assessmentids = $data->assessments; // Get the selected assessments.
     $filter = true;
-
 } else {
-    
+
     if (count($aids) == 0) {
         $noasses = 1;
     }
@@ -115,8 +112,12 @@ if ($id == 0 || $id == 1) {  // $id = 1 is the main page.
         echo $renderer->render_no_assessment_in_course();
     } else {
         $mform->display();
+    }
+
+    // Only if the user clicked filter display this.
+    if ($filter) {
         $url =  $PAGE->url;
-        $coursename = $DB->get_field('course', 'fullname', ['id' => $id], $strictness=IGNORE_MISSING);
+        $coursename = $DB->get_field('course', 'fullname', ['id' => $id], $strictness = IGNORE_MISSING);
         echo $renderer->render_assignfeedback_download($id, $assessmentids, $url, $cmid, $filter, $coursename);
     }
 

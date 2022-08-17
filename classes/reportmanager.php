@@ -55,6 +55,52 @@ class reportmanager {
         return $results;
     }
 
+    //Bring assessments that have submissions. it doesnt matter if they are graded.
+    public function get_submitted_assessments($courseid) {
+        global $DB;
+
+        $sql = "SELECT distinct assign.id as assignmentid, assign.name AS 'assignmentname' FROM {assign} as assign 
+                JOIN {assign_submission} as asub 
+                ON assign.id = asub.assignment
+                WHERE assign.course = ? AND asub.status = ?";
+
+        $params = ['course' => $courseid, 'status' => 'submitted'];
+
+        $results = $DB->get_records_sql($sql, $params);
+
+        return $results;
+    }
+
+    // Get the assessments that are submitted 
+    private function get_assessments_by_course_2($assessmentids) {
+        global $DB;
+
+        $sql = "SELECT asub.id, assign.id as assignmentid, assign.name AS 'assignmentname', u.id as userid, u.firstname, u.lastname
+                FROM {assign} as assign 
+                JOIN {assign_submission} as asub 
+                ON assign.id = asub.assignment
+                JOIN {user}  as u ON u.id = asub.userid
+                WHERE assign.id in ($assessmentids)";
+       
+        $results = $DB->get_records_sql($sql);
+
+       
+
+        return $results;
+    }
+
+    // Combine graded and not graded (but submitted) assignments
+    public function get_assessments($assessmentids) {
+        //Assessments not graded
+        $notgraded = $this->get_assessments_by_course_2($assessmentids);
+        // Assessments that could be fully graded or in the process off.
+        $gradedorstarted = $this->get_assessments_by_course($assessmentids);
+        $assessments = $gradedorstarted + $notgraded; // combine the results.  THe order matters here!! 
+        return $assessments;
+        
+    }
+
+
     public function get_assessment_submission_records($userid, $courseid, $assignmentid) {
         global $DB;
 
@@ -104,9 +150,9 @@ class reportmanager {
                 JOIN {assign_grades} as ag ON f.itemid = ag.id
                 WHERE f.itemid = ? AND f.component = ? AND f.filearea = ? AND  ac.grade = ? AND ag.userid = ?
                 AND f.filename <> '.'";
-      
+
         $params_array = ['itemid' => $itemid, 'component' => 'assignfeedback_comments', 'filearea' => 'feedback', 'grade' => $itemid, 'userid' => $userid];
-       
+
         $results = array_values($DB->get_records_sql($sql, $params_array));
         $comments = [];
 
@@ -161,15 +207,16 @@ class reportmanager {
         return $assessids;
     }
 
-    public function get_assessments_by_course($assessmentids) {
+    // Get the assessments that are graded or that are not but the teacher already started working on. For example, editing the annotated PDF or adding comments.
+    private function get_assessments_by_course($assessmentids) {
         global $DB;
 
-        $sql = "SELECT grades.id as gradeid, u.id as userid, u.firstname, u.lastname, grades.assignment as assignmentid, assign.name as 'assignmentname', assign.duedate
+        $sql = "SELECT  grades.id as gradeid, grades.assignment as assignmentid, u.id as userid, u.firstname, u.lastname,  assign.name as 'assignmentname', assign.duedate
                 FROM {assign_grades} AS grades
                 JOIN {assign} as assign ON grades.assignment = assign.id
                 JOIN {user} as u ON grades.userid = u.id
                 WHERE grades.assignment  IN ($assessmentids)
-                AND grades.grade != -1.00000
+              --  AND grades.grade != -1.00000
                 ORDER BY assign.name";
 
         $result = $DB->get_records_sql($sql);
