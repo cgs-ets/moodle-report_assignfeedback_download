@@ -169,9 +169,9 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
         $rubricparams = [];
 
         $users = ['users' => []];
-        
+
         foreach ($assessments as $assess) {
-    
+
             if (!isset($activeusers[$assess->userid])) {
                 continue;
             }
@@ -188,54 +188,49 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
             $cmid = $cmids[$assess->assignmentid]->cmid;
             $userassessment->assignmentnameurl = new moodle_url("$CFG->wwwroot/mod/assign/view.php", ['id' => $cmid]);
             $userassessment->submtree = $this->get_assessment_submission_files_tree($user->id, $courseid, $assess->assignmentid);
-               if (isset($assess->gradeid)) {
+            if (isset($assess->gradeid)) {
 
-            $userassessment->annottedpdftree = $this->get_assessment_anotatepdf_files_tree($assess->gradeid);
-            $userassessment->feedbackfiletree = $this->get_assessment_feedback_files_tree($assess->gradeid);
-            $userassessment->feedbackcommentxt = $this->get_assessment_feedback_comments($assess->gradeid, $assess->userid);
-            if ($userassessment->feedbackcommentxt != '') {
+                $userassessment->annottedpdftree = $this->get_assessment_anotatepdf_files_tree($assess->gradeid);
+                $userassessment->feedbackfiletree = $this->get_assessment_feedback_files_tree($assess->gradeid);
+                $userassessment->feedbackcommentxt = $this->get_assessment_feedback_comments($assess->gradeid, $assess->userid);
+                if ($userassessment->feedbackcommentxt != '') {
 
-                $userassessment->feedbackview = true;
-                $urlparams = array(
-                    'id' => $cmid,
-                    'sid' => $assess->gradeid,
-                    'gid' => $assess->gradeid,
-                    'plugin' => 'comments',
-                    'action' => 'viewpluginassignfeedback',
-                );
-                $url = new moodle_url('/mod/assign/view.php', $urlparams);
-                $userassessment->url = $url;
-            }
-            $userassessment->finalgrade = $this->manager->get_final_grade($assess->assignmentid, $assess->userid);
-            $userassessment->frubric = 0;
-
-            $fr = $this->get_assessment_frubric_tree($cmid, $courseid, $assess, $userassessment, $user, $cmidsaux, $coursename);
-
-            if ($fr != '') {
-                $rubricparams[] = $fr;
-            }
-
-            if (!isset($user->itemids)) {
-                $user->itemids = '';
-            }
-
-            $user->itemids .= $assess->gradeid . ','; // Call it itemid because it is called like that in other tables.
-              }
-
-            // If there are no files at all, dont show the student. TODO
-           if (empty($userassessment->submtree['tree']) && empty($userassessment->annottedpdftree['tree'])  && empty($userassessment->feedbackfiletree['tree'])) {
-                if (isset($users['users'][$assess->userid])) {
-                    unset($users['users'][$assess->userid]);
+                    $userassessment->feedbackview = true;
+                    $urlparams = array(
+                        'id' => $cmid,
+                        'sid' => $assess->gradeid,
+                        'gid' => $assess->gradeid,
+                        'plugin' => 'comments',
+                        'action' => 'viewpluginassignfeedback',
+                    );
+                    $url = new moodle_url('/mod/assign/view.php', $urlparams);
+                    $userassessment->url = $url;
                 }
-           } else {
+                $userassessment->finalgrade = $this->manager->get_final_grade($assess->assignmentid, $assess->userid);
+                $userassessment->frubric = 0;
 
-                if (!isset($users['users'][$assess->userid])) {
-                    $user->assessments[] = $userassessment;
-                    $users['users'][$assess->userid] = $user;
-                } else {
+                $fr = $this->get_assessment_frubric_tree($cmid, $courseid, $assess, $userassessment, $user, $cmidsaux, $coursename);
+
+                if ($fr != '') {
+                    $rubricparams[] = $fr;
+                }
+
+                if (!isset($user->itemids)) {
+                    $user->itemids = '';
+                }
+
+                $user->itemids .= $assess->gradeid . ','; // Call it itemid because it is called like that in other tables.
+            }
+
+            if (!isset($users['users'][$assess->userid])) {
+                $user->assessments[] = $userassessment;
+                $users['users'][$assess->userid] = $user;
+            } else {
+                $checkexistance =  $this->remove_duplicate_assessment($users['users'][$assess->userid]->assessments, $userassessment);
+                if (!$checkexistance) {
                     ($users['users'][$assess->userid]->assessments)[] = $userassessment;
                 }
-           }
+            }
         }
 
         $users = array_values($users['users']);
@@ -253,11 +248,20 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
             'cmids' => $cmidsaux,
         ];
 
-        //print_object($context); exit;
         return $context;
     }
 
+    // By allowing graded and ungraded assessments, they can duplicate
+    private function remove_duplicate_assessment($assessments, $assessmentoadd) {
 
+        foreach ($assessments as $assessment) {
+            if ($assessment->assignmentid == $assessmentoadd->assignmentid) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     protected function get_assessment_submission_files_tree($userid, $courseid, $assignmentid) {
 

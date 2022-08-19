@@ -67,7 +67,7 @@ class reportmanager {
         $params = ['course' => $courseid, 'status' => 'submitted'];
 
         $results = $DB->get_records_sql($sql, $params);
-
+       
         return $results;
     }
 
