@@ -261,9 +261,10 @@ class reportmanager {
                     
                     if ($file->get_filename() == '.') continue;
                     // Get extension from mimetype
-                    $extension = '.' . $this->getextension($file->get_mimetype()); 
+                    $extension = '.' . $this->get_extension($file); 
                     // In case there are files really long names
-                    $n = shorten_text($file->get_filename(), 30, false, $extension);
+                    $n = shorten_text($file->get_filename(), 30, false, '') . $extension;
+                 
                     $fname  =  $fr->name . '/' . $user->lastname . ' ' . $user->firstname . ' ' . $course->fullname . ' ' . $n;
                     $pathfilename =    $fname;
                     $filesforzipping[$pathfilename] = $file;
@@ -303,8 +304,8 @@ class reportmanager {
                     foreach ($files as $file) {
 
                         // Naming convention would be LAST Name, FirstName, Year, Subject, Level, Component.
-                        $extension = '.' . $this->getextension($file->get_mimetype());
-                        $n = shorten_text($file->get_filename(), 30, false, $extension);
+                        $extension = '.' . $this->get_extension($file); 
+                        $n = shorten_text($file->get_filename(), 30, false, '') . $extension;
                         $notname  = $user->lastname . ' ' . $user->firstname . ' ' . $course->fullname . ' ' . $n;
                         $pathfilename =   $assessname . '/' . $notname;
 
@@ -357,8 +358,8 @@ class reportmanager {
                     foreach ($files as $file) {
 
                         if ($file->get_filename() == '.') continue;
-                        $extension = '.' . $this->getextension($file->get_mimetype());
-                        $n = shorten_text($file->get_filename(), 30, false, $extension);
+                        $extension = '.' . $this->get_extension($file); 
+                        $n = shorten_text($file->get_filename(), 30, false,'') . $extension;
                         $fname  =  $assessname . '/' . $user->lastname . ' ' . $user->firstname . ' ' . $course->fullname . ' ' . $n;
                         $pathfilename =    $fname;
                         $filesforzipping[$pathfilename] = $file;
@@ -548,7 +549,7 @@ class reportmanager {
     // Get the file extension.  https://docs.w3cub.com/http/basics_of_http/mime_types/complete_list_of_mime_types.html
     // Mac users sometimes dont have the extension in the file. To avoid issues, pick up the mimetype of the file
     // and get the extension from it/.
-    private function getextension($mime) {
+    private function get_extension_helper($mime) {
         $mime_map = [
             'video/3gpp2'                                                               => '3g2',
             'video/3gp'                                                                 => '3gp',
@@ -731,5 +732,13 @@ class reportmanager {
         ];
 
         return isset($mime_map[$mime]) === true ? $mime_map[$mime] : false;
+    }
+
+    private function get_extension($file) {
+       if(pathinfo($file->get_filename(), PATHINFO_EXTENSION) == '') {
+        return $this->get_extension_helper($file->get_mimetype());
+       } else {
+        return  pathinfo($file->get_filename(), PATHINFO_EXTENSION);
+       }
     }
 }
