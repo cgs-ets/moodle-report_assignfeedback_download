@@ -188,11 +188,16 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
             $cmid = $cmids[$assess->assignmentid]->cmid;
             $userassessment->assignmentnameurl = new moodle_url("$CFG->wwwroot/mod/assign/view.php", ['id' => $cmid]);
             $userassessment->submtree = $this->get_assessment_submission_files_tree($user->id, $courseid, $assess->assignmentid);
+            
+            // If student didnt submit anything, then dont display
+           if(!isset(($userassessment->submtree['tree'])->submissionfiletree)) continue;
+           
             if (isset($assess->gradeid)) {
 
                 $userassessment->annottedpdftree = $this->get_assessment_anotatepdf_files_tree($assess->gradeid);
                 $userassessment->feedbackfiletree = $this->get_assessment_feedback_files_tree($assess->gradeid);
                 $userassessment->feedbackcommentxt = $this->get_assessment_feedback_comments($assess->gradeid, $assess->userid);
+
                 if ($userassessment->feedbackcommentxt != '') {
 
                     $userassessment->feedbackview = true;
@@ -206,6 +211,7 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
                     $url = new moodle_url('/mod/assign/view.php', $urlparams);
                     $userassessment->url = $url;
                 }
+
                 $userassessment->finalgrade = $this->manager->get_final_grade($assess->assignmentid, $assess->userid);
                 $userassessment->frubric = 0;
 
@@ -222,22 +228,30 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
                 $user->itemids .= $assess->gradeid . ','; // Call it itemid because it is called like that in other tables.
             }
 
+            
             if (!isset($users['users'][$assess->userid])) {
                 $user->assessments[] = $userassessment;
                 $users['users'][$assess->userid] = $user;
+                // if($assess->userid == 9) {print_object($users['users'][$assess->userid]);}
             } else {
                 $checkexistance =  $this->remove_duplicate_assessment($users['users'][$assess->userid]->assessments, $userassessment);
                 if (!$checkexistance) {
                     ($users['users'][$assess->userid]->assessments)[] = $userassessment;
                 }
+                // if($assess->userid == 9) {print_object($users['users'][$assess->userid]->assessments);}
             }
+
+            // Check if the user  doesnt have anything to display, then dont show it.
+
         }
 
+        // print_object($users); 
         $users = array_values($users['users']);
         usort($users, "sort_by_firstname");
+        
         $cmidsaux = json_encode($cmidsaux);
-
         $rubricparams = json_encode($rubricparams);
+
         if (isset($users[0])) {
             ($users[0])->firstuser = 1; // Only display the inner table's header on the first user.
         }
