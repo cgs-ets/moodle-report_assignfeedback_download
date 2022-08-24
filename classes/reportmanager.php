@@ -67,7 +67,7 @@ class reportmanager {
         $params = ['course' => $courseid, 'status' => 'submitted'];
 
         $results = $DB->get_records_sql($sql, $params);
-       
+   
         return $results;
     }
 
@@ -196,8 +196,7 @@ class reportmanager {
         $assessids = $assessmentids;
 
         if ($assessmentids == '' || in_array(0, $assessmentids)) {
-
-            $r = $this->get_assesments_with_grades($courseid);
+            $r =  $this->get_submitted_assessments($courseid);
             $r = array_unique(array_column($r, 'assignmentid'));
             $assessids = implode(',', $r);
         } else {

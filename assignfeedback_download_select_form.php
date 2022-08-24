@@ -40,7 +40,6 @@ class assignfeedback_download_select_form extends moodleform {
         $assessarray = array();
 
         $assessarray[] = get_string('all', 'report_assignfeedback_download');
-        $manager = new report_assignfeedback_download\reportmanager();
 
         //aids
         $this->_customdata['aids'];
