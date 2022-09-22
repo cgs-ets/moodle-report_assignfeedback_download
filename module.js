@@ -23,14 +23,14 @@
 
 M.report_assignfeedback_download = {};
 
-M.report_assignfeedback_download.init_tree = function (Y, expand_all, htmlid) {
+M.report_assignfeedback_download.init_tree = function (Y, expandAll, htmlid) {
     var treeElement = Y.one('#' + htmlid);
     if (treeElement) {
         Y.use('yui2-treeview', 'node-event-simulate', function (Y) {
             var tree = new Y.YUI2.widget.TreeView(htmlid);
 
             tree.subscribe("clickEvent", function (node, event) {
-                // we want normal clicking which redirects to url
+                // We want normal clicking which redirects to url.
                 return false;
             });
 
@@ -40,7 +40,7 @@ M.report_assignfeedback_download.init_tree = function (Y, expand_all, htmlid) {
                 return false;
             });
 
-            if (expand_all) {
+            if (expandAll) {
                 tree.expandAll();
             }
             tree.setNodesProperty('className', 'feedbackfilestv', false);

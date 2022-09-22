@@ -19,13 +19,21 @@
                         <tr>
                             <th>{{#firstuser}} {{#str}}assessmentheader, report_assignfeedback_download{{/str}} {{/firstuser}}</th>
                             <th>{{#firstuser}} {{#str}}fileattach, report_assignfeedback_download{{/str}} {{/firstuser}}</th>
+                            <th>{{#firstuser}} {{#str}}onlinesubmission, report_assignfeedback_download{{/str}} {{/firstuser}}</th>
                             <th>{{#firstuser}} {{#str}}feedbackfiles, report_assignfeedback_download{{/str}} {{/firstuser}}</th>
-                          
+
                             <th title = "{{#str}}commenthelp, report_assignfeedback_download{{/str}}">
                                 {{#firstuser}} {{#str}}feedbackcomments, report_assignfeedback_download{{/str}}{{/firstuser}}
                             </th>
                             <th>{{#firstuser}} {{#str}}annotatepdf, report_assignfeedback_download{{/str}} {{/firstuser}}</th>
-                            <th>{{#firstuser}} <span> {{#str}}rubric, report_assignfeedback_download{{/str}} </span> {{/firstuser}}</th>
+                            <th>
+                                {{#firstuser}}
+                                 <span>
+                                    {{#str}}rubric, report_assignfeedback_download {{/str}}
+                                    <i class="fa fa-question-circle" aria-hidden="true" data-toggle="tooltip" data-placement="top"  data-html="true" title="{{#str}}rubric_help, report_assignfeedback_download {{/str}}"></i>
+                                 </span>
+                                {{/firstuser}}
+                            </th>
                             <th>{{#firstuser}} {{#str}}finalgrade, report_assignfeedback_download{{/str}} {{/firstuser}}</th>
                         </tr>
                     </thead>
@@ -41,6 +49,14 @@
                                 {{{submissionfiletree}}}
                                 {{/tree}}
                                 {{/submtree}}
+                            </td>
+                            <td>
+                                {{#onlinetxtsubmissionview}}
+                                    <a href="{{{onlinetxturl}}}" target ="_blank">
+                                    <i class="icon fa fa-search-plus fa-fw " title="View online text submission" aria-label="View online text submission"></i>
+                                </a>
+                                {{/onlinetxtsubmissionview}}
+                                {{{onlinetextsubmission}}}
                             </td>
                             <td style="width:14%;">
                                 {{#feedbackfiletree}}
@@ -66,13 +82,18 @@
                             </td>
                             <td style="width:14%;"  class ="rubric-cell">
                             {{#frubric}}
-                                <div class = 'frubric-container' data-frubric-params = "{{rubricparams}}" data-frubric-filling = "{{rubric}}" data-rubric-file-name = "{{rubricfilename}}"> 
+                                <div class = 'frubric-container' data-frubric-params = "{{rubricparams}}" data-frubric-filling = "{{rubric}}" data-rubric-file-name = "{{rubricfilename}}">
                                      {{{frubrictree}}}
                                 </div>
                              {{/frubric}}
                             </td>
                             <td style="width:14%;">
-                                <strong> {{finalgrade}} </strong>
+                                {{#notgraded}}
+                                    Not Graded
+                                {{/notgraded}}
+                                {{^notgraded}}
+                                    <strong> {{finalgrade}} </strong>
+                                {{/notgraded}}
                             </td>
                         </tr>
                         {{/assessments}}

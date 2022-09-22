@@ -2,7 +2,6 @@
     action="{{actionurl}}" method="post" accept-charset="utf-8"
     id="{{formid}}" data-boost-form-errors-enhanced="1">
     <div style="display: none;">
-     
         <input name="id" type="hidden" value="{{id}}">
         <input class="selectedusers" name="selectedusers" type="hidden" value="">
         <input name="sesskey" type="hidden" value="{{sessionkey}}">
@@ -10,7 +9,6 @@
         <input name="itemids" type="hidden" value="">
         <input name="cmids" type="hidden" value="">
         <input name="frubricdetails" type="hidden" value="">
-   
     </div>
 
     <div id="fgroup_id_actionsgrp" class="form-group row  fitem   " data-groupname="actionsgrp">
@@ -32,13 +30,16 @@
                         <label class="col-form-label sr-only" for="id_operation">
                             {{#str}} chooseoperation, report_assignfeedback_download{{/str}}
                         </label>
-                        {{#feedbackfileoptiondisable}}HOLA{{/feedbackfileoptiondisable}}
                         <span data-fieldtype="select">
                             <select class="custom-select" disabled name="operation" id="id_operation">
-                                <option value="dldsubmission">{{#str}} dldsubmission, report_assignfeedback_download{{/str}}</option>
-                                <option value="dldfeedbackf" {{#feedbackfileoptiondisable}}disabled{{/feedbackfileoptiondisable}}>{{#str}} dldfeedbackf, report_assignfeedback_download{{/str}}</option>
-                                <option value="dldanotated" {{#feedbackcannotatepdfoptiondisable}}disabled{{/feedbackcannotatepdfoptiondisable}}>{{#str}} dldanotated, report_assignfeedback_download{{/str}}</option>
-                                <option value="dldrubric" {{#feedbackrubricoptiondisable}}disabled{{/feedbackrubricoptiondisable}}>{{#str}} dldrubric, report_assignfeedback_download{{/str}}</option>
+                                <option value="dldsubmission" {{#noexistsubmissions}}disabled{{/noexistsubmissions}}>{{#str}} dldsubmission, report_assignfeedback_download{{/str}}</option>
+                                <option value="dldsubmissiononlinetext" {{#noexistsubmissiononlinetext}}disabled{{/noexistsubmissiononlinetext}}>{{#str}} dldsubmissiononlinetext, report_assignfeedback_download{{/str}}</option>
+                                <option value="dldfeedbackf" {{#noexistfeedbackfiles}}disabled{{/noexistfeedbackfiles}}>{{#str}} dldfeedbackf, report_assignfeedback_download{{/str}}</option>
+                                <option value="dldfeedbackcomments" {{#noexistfeedbackcomments}}disabled{{/noexistfeedbackcomments}}>{{#str}} dldfeedbackcomments, report_assignfeedback_download{{/str}}</option>
+                                <option value="dldanotated" {{#noexistannotatedpdffiles}}disabled{{/noexistannotatedpdffiles}}>{{#str}} dldanotated, report_assignfeedback_download{{/str}}</option>
+                                <option value="dldrubric" {{#noexistfrubrics}}disabled{{/noexistfrubrics}}>{{#str}} dldrubric, report_assignfeedback_download{{/str}}</option>
+                                <option value="dldgrades" {{#noexistgrades}}disabled{{/noexistgrades}}>{{#str}} dldgrades, report_assignfeedback_download{{/str}}</option>
+
                             </select>
                         </span>
                         <div class="form-control-feedback invalid-feedback" id="id_error_operation"></div>
@@ -57,7 +58,7 @@
     </div>
 </form>
 
-{{#js}} 
+{{#js}}
 require(['report_assignfeedback_download/report_control'], function(module) {
     module.init();
 });

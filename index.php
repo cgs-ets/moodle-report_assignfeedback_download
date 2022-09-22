@@ -41,7 +41,7 @@ $selectedaction          = optional_param('operation', '', PARAM_TEXT);
 $frubricselection        = optional_param('frubricdetails', '', PARAM_TEXT);
 $manager = new report_assignfeedback_download\reportmanager();
 
-// download
+// Download.
 if ($selectedusers != '') {
     $selectedusers = explode(',', $selectedusers);
 
@@ -56,11 +56,18 @@ if ($selectedusers != '') {
             $manager->download_feedback_files($itemids, $id);
             break;
         case 'dldrubric':
-            $manager->download_rubric($itemids, $cmids, $instaceids, $id, $frubricselection);
+            $manager->download_frubric($cmids, $instaceids, $id, $frubricselection);
             break;
-        case 'dldall':
-            $manager->download_all_files($itemids, $id);
+        case 'dldfeedbackcomments':
+            $manager->download_feedback_comments($itemids, $id);
             break;
+        case 'dldsubmissiononlinetext':
+            $manager->download_submission_onlinetext($instaceids, $id, $selectedusers);
+            break;
+        case 'dldgrades':
+            $manager->download_assessment_grades($cmids, $id, $instaceids, $selectedusers);
+            break;
+
     }
 }
 
@@ -70,13 +77,15 @@ $PAGE->set_pagelayout('admin');
 $PAGE->add_body_class('report_assignfeedback_download');
 
 if (!$course = $DB->get_record('course', array('id' => $id))) {
-    print_error('invalidcourse');
+    $message = get_string('invalidcourse', 'report_assignfeedback_download');
+    $level = core\output\notification::NOTIFY_ERROR;
+    \core\notification::add($message, $level);
 }
 
 require_login($course);
 $context = context_course::instance($course->id);
 require_capability('report/assignfeedback_download:grade', $context);
-// Display the backup report
+// Display the backup report.
 $PAGE->set_title(format_string($course->shortname, true, array('context' => $context)));
 $PAGE->set_heading(format_string($course->fullname, true, array('context' => $context)));
 echo $OUTPUT->header();
@@ -86,12 +95,12 @@ $mform = new assignfeedback_download_select_form(null, ['id' => $id, 'cmid' => $
 $assessmentids = '';
 $filter = false;
 $noasses = 0;
-//Form processing and displaying is done here
+// Form processing and displaying is done here.
 if ($mform->is_cancelled()) {
-    //Handle form cancel operation, if cancel button is present on form
+    // Handle form cancel operation, if cancel button is present on form.
 } else if ($data = $mform->get_data()) {
 
-    //In this case you process validated data. $mform->get_data() returns data posted in form.
+    // In this case you process validated data. $mform->get_data() returns data posted in form.
     $assessmentids = $data->assessments; // Get the selected assessments.
     $filter = true;
 } else {
@@ -102,7 +111,9 @@ if ($mform->is_cancelled()) {
 }
 
 if ($id == 0 || $id == 1) {  // $id = 1 is the main page.
-    \core\notification::add(get_string('cantdisplayerror', 'report_assignfeedback_download'), core\output\notification::NOTIFY_ERROR);
+    $message = get_string('cantdisplayerror', 'report_assignfeedback_download');
+    $level = core\output\notification::NOTIFY_ERROR;
+    \core\notification::add($message, $level);
 } else {
 
     echo $OUTPUT->box_start();
@@ -116,7 +127,7 @@ if ($id == 0 || $id == 1) {  // $id = 1 is the main page.
 
     // Only if the user clicked filter display this.
     if ($filter) {
-        $url =  $PAGE->url;
+        $url = $PAGE->url;
         $coursename = $DB->get_field('course', 'fullname', ['id' => $id], $strictness = IGNORE_MISSING);
         echo $renderer->render_assignfeedback_download($id, $assessmentids, $url, $cmid, $filter, $coursename);
     }

@@ -14,7 +14,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * 
+ *
  *
  * @package    report
  * @subpackage ibassessmentreport
@@ -22,7 +22,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-define(["jquery", "core/ajax", "core/log", "report_assignfeedback_download/html2pdf"], function ($, Ajax, Log, html2pdf) {
+ define(["jquery", "core/ajax", "core/log", "report_assignfeedback_download/html2pdf"], function ($, Ajax, Log, html2pdf) {
     "use strict";
 
     function init() {
@@ -97,11 +97,12 @@ define(["jquery", "core/ajax", "core/log", "report_assignfeedback_download/html2
         let t = document.getElementById("iassignfeedbacktb");
         let countusers = 0;
         const selectallcheckstatus = document.getElementById("selectall").checked;
-        //let frcollection = new Map();
+
         let form = document.getElementById("downloadactionform");
         let selectedusers = form.querySelector('input[name="selectedusers"]');
         let useritemids = form.querySelector('input[name="itemids"]');
         let frubricdetails = form.querySelector('input[name="frubricdetails"]');
+
 
         if (t) {
             Array.from(t.rows).forEach((tr) => {
@@ -144,11 +145,11 @@ define(["jquery", "core/ajax", "core/log", "report_assignfeedback_download/html2
                     // Check FRubric
                     const innertabletr = document.getElementById(`innertable_${userid}`).querySelector('tbody');
                     for (let i = 0; i < innertabletr.rows.length; i++) {
-                        if (innertabletr.rows[i].cells[5].children.length > 0) { // It has  a rubric
+                        if (innertabletr.rows[i].cells[6].children.length > 0) { // It has  a rubric
                             if (!s.frcollection.has(userid)) {
                                 s.frcollection.set(userid, []);
                             }
-                            const frcontainer = innertabletr.rows[i].cells[5].firstElementChild;
+                            const frcontainer = innertabletr.rows[i].cells[6].firstElementChild;
                             s.frcollection.get(userid).push(frcontainer.getAttribute('data-frubric-params'));
                         }
                     }
@@ -227,11 +228,11 @@ define(["jquery", "core/ajax", "core/log", "report_assignfeedback_download/html2
             s.userids.push(userid);
             // Check FRubric
             for (let i = 0; i < innertable.rows.length; i++) {
-                if (innertable.rows[i].cells[5].children.length > 0) { // It has  a rubric
+                if (innertable.rows[i].cells[6].children.length > 0) { // It has  a rubric
                     if (!s.frcollection.has(userid)) {
                         s.frcollection.set(userid, []);
                     }
-                    const frcontainer = innertable.rows[i].cells[5].firstElementChild;
+                    const frcontainer = innertable.rows[i].cells[6].firstElementChild;
                     s.frcollection.get(userid).push(frcontainer.getAttribute('data-frubric-params'));
                 }
             }

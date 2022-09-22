@@ -22,7 +22,6 @@
  * @copyright  2021 Veronica Bermegui
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-defined('MOODLE_INTERNAL') || die;
 
 function report_assignfeedback_download_extend_navigation_course($navigation, $course, $context) {
 
@@ -52,3 +51,4 @@ function show_only_active_users($context) {
 function sort_by_firstname($param1, $param2) {
     return strcmp($param1->firstname, $param2->firstname);
 }
+
