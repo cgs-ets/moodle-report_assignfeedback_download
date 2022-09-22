@@ -29,6 +29,7 @@ require_once($CFG->libdir.'/pdflib.php');
 require_once($CFG->libdir.'/tcpdf/tcpdf.php');
 
 use moodle_url;
+use Mpdf\Mpdf;
 use stdClass;
 use TCPDF;
 
@@ -40,8 +41,7 @@ require_once($CFG->dirroot . '/report/assignfeedback_download/vendor/autoload.ph
  * Generate the PDF with the flexible rubric for a student. It contains the checked descriptors
  * Mpdf was used in this case because TCPDF did not render checkboxes from html properply.
  */
-function create_frubric_pdf($rubric, $assessname, $frubric)
-{
+function create_frubric_pdf($rubric, $assessname, $frubric) {
     global $CFG, $OUTPUT;
 
     $rubric = json_decode($rubric);
@@ -60,15 +60,14 @@ function create_frubric_pdf($rubric, $assessname, $frubric)
     $totalgrade = "<strong>TOTAL:  $totalgrade </strong>";
     $rubric = $table . '<br> ' . $totalgrade;
 
-    $mpdf = new \Mpdf\Mpdf(['tempDir' => $CFG->tempdir . '/', 'assignment_', 'mode' => 's', 'debug' => false]);
+    $mpdf = new Mpdf(['tempDir' => $CFG->tempdir . '/', 'assignment_', 'mode' => 's', 'debug' => false]);
     $mpdf->SetFont('DejaVuSans', '', 9);
     $mpdf->backupSubsFont = ['dejavusans'];
     $mpdf->allow_charset_conversion = true;
 
-    //$mpdf->WriteHTML($rubric);
     $data = new stdClass();
     $data->rubric = $rubric;
-    //$OUTPUT->render_from_template("report_assignfeedback_download/frubric_template", $data);
+
     $mpdf->WriteHTML($rubric);
 
     $pathfilename = $assessname;
