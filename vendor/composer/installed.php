@@ -6,7 +6,7 @@
     'aliases' => 
     array (
     ),
-    'reference' => 'b79be3b5f48c2518222e2c1abef6422e29af728a',
+    'reference' => '036246e73159ef9523dc333c99a4a91a6b1d4f7e',
     'name' => '__root__',
   ),
   'versions' => 
@@ -18,25 +18,29 @@
       'aliases' => 
       array (
       ),
-      'reference' => 'b79be3b5f48c2518222e2c1abef6422e29af728a',
+      'reference' => '036246e73159ef9523dc333c99a4a91a6b1d4f7e',
     ),
     'mpdf/mpdf' => 
     array (
-      'pretty_version' => 'v8.1.2',
-      'version' => '8.1.2.0',
+      'pretty_version' => 'v8.0.15',
+      'version' => '8.0.15.0',
       'aliases' => 
       array (
       ),
-      'reference' => 'a8a22f4874157e490d41b486053a20bec42e182c',
+      'reference' => 'd8a5294a6cc2e814c4157aecc8d7ac25014b18ed',
     ),
     'myclabs/deep-copy' => 
     array (
-      'pretty_version' => '1.11.0',
-      'version' => '1.11.0.0',
+      'pretty_version' => '1.10.2',
+      'version' => '1.10.2.0',
       'aliases' => 
       array (
       ),
-      'reference' => '14daed4296fae74d9e3201d2c4925d1acb7aa614',
+      'reference' => '776f831124e9c62e1a2c601ecc52e776d8bb7220',
+      'replaced' => 
+      array (
+        0 => '1.10.2',
+      ),
     ),
     'paragonie/random_compat' => 
     array (
@@ -46,24 +50,6 @@
       array (
       ),
       'reference' => '996434e5492cb4c3edcb9168db6fbb1359ef965a',
-    ),
-    'php-http/message-factory' => 
-    array (
-      'pretty_version' => 'v1.0.2',
-      'version' => '1.0.2.0',
-      'aliases' => 
-      array (
-      ),
-      'reference' => 'a478cb11f66a6ac48d8954216cfed9aa06a501a1',
-    ),
-    'psr/http-message' => 
-    array (
-      'pretty_version' => '1.0.1',
-      'version' => '1.0.1.0',
-      'aliases' => 
-      array (
-      ),
-      'reference' => 'f6561bf28d520154e4b0ec72be95418abe6d9363',
     ),
     'psr/log' => 
     array (
