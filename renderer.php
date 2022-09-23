@@ -238,7 +238,7 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
             }
 
             if (isset($assess->gradeid)) {
-                $countgradedsubmissions++;
+
                 $userassessment->annottedpdftree = $this->get_assessment_anotatepdf_files_tree($assess->gradeid);
                 $userassessment->feedbackfiletree = $this->get_assessment_feedback_files_tree($assess->gradeid);
                 $userassessment->feedbackcommentxt = $this->get_assessment_feedback_comments($assess->gradeid, $assess->userid);
@@ -277,6 +277,7 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
                 if ($fr != '') {
                     $rubricparams[] = $fr;
                     $countfrubricfiles++;
+                    $countgradedsubmissions++; // Only enable download grades if there are frubrics saved.
                 }
 
                 if (!isset($user->itemids)) {
