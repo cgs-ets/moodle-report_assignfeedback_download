@@ -112,6 +112,27 @@ class reportmanager {
 
     }
 
+    public function get_marking_workflow_state($userid, $assignmentid) {
+        global $DB;
+        $map = ['' => get_string('notmarked', 'report_assignfeedback_download'),
+                'inmarking' => get_string('inmarking', 'report_assignfeedback_download'),
+                'readyforreview' => get_string('readyforreview', 'report_assignfeedback_download'),
+                'inreview' => get_string('inreview', 'report_assignfeedback_download'),
+                'readyforrelease' => get_string('readyforrelease', 'report_assignfeedback_download'),
+                'released' => get_string('released', 'report_assignfeedback_download'),
+                ];
+
+        $sql = "SELECT workflowstate
+                FROM {assign_user_flags} auf
+                WHERE auf.userid = :userid AND auf.assignment = :assignmentid ";
+        $params = ['userid' => $userid, 'assignmentid' => $assignmentid];
+
+        $result = $DB->get_record_sql($sql, $params);
+
+        return $map[$result->workflowstate];
+
+    }
+
 
     public function get_assessment_submission_records($userid, $courseid, $assignmentid) {
         global $DB;
@@ -293,10 +314,14 @@ class reportmanager {
     private function get_assessments_by_course($assessmentids) {
         global $DB;
 
-        $sql = "SELECT  grades.id as gradeid, grades.assignment as assignmentid, u.id as userid, u.firstname, u.lastname,  assign.name as 'assignmentname', assign.duedate
-                FROM {assign_grades} AS grades
-                JOIN {assign} as assign ON grades.assignment = assign.id
-                JOIN {user} as u ON grades.userid = u.id
+        $sql = "SELECT  grades.id as gradeid,
+                        grades.assignment as assignmentid,
+                        u.id as userid, u.firstname,
+                        u.lastname,  assign.name as 'assignmentname',
+                        assign.duedate, assign.markingworkflow, grades.grade
+                FROM {assign_grades}  grades
+                JOIN {assign}  assign ON grades.assignment = assign.id
+                JOIN {user}  u ON grades.userid = u.id
                 WHERE grades.assignment  IN ($assessmentids)
               --  AND grades.grade != -1.00000
                 ORDER BY assign.name";
@@ -619,7 +644,7 @@ class reportmanager {
                 );
 
                 $gradingitem = null;
-
+                error_log(print_r($gradinginfo, true));
                 if (isset($gradinginfo->items[0])) {
                     $gradingitem = $gradinginfo->items[0];
                     $gradebookgrade = $gradingitem->grades[$userid];

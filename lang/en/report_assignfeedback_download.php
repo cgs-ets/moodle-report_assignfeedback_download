@@ -70,4 +70,10 @@ $string['criteriatotal']                = 'Criteria total';
 $string['gradinginfo']                  = 'Grading Info';
 $string['gradedby']                     = 'Graded by';
 $string['finalgrade']                   = 'Final grade';
+$string['notmarked']                    = 'Not marked';
+$string['inmarking']                    = 'In marking';
+$string['readyforreview']               = 'Marking completed (Ready for review)';
+$string['inreview']                     = 'In review';
+$string['readyforrelease']              = 'Ready for release';
+$string['released']                     = 'Released';
 

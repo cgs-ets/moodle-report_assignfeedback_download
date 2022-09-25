@@ -77,7 +77,7 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
         $yuiconfig = array();
         $yuiconfig['type'] = 'html';
 
-        if (empty($dir['subdirs']) and empty($dir['files'])) {
+        if (empty($dir['subdirs']) && empty($dir['files'])) {
             return '';
         }
         $result = '<ul>';
@@ -85,20 +85,37 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
             $image = $this->output->pix_icon(file_folder_icon(), $subdir['dirname'], 'moodle', array('class' => 'icon'));
             $result .= '<li yuiConfig=\'' . json_encode($yuiconfig) . '\'><div>' . $image . s($subdir['dirname']) . '</div> ' . $this->htmllize_tree($tree, $subdir, $filetype) . '</li>';
         }
+        $urlbase = "{$CFG->wwwroot}/pluginfile.php";
         foreach ($dir['files'] as $file) {
 
             switch ($filetype) {
                 case self::SUBMISSION:
-                    $url = moodle_url::make_file_url("{$CFG->wwwroot}/pluginfile.php", "/{$tree->contextid}/assignsubmission_file/{$tree->filearea}/{$tree->itemid}" . $file->get_filepath() . $file->get_filename(), true);
+                    $url = moodle_url::make_file_url($urlbase,
+                    "/{$tree->contextid}/assignsubmission_file/{$tree->filearea}/{$tree->itemid}"
+                    . $file->get_filepath()
+                    . $file->get_filename(),
+                    true);
                     break;
                 case self::FEEDBACK:
-                    $url = moodle_url::make_file_url("{$CFG->wwwroot}/pluginfile.php", "/{$tree->contextid}/assignfeedback_file/{$tree->filearea}/{$tree->itemid}" . $file->get_filepath() . $file->get_filename(), true);
+                    $url = moodle_url::make_file_url($urlbase,
+                    "/{$tree->contextid}/assignfeedback_file/{$tree->filearea}/{$tree->itemid}"
+                    . $file->get_filepath()
+                    . $file->get_filename(),
+                    true);
                     break;
                 case self::ANNOTATEPDF:
-                    $url = moodle_url::make_file_url("{$CFG->wwwroot}/pluginfile.php", "/{$tree->contextid}/assignfeedback_editpdf/{$tree->filearea}/{$tree->itemid}" . $file->get_filepath() . $file->get_filename(), true);
+                    $url = moodle_url::make_file_url($urlbase,
+                    "/{$tree->contextid}/assignfeedback_editpdf/{$tree->filearea}/{$tree->itemid}"
+                    . $file->get_filepath()
+                    . $file->get_filename(),
+                    true);
                     break;
                 case self::EMBEDDEDFILEINCOMMENT:
-                    $url = moodle_url::make_file_url("{$CFG->wwwroot}/pluginfile.php", "/{$tree->contextid}/assignfeedback_comments/{$tree->filearea}/{$tree->itemid}" . $file->get_filepath() . $file->get_filename(), true);
+                    $url = moodle_url::make_file_url($urlbase,
+                    "/{$tree->contextid}/assignfeedback_comments/{$tree->filearea}/{$tree->itemid}"
+                    . $file->get_filepath()
+                    . $file->get_filename(),
+                    true);
                     break;
             }
 
@@ -116,7 +133,11 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
         $yuiconfig['type'] = 'html';
         $result = '<ul>';
         $image = $this->output->pix_icon('icon', '', 'report_assignfeedback_download');
-        $result .= '<li yuiConfig=\'' . json_encode($yuiconfig) . '\'><div>' . html_writer::span($image . $rubricname, 'frubric-container', ['title' => get_string('frubric_desc', 'report_assignfeedback_download')]) . '</div></li>';
+        $result .= '<li yuiConfig=\'' . json_encode($yuiconfig) . '\'><div>'
+        . html_writer::span($image . $rubricname, 'frubric-container',
+        ['title' => get_string('frubric_desc', 'report_assignfeedback_download')])
+        . '</div></li>';
+
 
         return $result;
     }
@@ -267,17 +288,37 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
                 }
 
                 $userassessment->finalgrade = $this->manager->get_final_grade($assess->assignmentid, $assess->userid);
-                $nograde = "0.00 / 100.00";
-                $userassessment->finalgrade = ($userassessment->finalgrade == $nograde) ? "Not graded" : $userassessment->finalgrade;
+                // Check if the assessment is using workflow.
+                $tag = "Not graded";
+
+                if ($assess->markingworkflow) {
+                    $tag = $this->manager->get_marking_workflow_state($assess->userid, $assess->assignmentid);
+                    $isreleased = ($tag == get_string('released', 'report_assignfeedback_download')) ? true : false;
+                    $userassessment->finalgrade = ($isreleased) ? $userassessment->finalgrade : $tag;
+                }
 
                 $userassessment->frubric = 0;
+                $showfrubricicon = false;
+                if ($assess->markingworkflow &&  $isreleased) {
+                    $showfrubricicon = true;
+                } else if ($assess->grade != -1.00000 && !$assess->markingworkflow) {
+                    $showfrubricicon = true;
+                }
 
-                $fr = $this->get_assessment_frubric_tree($cmid, $courseid, $assess, $userassessment, $user, $cmidsaux, $coursename);
+                if ($showfrubricicon) {
 
-                if ($fr != '') {
-                    $rubricparams[] = $fr;
-                    $countfrubricfiles++;
-                    $countgradedsubmissions++; // Only enable download grades if there are frubrics saved.
+                    $fr = $this->get_assessment_frubric_tree($cmid,
+                    $courseid,
+                    $assess,
+                    $userassessment,
+                    $user, $cmidsaux,
+                    $coursename);
+
+                    if ($fr != '') {
+                        $rubricparams[] = $fr;
+                        $countfrubricfiles++;
+                        $countgradedsubmissions++; // Only enable download grades if there are frubrics saved.
+                    }
                 }
 
                 if (!isset($user->itemids)) {
@@ -429,7 +470,8 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
             $year = userdate($date->getTimestamp(), '%Y');
             $year = $year == 1970 ? date("Y") : $year; // When the assessment doesnt have a due date.
             // Naming convention: Student name_CourseName_AssessmentName.
-            $userassessment->rubricfilename = $user->firstname . ' ' . $user->lastname . ' ' . $coursename . ' ' . $assess->assignmentname . '.pdf';
+            $rubricfilename = $user->firstname . ' ' . $user->lastname . ' ' . $coursename . ' ' . $assess->assignmentname . '.pdf';
+            $userassessment->rubricfilename = $rubricfilename;
             $rubricparams->rubricfilename = $userassessment->rubricfilename;
             $userassessment->rubricparams = json_encode($rubricparams);
 
@@ -437,8 +479,11 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
             $htmlid = 'assessement_frubric_tree_' . uniqid();
             $this->page->requires->js_init_call('M.report_assignfeedback_download.init_tree', array(false, $htmlid), true);
             $html = '<div id="' . $htmlid . '">';
-            $html .= $this->htmlize_rubric($tree, shorten_text($userassessment->rubricfilename, 20), $this->output->image_url('icon', 'report_assignfeedback_download'));
+            $rubricname = shorten_text($userassessment->rubricfilename, 20);
+            $icon = $this->output->image_url('icon', 'report_assignfeedback_download');
+            $html .= $this->htmlize_rubric($tree, $rubricname, $icon);
             $html .= '</div>';
+
             $userassessment->frubrictree = $html;
             $cmidcollection[$assess->assignmentid] = $cmid;
 
