@@ -610,7 +610,7 @@ class reportmanager {
                 $rubric = $this->get_advanced_method($frubric->cmid, $courseid, $frubric->userid, $frubric->assignmentid);
 
                 if (isset($rubric['frubric'])) {
-                    $userpdfs[$frubric->userid][] = report_assignfeedback_download_create_frubric_pdf($rubric, $assessname, $frubric);
+                    $userpdfs[$frubric->userid][] = report_assignfeedback_download_create_frubric_pdf($rubric['frubric'], $assessname, $frubric);
                 }
             }
         }
@@ -622,7 +622,7 @@ class reportmanager {
      * Based on the active method, return what is needed.
      */
     public function get_advanced_method($cmid, $courseid, $userid, $instanceid) {
-        global $DB, $PAGE, $CFG;
+        global $CFG;
         require_once($CFG->libdir . '/gradelib.php');
         $context = \context_module::instance($cmid);
         $gradingmanager = get_grading_manager($context, 'mod_assign', 'submissions');
@@ -632,7 +632,7 @@ class reportmanager {
                 return ['frubric' => $this->get_frubric_json($courseid, $userid, $instanceid, $gradingmanager->get_active_controller())];
                 break;
             case 'rubric' :
-                return ['rubric' => 'fotin'];
+                return ['rubric' => 'rubric'];
                 break;
 
             default:
