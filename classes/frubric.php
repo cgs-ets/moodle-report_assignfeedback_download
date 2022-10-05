@@ -172,14 +172,12 @@ function report_assignfeedback_download_add_student_header(MoodleExcelWorkbook $
 function report_assignfeedback_download_add_frubric_and_grading_info_header(MoodleExcelWorkbook $workbook, MoodleExcelWorksheet $sheet, $frubric, $pos) {
     $format     = $workbook->add_format(HEADINGTITLES);
     $format2    = $workbook->add_format(HEADINGSUBTITLES);
-    $longestdesc = 0;
 
     // Set the Frubric headers.
     foreach ($frubric->frubric_criteria as $cid => $criteria) {
 
         foreach ($criteria as $title => $criterion) {
             if ($title == 'description') {
-                $longestdesc = $longestdesc < strlen($criterion) ? strlen($criterion) : $longestdesc;
                 $sheet->write_string(HEADINGSROW, $pos, $criterion, $format);
                 $thiscriterionlevel = $frubric->frubric_criteria[$cid]['levels'];
                 $descriptortext = report_assignfeedback_download_get_descriptors_and_titles($thiscriterionlevel);
@@ -196,7 +194,7 @@ function report_assignfeedback_download_add_frubric_and_grading_info_header(Mood
 
         }
     }
-    $sheet->set_row(4, ($longestdesc / 2), $format);
+    $sheet->set_row(4, 30, $format);
     // Add the grading info header.
     $sheet->write_string(HEADINGSROW, $pos, get_string('gradinginfo', 'report_assignfeedback_download'), $format);
     $sheet->write_string(5, $pos++, get_string('criteriatotal', 'report_assignfeedback_download'), $format2);

@@ -172,7 +172,6 @@ function report_assignfeedback_download_add_header(MoodleExcelWorkbook $workbook
 function report_assignfeedback_download_add_rubric_and_grading_info_header(MoodleExcelWorkbook $workbook, MoodleExcelWorksheet $sheet, $data, $pos) {
     $format = $workbook->add_format(HEADINGTITLES);
     $format2 = $workbook->add_format(HEADINGSUBTITLES);
-    $longestdesc = 0;
     // Set the Rubric headers.
     foreach ($data as $line) {
 
@@ -184,7 +183,6 @@ function report_assignfeedback_download_add_rubric_and_grading_info_header(Moodl
         $sheet->write_string(5, $pos, get_string('feedback', 'report_assignfeedback_download'), $format2);
         $sheet->set_column($pos - 1, $pos++, 10); // Set column widths to 10.
         // Get the longes description to set the row height later.
-        $longestdesc = $longestdesc < strlen($line->description) ? strlen($line->description) : $longestdesc;
     }
 
     // Grading info columns.
@@ -195,7 +193,7 @@ function report_assignfeedback_download_add_rubric_and_grading_info_header(Moodl
     $sheet->set_column($pos, $pos, 17.5); // Set column width to 17.5.
     $sheet->merge_cells(4, $pos - 1, 4, $pos);
 
-    $sheet->set_row(4, $longestdesc, $format);
+    $sheet->set_row(4, 30, $format);
     $sheet->set_row(5, null, $format2);
 
     // Merge header cells.
@@ -229,13 +227,10 @@ function report_assignfeedback_set_students_rows (MoodleExcelWorksheet $sheet, $
     foreach ($students as $student) {
         $col = 0;
         $row++;
-        $longestdef = 0;
         $sheet->write_string($row, $col++, $student->firstname, $format);
         $sheet->write_string($row, $col++, $student->lastname, $format);
         $sheet->write_string($row, $col++, $student->username, $format);
         foreach ($student->data as $line) {
-
-            $longestdef = $longestdef < strlen($line->definition) ? strlen($line->definition) : $longestdef;
 
             if (is_numeric($line->score)) {
                 $sheet->write_number($row, $col++, $line->score);
@@ -244,7 +239,7 @@ function report_assignfeedback_set_students_rows (MoodleExcelWorksheet $sheet, $
             $sheet->set_column($col, $col, 35);
             $sheet->write_string($row, $col++, $line->definition);
             $sheet->write_string($row, $col++, $line->remark);
-            $sheet->set_row($row, ($longestdef / 2), $format);
+            $sheet->set_row($row, 25, $format);
 
             if ($col === $pos) {
                 $sheet->set_column($col, $col, 15);
