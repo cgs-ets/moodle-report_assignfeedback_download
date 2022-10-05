@@ -23,6 +23,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+
+
 function report_assignfeedback_download_extend_navigation_course($navigation, $course, $context) {
 
     if (has_capability('moodle/site:viewuseridentity', $context)) {
@@ -31,24 +33,10 @@ function report_assignfeedback_download_extend_navigation_course($navigation, $c
     }
 }
 
-
-function show_only_active_users($context) {
-    global $CFG;
-    $showonlyactiveenrol = true;
-    if ($showonlyactiveenrol) {
-        $defaultgradeshowactiveenrol = !empty($CFG->grade_report_showonlyactiveenrol);
-        $showonlyactiveenrol = get_user_preferences('grade_report_showonlyactiveenrol', $defaultgradeshowactiveenrol);
-
-        if (!is_null($context)) {
-            $showonlyactiveenrol = $showonlyactiveenrol ||
-                !has_capability('moodle/course:viewsuspendedusers', $context);
-        }
-    }
-    return $showonlyactiveenrol;
-}
-
-
-function sort_by_firstname($param1, $param2) {
+function report_assignfeedback_download_sort_by_firstname($param1, $param2) {
     return strcmp($param1->firstname, $param2->firstname);
 }
 
+function  report_assignfeedback_download_get_anonymous_submission_id($cm, $userid) {
+    return \assign::get_uniqueid_for_user_static($cm->instance, $userid);
+}

@@ -1,3 +1,6 @@
+/* eslint-disable no-unused-vars */
+/* eslint-disable require-jsdoc */
+/* eslint-disable jsdoc/require-jsdoc */
 // This file is part of Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -15,7 +18,6 @@
 
 /**
  *
- *
  * @package    report
  * @subpackage ibassessmentreport
  * @copyright  2021 Veronica Bermegui
@@ -26,8 +28,6 @@
     "use strict";
 
     function init() {
-        Y.log("assignfeedback_download control...");
-
         let userids = [];
         let useritemids = [];
         var control = new Controls(userids, useritemids);
@@ -174,8 +174,6 @@
 
         selectedusers.value = s.userids;
         useritemids.value = JSON.stringify(s.useritemids);
-
-
 
         // Enable the download select only if there are selected users.
         if (selectedusers.value) {

@@ -27,6 +27,9 @@ table.innertable {
     width: 100%;
 }
 
+tr.secondary-tables-header {
+    color: white;
+}
 
 tbody#iassignfeedbacktb > tr {
     vertical-align: middle;

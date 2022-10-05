@@ -41,7 +41,7 @@ require_once($CFG->dirroot . '/report/assignfeedback_download/vendor/autoload.ph
  * Generate the PDF with the flexible rubric for a student. It contains the checked descriptors
  * Mpdf was used in this case because TCPDF did not render checkboxes from html properply.
  */
-function create_frubric_pdf($rubric, $assessname, $frubric) {
+function report_assignfeedback_download_create_frubric_pdf($rubric, $assessname, $frubric) {
     global $CFG, $OUTPUT;
 
     $rubric = json_decode($rubric);
@@ -79,7 +79,7 @@ function create_frubric_pdf($rubric, $assessname, $frubric) {
     return $fd;
 }
 
-function generatefeedbackpdf($content, $assessmentname, $student, $course) {
+function report_assignfeedback_download_generatefeedbackpdf($content, $assessmentname, $student, $course) {
 
     $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
     // Set default header data.
@@ -87,7 +87,7 @@ function generatefeedbackpdf($content, $assessmentname, $student, $course) {
 
     $pdf->SetHeaderData(PDF_HEADER_LOGO, PDF_HEADER_LOGO_WIDTH, 'COURSE: ' . $course->fullname, $pdfheaderstring);
 
-    // set header and footer fonts.
+    // Set header and footer fonts.
     $pdf->setHeaderFont(array(PDF_FONT_NAME_MAIN, '', PDF_FONT_SIZE_MAIN));
     $pdf->setFooterFont(array(PDF_FONT_NAME_DATA, '', PDF_FONT_SIZE_DATA));
 
@@ -188,8 +188,7 @@ function pdfassessmentdownloader_fix_image_links($html)
         return $html;
 }
 
-function pdfassessmentdownloader_fix_svg_images($html)
-{
+function pdfassessmentdownloader_fix_svg_images($html) {
     $baseurl = new moodle_url('/theme/image.php');
     $baseurl = preg_quote($baseurl->out());
     $html = preg_replace_callback("|({$baseurl})([^\"']*)|", function ($matches) {

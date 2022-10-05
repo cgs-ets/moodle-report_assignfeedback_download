@@ -27,53 +27,50 @@ namespace report_assignfeedback_download\frubric;
 
 require_once($CFG->dirroot.'/lib/excellib.class.php');
 
+require($CFG->dirroot . '/report/assignfeedback_download/classes/excelmanager.php');
+
 use context_module;
 use MoodleExcelWorkbook;
 use MoodleExcelWorksheet;
 use stdClass;
 use AssignfedbackDownloaderExcelWorkbook;
 
-define("HEADINGSROW", 4);
-define("HEADINGTITLES", array('size' => 12, 'bold' => 1, 'text_wrap' => true, 'align' => 'centre'));
-define("HEADINGSUBTITLES", array('bold' => 1, 'text_wrap' => true, 'align' => 'fill'));
-require($CFG->dirroot . '/report/assignfeedback_download/classes/excelmanager.php');
+const HEADINGSROW = 4;
+const HEADINGTITLES = array('size' => 12, 'bold' => 1, 'text_wrap' => true, 'align' => 'centre');
+const HEADINGSUBTITLES = array('bold' => 1, 'text_wrap' => true, 'align' => 'fill');
 
-function setup_frubric_workbook($id, $modid, $areaid, $selectedusers, $maxscore, $tempdir, $numberofassessments) {
+function report_assignfeedback_download_setup_frubric_workbook($id, $modid, $areaid, $selectedusers, $maxscore, $tempdir) {
     global $DB;
 
-    $course = $DB->get_record('course', array('id' => $id), '*', MUST_EXIST);
-    $modinfo = get_fast_modinfo($course->id);
-    $cm = $modinfo->get_cm($modid);
-    $modcontext = context_module::instance($cm->id);
+    $course         = $DB->get_record('course', array('id' => $id), '*', MUST_EXIST);
+    $modinfo        = get_fast_modinfo($course->id);
+    $cm             = $modinfo->get_cm($modid);
+    $modcontext     = context_module::instance($cm->id);
+
     require_capability('mod/assign:grade', $modcontext);
 
-    $filename = $course->shortname . ' - ' . $cm->name . '.xls';
-    $workbook = new AssignfedbackDOwnloaderExcelWorkbook("-");
+    $filename       = $course->shortname . ' - ' . $cm->name . '.xls';
+    $workbook       = new AssignfedbackDownloaderExcelWorkbook("-");
     $workbook->send($filename);
-    $sheet = $workbook->add_worksheet($cm->name);
+    $sheet          = $workbook->add_worksheet($cm->name);
 
-    $frubric = get_frubric_data_definition($areaid);
-    $pos = report_assignfeedback_download_add_student_header($workbook, $sheet, $course->fullname, $cm->name, $frubric);
-    $pos = report_assignfeedback_download_add_frubric_and_grading_info_header($workbook, $sheet, $frubric, $pos);
-    $data = report_assignfeedback_students_data($modid, $selectedusers);
+    $frubric     = report_assignfeedback_download_decode_level_filling($areaid);
+    $pos         = report_assignfeedback_download_add_student_header($workbook, $sheet, $course->fullname, $cm->name, $frubric);
+    $pos         = report_assignfeedback_download_add_frubric_and_grading_info_header($workbook, $sheet, $frubric, $pos);
+    $data        = report_assignfeedback_download_students_data($modid, $selectedusers, $cm);
 
     report_assignfeedback_set_students_rows($sheet, $data, $maxscore);
 
-    // When more than one assessment is selected. The .xlxs are saved in a zip file.
-    // If there is only one assessment selected, the .xlxs file is saved.
-    if ($numberofassessments > 1) {
-        $workbook->savetotempdir($tempdir);
-    } else {
-        $workbook->close();
-    }
-
-    return $filename;
+    $workbook->savetotempdir($tempdir);
 
 }
 
-// Frubic is made of: Criterion, levels and descritors.
-// It defers from rubric because a level can have 1..* descriptors.
-function get_frubric_data_definition($areaid) {
+/**
+ * Get the frubric definition.
+ * Frubic is made of: Criterion, levels and descritors.
+ * It defers from rubric because a level can have 1..* descriptors.
+ */
+function report_assignfeedback_download_decode_level_filling($areaid) {
     global $DB;
 
     $sql = "SELECT gd.*, rc.id AS rcid, rc.sortorder AS rcsortorder,
@@ -90,8 +87,7 @@ function get_frubric_data_definition($areaid) {
             ORDER BY rl.id";
             $params = array('areaid' => $areaid, 'method' => 'frubric');
 
-    $rs = $DB->get_recordset_sql($sql, $params);
-
+    $rs         = $DB->get_recordset_sql($sql, $params);
     $definition = new stdClass();
     $definition->frubric_criteria = array();
 
@@ -140,10 +136,10 @@ function get_frubric_data_definition($areaid) {
 function report_assignfeedback_download_add_student_header(MoodleExcelWorkbook $workbook, MoodleExcelWorksheet $sheet, $coursename, $modname, $frubric) {
 
     // Course, assingment and Frubric definition section.
-    $format = $workbook->add_format(array('size' => 18, 'bold' => 1));
+    $format     = $workbook->add_format(array('size' => 18, 'bold' => 1));
     $sheet->write_string(0, 0, $coursename, $format);
     $sheet->set_row(0, 24, $format);
-    $format = $workbook->add_format(array('size' => 16, 'bold' => 1));
+    $format     = $workbook->add_format(array('size' => 16, 'bold' => 1));
     $sheet->write_string(1, 0, $modname, $format);
     $sheet->set_row(1, 21, $format);
     $methodname = "Frubric : $frubric->name";
@@ -151,45 +147,56 @@ function report_assignfeedback_download_add_student_header(MoodleExcelWorkbook $
     $sheet->set_row(2, 21, $format);
 
     // Column headers - two rows for grouping.
-    $format = $workbook->add_format(HEADINGTITLES);
-    $format2 = $workbook->add_format(HEADINGSUBTITLES);
+    $format     = $workbook->add_format(HEADINGTITLES);
+    $format2    = $workbook->add_format(HEADINGSUBTITLES);
     $sheet->write_string(HEADINGSROW, 0, get_string('student', 'report_assignfeedback_download'), $format);
     $sheet->merge_cells(HEADINGSROW, 0, HEADINGSROW, 2, $format); // Student section.
-    $col = 0;
+    $col        = 0;
     $sheet->write_string(5, $col++, get_string('firstname', 'report_assignfeedback_download'), $format2);
     $sheet->write_string(5, $col++, get_string('lastname', 'report_assignfeedback_download'), $format2);
     $sheet->write_string(5, $col++, get_string('username', 'report_assignfeedback_download'), $format2);
 
-    $sheet->set_column(0, $col, 10); // Set column widths to 10.
-    return $col; // Add an empty column to make it better.
+    $sheet->set_column(0, $col, 20); // Set column widths to 20.
+    return $col;
 }
 
+/**
+ * Creates:
+ * Frubric columns
+ *  Criterion descriptor
+ *      Levels this descriptor has
+ * Grading info column
+ *  Grader
+ *
+ */
 function report_assignfeedback_download_add_frubric_and_grading_info_header(MoodleExcelWorkbook $workbook, MoodleExcelWorksheet $sheet, $frubric, $pos) {
-    $format = $workbook->add_format(HEADINGTITLES);
-    $format2 = $workbook->add_format(HEADINGSUBTITLES);
+    $format     = $workbook->add_format(HEADINGTITLES);
+    $format2    = $workbook->add_format(HEADINGSUBTITLES);
+    $longestdesc = 0;
 
     // Set the Frubric headers.
     foreach ($frubric->frubric_criteria as $cid => $criteria) {
 
         foreach ($criteria as $title => $criterion) {
             if ($title == 'description') {
-
+                $longestdesc = $longestdesc < strlen($criterion) ? strlen($criterion) : $longestdesc;
                 $sheet->write_string(HEADINGSROW, $pos, $criterion, $format);
                 $thiscriterionlevel = $frubric->frubric_criteria[$cid]['levels'];
-                $descriptortext = get_descriptors_and_titles($thiscriterionlevel);
+                $descriptortext = report_assignfeedback_download_get_descriptors_and_titles($thiscriterionlevel);
+
                 $lastcol = (count($descriptortext) + $pos) - 1;
                 $sheet->merge_cells(HEADINGSROW, $pos, HEADINGSROW, $lastcol, $format);
-                $sheet->set_column($pos, $lastcol, 20); // Set column width to 6.
+                $sheet->set_column($pos, $lastcol, 20); // Set column width to 20.
                 // Set the descriptors for each criterion.
                 foreach ($descriptortext as $desctext) {
                     $sheet->write_string(5, $pos++, $desctext, $format2);
                 }
-                $sheet->set_column($lastcol - 1, $lastcol, 20); // Set column widths to 10.
+                $sheet->set_column($lastcol - 1, $lastcol, 20); // Set column widths to 20.
             }
 
         }
     }
-
+    $sheet->set_row(4, ($longestdesc / 2), $format);
     // Add the grading info header.
     $sheet->write_string(HEADINGSROW, $pos, get_string('gradinginfo', 'report_assignfeedback_download'), $format);
     $sheet->write_string(5, $pos++, get_string('criteriatotal', 'report_assignfeedback_download'), $format2);
@@ -201,7 +208,10 @@ function report_assignfeedback_download_add_frubric_and_grading_info_header(Mood
     return $pos;
 }
 
-function get_descriptors_and_titles($levels) {
+/**
+ * Helper function to get the levels descritors
+ */
+function report_assignfeedback_download_get_descriptors_and_titles($levels) {
     $descriptortext = [];
 
     foreach ($levels as $level) {
@@ -219,34 +229,20 @@ function get_descriptors_and_titles($levels) {
     return $descriptortext;
 }
 
-function report_assignfeedback_download_add_grading_info(MoodleExcelWorkbook $workbook, MoodleExcelWorksheet $sheet, $pos) {
-    $format = $workbook->add_format(HEADINGTITLES);
-    $format2 = $workbook->add_format(HEADINGSUBTITLES);
-
-    $sheet->write_string(4, $pos, get_string('gradinginfo', 'report_assignfeedback_download'), $format);
-    $sheet->write_string(5, $pos, get_string('finalgrade', 'report_assignfeedback_download'), $format2);
-    $sheet->write_string(5, $pos, get_string('gradedby', 'report_assignfeedback_download'), $format2);
-    $sheet->set_column($pos, $pos, 17.5); // Set column width to 17.5.
-    $sheet->merge_cells(4, $pos - 1, 4, $pos);
-
-    $sheet->set_row(4, 15, $format);
-    $sheet->set_row(5, null, $format2);
-
-    // Merge header cells.
-    $sheet->merge_cells(0, 0, 0, $pos);
-    $sheet->merge_cells(1, 0, 1, $pos);
-    $sheet->merge_cells(2, 0, 2, $pos);
-}
-
-function report_assignfeedback_students_data($cmid, $selectedusers) {
+/**
+ * Get the students grading details
+ *    descritors checked, level sscore, criteria total score, final grade
+ */
+function report_assignfeedback_download_students_data($cmid, $selectedusers, $cm) {
     global $DB, $CFG;
     require_once($CFG->libdir . '/gradelib.php');
 
-    $sql = "SELECT grf.id AS grfid, grl.id AS levelid, grf.leveljson
-            AS selections, grf.remark, grf.levelscore AS score, grf.criterionid,
+    $sql = "SELECT grf.id AS grfid, grl.id AS levelid, grf.leveljson  AS selections,
+            grf.remark, grf.levelscore AS score, grf.criterionid,
             rubm.username AS grader, stu.id AS userid,
             stu.idnumber AS idnumber, stu.firstname,stu.lastname,
-            stu.username, gin.timemodified AS modified, crs.id AS courseid, asg.id as itemid
+            stu.username, gin.timemodified AS modified,
+            crs.id AS courseid, asg.id AS itemid, asg.blindmarking
             FROM {course} crs
             JOIN {course_modules} cm ON crs.id = cm.course
             JOIN {assign} asg ON asg.id = cm.instance
@@ -264,19 +260,27 @@ function report_assignfeedback_students_data($cmid, $selectedusers) {
             WHERE cm.id = :cmid AND gin.status = 1 AND stu.id in ($selectedusers)
             ORDER BY lastname ASC, firstname ASC, userid ASC, grc.sortorder ASC";
 
-    $params = ['cmid' => $cmid];
-    $results = $DB->get_records_sql($sql, $params);
-    $data = [];
+    $params     = ['cmid' => $cmid];
+    $results    = $DB->get_records_sql($sql, $params);
+    $data       = [];
 
     foreach ($results as $result) {
 
         if (!isset($data[$result->userid])) {
             $filling = new stdClass();
-            $filling->firstname = $result->firstname;
-            $filling->lastname = $result->lastname;
-            $filling->username = $result->username;
-            $filling->grader = $result->grader;
-            $filling->modified = $result->modified;
+            $filling->firstname     = '';
+            $filling->lastname      = '';
+            if ($result->blindmarking == 1) {
+                $filling->username = report_assignfeedback_download_get_anonymous_submission_id($cm, $result->userid);
+            } else {
+
+                $filling->firstname     = $result->firstname;
+                $filling->lastname      = $result->lastname;
+                $filling->username      = $result->username;
+            }
+
+            $filling->grader        = $result->grader;
+            $filling->modified      = $result->modified;
 
             $gradinginfo = grade_get_grades(
                 $result->courseid,
@@ -296,21 +300,24 @@ function report_assignfeedback_students_data($cmid, $selectedusers) {
         } else {
             $filling = $data[$result->userid];
         }
-        $level = new stdClass();
-        $level->id = $result->levelid;
-        $level->feedback = $result->remark;
-        $level->score = $result->score;
-        $level->descriptors = decode_level_filling($result->selections);
+        $level                       = new stdClass();
+        $level->id                   = $result->levelid;
+        $level->feedback             = $result->remark;
+        $level->score                = $result->score;
+        $level->descriptors          = report_assignfeedback_download_decode_level_descriptors($result->selections);
         $filling->levels[$level->id] = $level;
-        $data[$result->userid] = $filling;
+        $data[$result->userid]       = $filling;
     }
 
     return $data;
 }
 
-function decode_level_filling($selections) {
+/**
+ * Helper function to set a ✔ to the checked levels
+ */
+function report_assignfeedback_download_decode_level_descriptors($selections) {
     $selections = json_decode($selections);
-    $decoded = [];
+    $decoded    = [];
     foreach ($selections as $levelid => $filling) {
         $definition = json_decode($filling->definition);
 
@@ -318,6 +325,8 @@ function decode_level_filling($selections) {
 
             if ($descriptor->checked == 1) {
                 $descriptor->checked = '✔';
+            } else {
+                $descriptor->checked = '';
             }
 
             $decoded[] = $descriptor->checked;
@@ -328,6 +337,9 @@ function decode_level_filling($selections) {
 
 }
 
+/**
+ * Fill the rows with the student info
+ */
 function report_assignfeedback_set_students_rows (MoodleExcelWorksheet $sheet, $students, $maxscore) {
     $row = 5;
     $format = array('text_wrap' => true);

@@ -27,14 +27,16 @@ use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use zip_packer;
 
-use function report_assignfeedback_download\frubric\setup_frubric_workbook;
-use function report_assignfeedback_download\pdflib\create_frubric_pdf;
-use function report_assignfeedback_download\pdflib\generatefeedbackpdf;
+use function report_assignfeedback_download\frubric\report_assignfeedback_download_setup_frubric_workbook;
+use function report_assignfeedback_download\pdflib\report_assignfeedback_download_create_frubric_pdf;
+use function report_assignfeedback_download\pdflib\report_assignfeedback_download_generatefeedbackpdf;
+use function report_assignfeedback_download\rubric\report_assignfeedback_download_setup_rubric_workbook;
 
 defined('MOODLE_INTERNAL') || die();
 
 require($CFG->dirroot . '/report/assignfeedback_download/classes/pdflib.php');
 require($CFG->dirroot . '/report/assignfeedback_download/classes/frubric.php');
+require($CFG->dirroot . '/report/assignfeedback_download/classes/rubric.php');
 require_once($CFG->libdir . '/filestorage/zip_archive.php');
 require_once($CFG->dirroot . '/report/assignfeedback_download/vendor/autoload.php');
 
@@ -425,7 +427,7 @@ class reportmanager {
             }
         }
 
-        // Remove folder
+        // Remove folder.
         foreach ($filesforzipping as $path => $files) {
             if ($path[-1] == '.') {
                 unset($filesforzipping[$path]);
@@ -490,7 +492,7 @@ class reportmanager {
     // Generate PDFs with the feedback comments.
     public function download_feedback_comments($itemids, $id) {
         global $DB;
-           // Increase the server timeout to handle the creation and sending of large zip files.
+        // Increase the server timeout to handle the creation and sending of large zip files.
         \core_php_time_limit::raise();
 
         $uitemids = json_decode($itemids);
@@ -506,7 +508,7 @@ class reportmanager {
                 $filerecords = $this->get_assessment_feedback_comments($itemid, $user->id, true);
 
                 foreach ($filerecords as $fr) {
-                    $userspdfs [$user->id][] = generatefeedbackpdf($fr, $assessname, $user, $course);
+                    $userspdfs [$user->id][] = report_assignfeedback_download_generatefeedbackpdf($fr, $assessname, $user, $course);
                 }
             }
         }
@@ -533,7 +535,7 @@ class reportmanager {
 
                 $filerecords = $this->get_assessment_submission_onlinetext($assignmentid, $user->id, true);
                 foreach ($filerecords as $fr) {
-                    $userpdfs[$user->id][] = generatefeedbackpdf($fr, $asessn, $user, $course);
+                    $userpdfs[$user->id][] = report_assignfeedback_download_generatefeedbackpdf($fr, $asessn, $user, $course);
                 }
             }
 
@@ -550,24 +552,25 @@ class reportmanager {
         $instaceids = explode(',', $instaceids);
         $selectedusers = implode(',', $selectedusers);
         $tempdir = make_temp_directory('report_assing_fdownloader/excel');
-        $numberofassessments = count($cmids);
         foreach ($cmids as $cmid) {
-            $this->download_grades_helper($cmid, $courseid, $selectedusers, $tempdir, $numberofassessments);
+            $this->download_grades_helper($cmid, $courseid, $selectedusers, $tempdir);
         }
         // Now make a zip file of the temp dir and then delete it.
         $this->zip_excelworkbook();
 
     }
 
-    private function download_grades_helper($cmid, $courseid, $selectedusers, $tempdir, $numberofassessments) {
+    private function download_grades_helper($cmid, $courseid, $selectedusers, $tempdir) {
         $context = \context_module::instance($cmid);
         $gradingmanager = get_grading_manager($context, 'mod_assign', 'submissions');
-
         switch ($gradingmanager->get_active_method()) {
             case 'frubric':
                 $areaid = $gradingmanager->get_active_controller()->get_areaid();
                 $maxscore = $gradingmanager->get_active_controller()->get_min_max_score()['maxscore'];
-                setup_frubric_workbook($courseid, $cmid, $areaid, $selectedusers, $maxscore, $tempdir, $numberofassessments);
+                report_assignfeedback_download_setup_frubric_workbook($courseid, $cmid, $areaid, $selectedusers, $maxscore, $tempdir);
+                break;
+            case 'rubric':
+                report_assignfeedback_download_setup_rubric_workbook($courseid, $cmid, $selectedusers, $tempdir);
                 break;
         }
     }
@@ -578,7 +581,7 @@ class reportmanager {
     }
 
     public function download_frubric($cmids, $instaceids, $courseid, $frubricselection) {
-        global $DB, $CFG;
+        global $DB;
 
         \core_php_time_limit::raise();
 
@@ -604,10 +607,10 @@ class reportmanager {
                 $frubric = json_decode($frubric);
 
                 $assessname = $assesmentsdetails[$frubric->gradeid]->assignmentname;
-                $rubric = $this->get_rubric($frubric->cmid, $courseid, $frubric->userid, $frubric->assignmentid);
+                $rubric = $this->get_advanced_method($frubric->cmid, $courseid, $frubric->userid, $frubric->assignmentid);
 
-                if ($rubric != '') {
-                    $userpdfs[$frubric->userid][] = create_frubric_pdf($rubric, $assessname, $frubric);
+                if (isset($rubric['frubric'])) {
+                    $userpdfs[$frubric->userid][] = report_assignfeedback_download_create_frubric_pdf($rubric, $assessname, $frubric);
                 }
             }
         }
@@ -615,9 +618,31 @@ class reportmanager {
         $this->save_generated_pdf_files($userpdfs, $dirname);
     }
 
+    /**
+     * Based on the active method, return what is needed.
+     */
+    public function get_advanced_method($cmid, $courseid, $userid, $instanceid) {
+        global $DB, $PAGE, $CFG;
+        require_once($CFG->libdir . '/gradelib.php');
+        $context = \context_module::instance($cmid);
+        $gradingmanager = get_grading_manager($context, 'mod_assign', 'submissions');
+
+        switch($gradingmanager->get_active_method()) {
+            case 'frubric' :
+                return ['frubric' => $this->get_frubric_json($courseid, $userid, $instanceid, $gradingmanager->get_active_controller())];
+                break;
+            case 'rubric' :
+                return ['rubric' => 'fotin'];
+                break;
+
+            default:
+                return '';
+
+        }
+
+    }
     // Get the frubric that is rendered to a student. With the checked descriptors.
     public function get_rubric($cmid, $courseid, $userid, $instanceid) {
-
         global $DB, $PAGE, $CFG;
         require_once($CFG->libdir . '/gradelib.php');
 
@@ -627,42 +652,53 @@ class reportmanager {
         if ($controller = $gradingmanager->get_active_controller()) {
             $methodname = $DB->get_record('grading_areas', ['id' => $controller->get_areaid()], 'activemethod', IGNORE_MISSING);
 
-            if ($methodname->activemethod == 'frubric') {  // Only works for flexible rubric.
-
-                $params = array('assignment' => $instanceid, 'userid' => $userid);
-                $grade = array_values($DB->get_records('assign_grades', $params, 'attemptnumber DESC', '*', 0, 1));
-
-                if (count($grade) == 0) {
-                    return '';
-                }
-                $gradinginfo = grade_get_grades(
-                    $courseid,
-                    'mod',
-                    'assign',
-                    $instanceid,
-                    $userid
-                );
-
-                $gradingitem = null;
-                error_log(print_r($gradinginfo, true));
-                if (isset($gradinginfo->items[0])) {
-                    $gradingitem = $gradinginfo->items[0];
-                    $gradebookgrade = $gradingitem->grades[$userid];
-                }
-
-                $fr = json_encode($controller->render_grade(
-                    $PAGE,
-                    $grade[0]->id,
-                    $gradinginfo,
-                    $gradebookgrade->str_long_grade,
-                    true
-                ));
-
-                return $fr;
+            if ($methodname->activemethod == 'frubric') {
+                return  $this->get_frubric_json($courseid, $userid, $instanceid, $controller);
             }
         }
 
         return '';
+    }
+
+    /**
+     * Only Frubric can be downloaded as PDF.
+     * This function generats the JSON needed to downloand from the front page (Using JS) --> Which is not active yet.
+     *
+     */
+    private function get_frubric_json($courseid, $userid, $instanceid, $controller) {
+        global $DB, $PAGE;
+
+        $params = array('assignment' => $instanceid, 'userid' => $userid);
+        $grade = array_values($DB->get_records('assign_grades', $params, 'attemptnumber DESC', '*', 0, 1));
+
+        if (count($grade) == 0) {
+            return '';
+        }
+
+        $gradinginfo = grade_get_grades(
+            $courseid,
+            'mod',
+            'assign',
+            $instanceid,
+            $userid
+        );
+
+        $gradingitem = null;
+
+        if (isset($gradinginfo->items[0])) {
+            $gradingitem = $gradinginfo->items[0];
+            $gradebookgrade = $gradingitem->grades[$userid];
+        }
+
+        $fr = json_encode($controller->render_grade(
+            $PAGE,
+            $grade[0]->id,
+            $gradinginfo,
+            $gradebookgrade->str_long_grade,
+            true
+        ));
+
+        return $fr;
     }
 
 
@@ -751,9 +787,11 @@ class reportmanager {
 
         // Zip archive will be created only after closing object.
         $zip->close();
+
         foreach ($filestodelete as $file) {
             unlink($file);
         }
+
         header("Content-Type: application/zip");
         header("Content-Disposition: attachment; filename=grades.zip");
         header("Content-Length: " . filesize("$filename"));

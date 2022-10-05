@@ -39,7 +39,7 @@ $instaceids              = optional_param('instanceids', '', PARAM_TEXT);
 $selectedusers           = optional_param('selectedusers', '', PARAM_TEXT);
 $selectedaction          = optional_param('operation', '', PARAM_TEXT);
 $frubricselection        = optional_param('frubricdetails', '', PARAM_TEXT);
-$manager = new report_assignfeedback_download\reportmanager();
+$manager                 = new report_assignfeedback_download\reportmanager();
 
 // Download.
 if ($selectedusers != '') {
@@ -96,15 +96,11 @@ $assessmentids = '';
 $filter = false;
 $noasses = 0;
 // Form processing and displaying is done here.
-if ($mform->is_cancelled()) {
-    // Handle form cancel operation, if cancel button is present on form.
-} else if ($data = $mform->get_data()) {
-
+if ($data = $mform->get_data()) {
     // In this case you process validated data. $mform->get_data() returns data posted in form.
     $assessmentids = $data->assessments; // Get the selected assessments.
-    $filter = true;
+    $filter        = true;
 } else {
-
     if (count($aids) == 0) {
         $noasses = 1;
     }
@@ -112,10 +108,9 @@ if ($mform->is_cancelled()) {
 
 if ($id == 0 || $id == 1) {  // $id = 1 is the main page.
     $message = get_string('cantdisplayerror', 'report_assignfeedback_download');
-    $level = core\output\notification::NOTIFY_ERROR;
+    $level   = core\output\notification::NOTIFY_ERROR;
     \core\notification::add($message, $level);
 } else {
-
     echo $OUTPUT->box_start();
     $renderer = $PAGE->get_renderer('report_assignfeedback_download');
 
@@ -127,14 +122,13 @@ if ($id == 0 || $id == 1) {  // $id = 1 is the main page.
 
     // Only if the user clicked filter display this.
     if ($filter) {
-        $url = $PAGE->url;
-        $coursename = $DB->get_field('course', 'fullname', ['id' => $id], $strictness = IGNORE_MISSING);
+        $url            = $PAGE->url;
+        $coursename     = $DB->get_field('course', 'fullname', ['id' => $id], $strictness = IGNORE_MISSING);
         echo $renderer->render_assignfeedback_download($id, $assessmentids, $url, $cmid, $filter, $coursename);
     }
 
     echo $OUTPUT->box_end();
 }
 
-
-
 echo $OUTPUT->footer();
+
