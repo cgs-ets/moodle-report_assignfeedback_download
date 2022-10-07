@@ -57,7 +57,7 @@ function report_assignfeedback_download_setup_frubric_workbook($id, $modid, $are
     $frubric     = report_assignfeedback_download_decode_level_filling($areaid);
     $pos         = report_assignfeedback_download_add_student_header($workbook, $sheet, $course->fullname, $cm->name, $frubric);
     $pos         = report_assignfeedback_download_add_frubric_and_grading_info_header($workbook, $sheet, $frubric, $pos);
-    $data        = report_assignfeedback_download_students_data($modid, $selectedusers, $cm);
+    $data        = report_assignfeedback_download_students_data($modid, $selectedusers, $cm, $areaid);
 
     report_assignfeedback_set_students_rows($sheet, $data, $maxscore);
 
@@ -231,7 +231,7 @@ function report_assignfeedback_download_get_descriptors_and_titles($levels) {
  * Get the students grading details
  *    descritors checked, level sscore, criteria total score, final grade
  */
-function report_assignfeedback_download_students_data($cmid, $selectedusers, $cm) {
+function report_assignfeedback_download_students_data($cmid, $selectedusers, $cm, $areaid) {
     global $DB, $CFG;
     require_once($CFG->libdir . '/gradelib.php');
 
@@ -254,16 +254,25 @@ function report_assignfeedback_download_students_data($cmid, $selectedusers, $cm
             JOIN {user} stu ON stu.id = ag.userid
             JOIN {user} rubm ON rubm.id = gin.raterid
             JOIN {gradingform_frubric_fillings} grf ON (grf.instanceid = gin.id)
-            AND (grf.criterionid = grc.id) AND (grf.levelid = grl.id)
+            AND (grf.criterionid = grc.id)  -- AND (grf.levelid = grl.id)
             WHERE cm.id = :cmid AND gin.status = 1 AND stu.id in ($selectedusers)
             ORDER BY lastname ASC, firstname ASC, userid ASC, grc.sortorder ASC";
 
-    $params     = ['cmid' => $cmid];
-    $results    = $DB->get_records_sql($sql, $params);
+    $params     = ['cmid' => $cmid, 'cmid2' => $cmid];
+    $results    = $DB->get_recordset_sql($sql, $params);
     $data       = [];
-
+    // When no descriptor is selected, the levelid is missing in the gradingform_frubric_fillings table.
+    // This is not a bug in frubric plugin.
+    // To avoid PHP notice unique id, I used get_recordset_sql this brigs all records.
+    // Filter here the duplicate.
+    $trackfill  = [];
     foreach ($results as $result) {
 
+        if (in_array($result->grfid, $trackfill)) {
+            continue;
+        } else {
+            $trackfill[] = $result->grfid;
+        }
         if (!isset($data[$result->userid])) {
             $filling = new stdClass();
             $filling->firstname     = '';
@@ -307,6 +316,7 @@ function report_assignfeedback_download_students_data($cmid, $selectedusers, $cm
         $data[$result->userid]       = $filling;
     }
 
+    $results->close(); // Remember to close the set.
     return $data;
 }
 
