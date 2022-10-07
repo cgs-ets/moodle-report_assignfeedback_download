@@ -311,11 +311,11 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
                     $userassessment,
                     $user, $cmidsaux,
                     $coursename);
-
-                    if ($fr != '') {
+                    $supported = in_array($this->manager->get_active_grading_method($cmid), SUPPORTED_ADVANCED_GRADING_METHODS);
+                    if ($fr != ''  && $supported) {
                         $rubricparams[] = $fr;
                         $countfrubricfiles++;
-                        $countgradedsubmissions++; // Only enable download grades if there are frubrics saved.
+                        $countgradedsubmissions++; // Only enable download grades if there are frubrics or rubrics saved.
                     }
                 }
 
@@ -513,12 +513,12 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
         $rubricparams->assignmentid = $assess->assignmentid;
         $rubricparams->gradeid      = $assess->gradeid;
 
+
         if (isset($rubric['frubric'])) {
             $this->get_assessment_frubric_tree($cmid, $courseid, $assess, $userassessment, $user, $cmidcollection, $coursename, $rubricparams);
         } else if ($rubric['rubric']) {
             $this->get_assessment_rubric_tree($cmid, $assess, $userassessment, $cmidcollection );
             $userassessment->rubricparams = json_encode($rubricparams);
-
         }
 
         return $rubricparams;

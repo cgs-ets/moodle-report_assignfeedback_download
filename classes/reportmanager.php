@@ -637,9 +637,18 @@ class reportmanager {
 
             default:
                 return '';
-
         }
+    }
 
+    /**
+     * Returns the current active method for the assessment.
+     */
+    public function get_active_grading_method($cmid) {
+        global $CFG;
+        require_once($CFG->libdir . '/gradelib.php');
+        $context = \context_module::instance($cmid);
+        $gradingmanager = get_grading_manager($context, 'mod_assign', 'submissions');
+        return $gradingmanager->get_active_method();
     }
     // Get the frubric that is rendered to a student. With the checked descriptors.
     public function get_rubric($cmid, $courseid, $userid, $instanceid) {

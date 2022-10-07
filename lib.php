@@ -23,7 +23,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-
+define("SUPPORTED_ADVANCED_GRADING_METHODS", ['frubric', 'rubric']);
 
 function report_assignfeedback_download_extend_navigation_course($navigation, $course, $context) {
 
