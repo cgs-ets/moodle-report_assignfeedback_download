@@ -144,12 +144,14 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
 
     private function get_active_users($context) {
 
-        $userfields = user_picture::fields('u');
+        $extrafields = \core_user\fields::for_identity($context)->get_required_fields();
+        $ufields = \core_user\fields::for_userpic()->including(...$extrafields);
+        $ufields = $ufields->get_sql('u', false, '', '', false)->selects;
         return  get_enrolled_users(
             $context,
             "mod/assign:submit",
             null,
-            $userfields,
+            $ufields,
             'firstname',
             0,
             0,
@@ -512,7 +514,6 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
         $rubricparams->userid       = $assess->userid;
         $rubricparams->assignmentid = $assess->assignmentid;
         $rubricparams->gradeid      = $assess->gradeid;
-
 
         if (isset($rubric['frubric'])) {
             $this->get_assessment_frubric_tree($cmid, $courseid, $assess, $userassessment, $user, $cmidcollection, $coursename, $rubricparams);
