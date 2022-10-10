@@ -106,7 +106,7 @@ if ($data = $mform->get_data()) {
     }
 }
 
-if ($id == 0 || $id == 1) {  // $id = 1 is the main page.
+if ($id == 0 || $id == 1) {  // 1 is the main page.
     $message = get_string('cantdisplayerror', 'report_assignfeedback_download');
     $level   = core\output\notification::NOTIFY_ERROR;
     \core\notification::add($message, $level);

@@ -25,6 +25,8 @@
 
 namespace report_assignfeedback_download\pdflib;
 
+defined('MOODLE_INTERNAL') || die();
+
 require_once($CFG->libdir.'/pdflib.php');
 require_once($CFG->libdir.'/tcpdf/tcpdf.php');
 
@@ -33,7 +35,7 @@ use Mpdf\Mpdf;
 use stdClass;
 use TCPDF;
 
-defined('MOODLE_INTERNAL') || die();
+
 
 require_once($CFG->dirroot . '/report/assignfeedback_download/vendor/autoload.php');
 

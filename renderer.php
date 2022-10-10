@@ -175,7 +175,7 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
             'assignids'     => $userscontext['assignids'],
             'cmids'         => $userscontext['cmids'],
             'filter'        => $filter,
-             // Enable download option only if there is at least one file to download.
+            // Enable download option only if there is at least one file to download.
             'noexistsubmissions'            => $userscontext['noexistsubmissions'],
             'noexistfeedbackfiles'          => $userscontext['noexistfeedbackfiles'],
             'noexistannotatedpdffiles'      => $userscontext['noexistannotatedpdffiles'],
@@ -286,14 +286,16 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
                     $userassessment->url = $url;
                 }
 
-                $userassessment->finalgrade = $this->manager->get_final_grade($assess->assignmentid, $assess->userid);
-                $tag = "Not graded";
+                $gradingstatus              = $this->manager->get_grading_instance_status($cmid, $assess->gradeid);
+                $fg                         = $this->manager->get_final_grade($assess->assignmentid, $assess->userid);
+                $userassessment->finalgrade = ($gradingstatus == '1') ? $fg : get_string('rubricneedsupdate', 'report_assignfeedback_download');
 
+                $tag = "Not graded";
                 // Check if the assessment is using workflow.
                 if ($assess->markingworkflow) {
                     $tag                        = $this->manager->get_marking_workflow_state($assess->userid, $assess->assignmentid);
                     $isreleased                 = ($tag == get_string('released', 'report_assignfeedback_download')) ? true : false;
-                    $userassessment->finalgrade = ($isreleased) ? $userassessment->finalgrade : $tag;
+                    $userassessment->finalgrade = ($isreleased && $gradingstatus == '1') ? $userassessment->finalgrade : $tag;
                 }
 
                 $userassessment->frubric = 0;
@@ -301,7 +303,7 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
 
                 if ($assess->markingworkflow &&  $isreleased) {
                     $showfrubricicon = true;
-                } else if ($assess->grade != -1.00000 && !$assess->markingworkflow) {
+                } else if ($assess->grade != -1.00000 && !$assess->markingworkflow && $gradingstatus == 1) {
                     $showfrubricicon = true;
                 }
 

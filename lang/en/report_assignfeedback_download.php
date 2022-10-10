@@ -79,4 +79,6 @@ $string['readyforreview']               = 'Marking completed (Ready for review)'
 $string['inreview']                     = 'In review';
 $string['readyforrelease']              = 'Ready for release';
 $string['released']                     = 'Released';
+$string['rubricneedsupdate']            = 'The rubric definition was changed after this student had been graded.
+                                           Check the rubric and update the grade';
 

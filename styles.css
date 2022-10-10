@@ -27,6 +27,14 @@ table.innertable {
     width: 100%;
 }
 
+.innertable tbody tr {
+    border-bottom: 1px solid #dddddd;
+}
+
+.innertable tbody tr:last-of-type {
+    border-bottom: none
+}
+
 tr.secondary-tables-header {
     color: white;
 }
@@ -46,4 +54,14 @@ i.fa.fa-question-circle.qcomment {
 select#id_assessments {
     width: max-content;
     height: 21vh;
+}
+
+form#downloadactionform {
+    margin-top: 3rem;
+}
+
+@media (max-width: 900px) {
+   .report-container {
+    overflow-x: visible;
+   }
 }

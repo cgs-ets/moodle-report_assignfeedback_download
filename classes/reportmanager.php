@@ -563,6 +563,7 @@ class reportmanager {
     private function download_grades_helper($cmid, $courseid, $selectedusers, $tempdir) {
         $context = \context_module::instance($cmid);
         $gradingmanager = get_grading_manager($context, 'mod_assign', 'submissions');
+
         switch ($gradingmanager->get_active_method()) {
             case 'frubric':
                 $areaid = $gradingmanager->get_active_controller()->get_areaid();
@@ -575,6 +576,14 @@ class reportmanager {
         }
     }
 
+    public function get_grading_instance_status($cmid, $itemid) {
+        global $USER;
+        $context = \context_module::instance($cmid);
+        $gradingmanager = get_grading_manager($context, 'mod_assign', 'submissions');
+        $controller = $gradingmanager->get_controller( $gradingmanager->get_active_method());
+        $currentinstance = $controller->get_current_instance($USER->id, $itemid);
+        return  $currentinstance->get_status();
+    }
 
     public function download_all_files($itemids, $id) {
         \core_php_time_limit::raise();
@@ -650,9 +659,10 @@ class reportmanager {
         $gradingmanager = get_grading_manager($context, 'mod_assign', 'submissions');
         return $gradingmanager->get_active_method();
     }
+
     // Get the frubric that is rendered to a student. With the checked descriptors.
     public function get_rubric($cmid, $courseid, $userid, $instanceid) {
-        global $DB, $PAGE, $CFG;
+        global $DB, $CFG;
         require_once($CFG->libdir . '/gradelib.php');
 
         $context = \context_module::instance($cmid);

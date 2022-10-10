@@ -30,6 +30,8 @@
 
 namespace report_assignfeedback_download\rubric;
 
+defined('MOODLE_INTERNAL') || die();
+
 require_once($CFG->dirroot.'/lib/excellib.class.php');
 require_once($CFG->dirroot . '/mod/assign/locallib.php');
 
@@ -55,9 +57,9 @@ function report_assignfeedback_download_setup_rubric_workbook($id, $modid, $sele
     $filename = $course->shortname . ' - ' . $cm->name . '.xls';
     $workbook = new AssignfedbackDownloaderExcelWorkbook("-");
     $workbook->send($filename);
-    $sheet = $workbook->add_worksheet($cm->name);
-    $rubric = report_assignfeedback_get_rubric_data($cm);
-    $first  = reset($rubric);
+    $sheet    = $workbook->add_worksheet($cm->name);
+    $rubric   = report_assignfeedback_get_rubric_data($cm);
+    $first    = reset($rubric);
 
     $pos = report_assignfeedback_download_add_header($workbook, $sheet, $course->fullname, $cm->name, $first->rubric);
     $pos = report_assignfeedback_download_add_rubric_and_grading_info_header($workbook, $sheet, $rubric, $pos);

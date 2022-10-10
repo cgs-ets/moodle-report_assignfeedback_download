@@ -41,9 +41,9 @@ class assignfeedback_download_select_form extends moodleform {
 
         $assessarray[] = get_string('all', 'report_assignfeedback_download');
 
-        //aids
+        // Assignment ids.
         $this->_customdata['aids'];
-        $result =   $this->_customdata['aids']; //$manager->get_assesments_with_grades($this->_customdata['id']);
+        $result = $this->_customdata['aids'];
 
         foreach ($result as $row) {
             $assessarray[$row->assignmentid] = $row->assignmentname;
