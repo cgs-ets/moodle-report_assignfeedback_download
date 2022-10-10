@@ -127,8 +127,7 @@ function report_assignfeedback_download_generatefeedbackpdf($content, $assessmen
   * @copyright 2014 Davo Smith, Synergy Learning
   * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
   */
-function pdfassessmentdownloader_fix_image_links($html)
-{
+function pdfassessmentdownloader_fix_image_links($html) {
         global $CFG;
 
         $html = pdfassessmentdownloader_fix_svg_images($html);

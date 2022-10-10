@@ -25,8 +25,9 @@
 
 namespace report_assignfeedback_download\frubric;
 
-require_once($CFG->dirroot.'/lib/excellib.class.php');
+defined('MOODLE_INTERNAL') || die();
 
+require_once($CFG->dirroot.'/lib/excellib.class.php');
 require($CFG->dirroot . '/report/assignfeedback_download/classes/excelmanager.php');
 
 use context_module;
@@ -51,13 +52,14 @@ function report_assignfeedback_download_setup_frubric_workbook($id, $modid, $are
 
     $filename       = $course->shortname . ' - ' . $cm->name . '.xls';
     $workbook       = new AssignfedbackDownloaderExcelWorkbook("-");
-    $workbook->send($filename);
-    $sheet          = $workbook->add_worksheet($cm->name);
 
-    $frubric     = report_assignfeedback_download_decode_level_filling($areaid);
-    $pos         = report_assignfeedback_download_add_student_header($workbook, $sheet, $course->fullname, $cm->name, $frubric);
-    $pos         = report_assignfeedback_download_add_frubric_and_grading_info_header($workbook, $sheet, $frubric, $pos);
-    $data        = report_assignfeedback_download_students_data($modid, $selectedusers, $cm, $areaid);
+    $workbook->send($filename);
+
+    $sheet          = $workbook->add_worksheet($cm->name);
+    $frubric        = report_assignfeedback_download_decode_level_filling($areaid);
+    $pos            = report_assignfeedback_download_add_student_header($workbook, $sheet, $course->fullname, $cm->name, $frubric);
+    $pos            = report_assignfeedback_download_add_frubric_and_grading_info_header($workbook, $sheet, $frubric, $pos);
+    $data           = report_assignfeedback_download_students_data($modid, $selectedusers, $cm, $areaid);
 
     report_assignfeedback_set_students_rows($sheet, $data, $maxscore);
 

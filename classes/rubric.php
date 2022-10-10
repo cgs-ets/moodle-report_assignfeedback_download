@@ -56,20 +56,20 @@ function report_assignfeedback_download_setup_rubric_workbook($id, $modid, $sele
 
     $filename = $course->shortname . ' - ' . $cm->name . '.xls';
     $workbook = new AssignfedbackDownloaderExcelWorkbook("-");
+
     $workbook->send($filename);
+
     $sheet    = $workbook->add_worksheet($cm->name);
     $rubric   = report_assignfeedback_get_rubric_data($cm);
     $first    = reset($rubric);
-
-    $pos = report_assignfeedback_download_add_header($workbook, $sheet, $course->fullname, $cm->name, $first->rubric);
-    $pos = report_assignfeedback_download_add_rubric_and_grading_info_header($workbook, $sheet, $rubric, $pos);
+    $pos      = report_assignfeedback_download_add_header($workbook, $sheet, $course->fullname, $cm->name, $first->rubric);
+    $pos      = report_assignfeedback_download_add_rubric_and_grading_info_header($workbook, $sheet, $rubric, $pos);
     $students = report_assignfeedback_download_get_students_data($modcontext, $cm, $selectedusers);
     // Get data for each student.
     $students = report_assignfeedback_process_data($students, $rubric);
+
     report_assignfeedback_set_students_rows($sheet, $students, $pos);
 
-    // When more than one assessment is selected. The .xlxs are saved in a zip file.
-    // If there is only one assessment selected, the .xlxs file is saved.
     $workbook->savetotempdir($tempdir);
 
 }
@@ -175,8 +175,11 @@ function report_assignfeedback_download_add_rubric_and_grading_info_header(Moodl
     $format = $workbook->add_format(HEADINGTITLES);
     $format2 = $workbook->add_format(HEADINGSUBTITLES);
     // Set the Rubric headers.
+    $firstel = reset($data);
     foreach ($data as $line) {
-
+        if ($line->userid !== $firstel->userid) { // We have all the rubrics titles needed.
+            break;
+        }
         $sheet->write_string(HEADINGSROW, $pos, $line->description);
         $sheet->merge_cells(HEADINGSROW, $pos, HEADINGSROW, $pos + 2);
         $sheet->write_string(5, $pos, get_string('score_rubric', 'report_assignfeedback_download'), $format2);

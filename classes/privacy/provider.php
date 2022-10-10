@@ -24,8 +24,6 @@
 
 namespace report_assignfeedback_download\privacy;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Privacy Subsystem for report_assignfeedback_download implementing null_provider.
  *
