@@ -163,6 +163,7 @@ function report_assignfeedback_download_add_frubric_and_grading_info_header(Mood
     $sheet->write_string(5, $pos++, get_string('criteriatotal', 'report_assignfeedback_download'), $format2);
     $sheet->write_string(5, $pos++, get_string('finalgrade', 'report_assignfeedback_download'), $format2);
     $sheet->write_string(5, $pos++, get_string('gradedby', 'report_assignfeedback_download'), $format2);
+    $sheet->write_string(5, $pos, get_string('timegraded', 'report_assignfeedback_download'), $format2);
     $sheet->set_column($pos - 1, $pos, 20); // Set column widths to 10.
     $sheet->merge_cells(HEADINGSROW, $pos - 3 , HEADINGSROW, $pos - 1, $format);
 
@@ -250,7 +251,7 @@ function report_assignfeedback_download_students_frubric_data($cmid, $selectedus
             }
 
             $filling->grader        = $result->grader;
-            $filling->modified      = $result->modified;
+            $filling->modified      = userdate($result->modified);
 
             $gradinginfo = grade_get_grades(
                 $result->courseid,
@@ -265,11 +266,13 @@ function report_assignfeedback_download_students_frubric_data($cmid, $selectedus
                 $gradebookgrade = $gradingitem->grades[$result->userid];
                 $gradebookgrade->str_long_grade;
                 $filling->finalgrade = $gradebookgrade->str_long_grade;
+                // $filling->modified      = $result->modified;
             }
 
         } else {
             $filling = $data[$result->userid];
         }
+
         $level                       = new stdClass();
         $level->id                   = $result->levelid;
         $level->feedback             = $result->remark;
@@ -337,6 +340,7 @@ function report_assignfeedback_set_students_rows (MoodleExcelWorksheet $sheet, $
         $sheet->set_column($col, $col, 25, $format);
         $sheet->write_string($row, $col++, $student->finalgrade, $format);
         $sheet->write_string($row, $col++, $student->grader, $format);
+        $sheet->write_string($row, $col++, $student->modified, $format);
 
     }
 

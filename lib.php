@@ -95,7 +95,7 @@ function report_assignfeedback_download_add_advanced_method_and_grading_info_hea
         if ($line->userid !== $firstel->userid) { // We have all the rubrics titles needed.
             break;
         }
-        if(isset($line->description)) {
+        if (isset($line->description)) {
             $sheet->write_string(HEADINGSROW, $pos, $line->description);
         } else if (isset($line->shortname)) {
             $sheet->write_string(HEADINGSROW, $pos, $line->shortname);
