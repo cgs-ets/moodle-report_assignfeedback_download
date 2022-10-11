@@ -27,12 +27,11 @@ use report_assignfeedback_download\reportmanager;
 
 class report_assignfeedback_download_renderer extends plugin_renderer_base {
 
-    const SUBMISSION                = 'submission';
-    const FEEDBACK                  = 'feedback';
-    const ANNOTATEPDF               = 'annotatedpdf';
-    const GRADING_METHOD_FRUBRIC    = 'frubric';
-    const GRADING_METHOD_RUBRIC     = 'rubric';
-    const EMBEDDEDFILEINCOMMENT     = 'embeddedfileincomment';
+    const SUBMISSION                      = 'submission';
+    const FEEDBACK                        = 'feedback';
+    const ANNOTATEPDF                     = 'annotatedpdf';
+    const GRADING_METHOD_FRUBRIC          = 'frubric';
+    const EMBEDDEDFILEINCOMMENT           = 'embeddedfileincomment';
 
     public function __construct(moodle_page $page, $target) {
 
@@ -191,6 +190,7 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
 
     public function get_users_context($courseid, $assessmentids, $coursename) {
         global  $CFG;
+
         $context = context_course::instance($courseid);
 
         $activeusers    = $this->get_active_users($context);
@@ -263,7 +263,7 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
                 $userassessment->feedbackfiletree   = $this->get_assessment_feedback_files_tree($assess->gradeid);
                 $userassessment->feedbackcommentxt  = $this->get_assessment_feedback_comments($assess->gradeid, $assess->userid);
 
-                // Check if there trees have files.
+                // Check if the trees have files.
                 if (isset(($userassessment->annottedpdftree['tree'])->feedbackfiletree)) {
                     $countannotatedpdffiles++;
                 }
@@ -316,6 +316,7 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
                     $user, $cmidsaux,
                     $coursename);
                     $supported = in_array($this->manager->get_active_grading_method($cmid), SUPPORTED_ADVANCED_GRADING_METHODS);
+
                     if ($fr != ''  && $supported) {
                         $rubricparams[] = $fr;
                         $countfrubricfiles++;
@@ -519,7 +520,7 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
 
         if (isset($rubric['frubric'])) {
             $this->get_assessment_frubric_tree($cmid, $courseid, $assess, $userassessment, $user, $cmidcollection, $coursename, $rubricparams);
-        } else if ($rubric['rubric']) {
+        } else if ($rubric['rubric'] || $rubric['guide']) {
             $this->get_assessment_rubric_tree($cmid, $assess, $userassessment, $cmidcollection );
             $userassessment->rubricparams = json_encode($rubricparams);
         }

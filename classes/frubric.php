@@ -36,10 +36,6 @@ use MoodleExcelWorksheet;
 use stdClass;
 use AssignfedbackDownloaderExcelWorkbook;
 
-const HEADINGSROW = 4;
-const HEADINGTITLES = array('size' => 12, 'bold' => 1, 'text_wrap' => true, 'align' => 'centre');
-const HEADINGSUBTITLES = array('bold' => 1, 'text_wrap' => true, 'align' => 'fill');
-
 function report_assignfeedback_download_setup_frubric_workbook($id, $modid, $areaid, $selectedusers, $maxscore, $tempdir) {
     global $DB;
 
@@ -57,9 +53,10 @@ function report_assignfeedback_download_setup_frubric_workbook($id, $modid, $are
 
     $sheet          = $workbook->add_worksheet($cm->name);
     $frubric        = report_assignfeedback_download_decode_level_filling($areaid);
-    $pos            = report_assignfeedback_download_add_student_header($workbook, $sheet, $course->fullname, $cm->name, $frubric);
+    $methodname     = "Frubric : $frubric->name";
+    $pos            = report_assignfeedback_download_add_header($workbook, $sheet, $course->fullname, $cm->name, $methodname);
     $pos            = report_assignfeedback_download_add_frubric_and_grading_info_header($workbook, $sheet, $frubric, $pos);
-    $data           = report_assignfeedback_download_students_data($modid, $selectedusers, $cm, $areaid);
+    $data           = report_assignfeedback_download_students_frubric_data($modid, $selectedusers, $cm, $areaid);
 
     report_assignfeedback_set_students_rows($sheet, $data, $maxscore);
 
@@ -124,42 +121,6 @@ function report_assignfeedback_download_decode_level_filling($areaid) {
 
     return $definition;
 
-}
-
-
-/**
- * Create the first 3 columns of the Excel
- * CourseName
- * AssessmentName
- * Frubric name
- * Student
- *      First name, last name and username
- */
-function report_assignfeedback_download_add_student_header(MoodleExcelWorkbook $workbook, MoodleExcelWorksheet $sheet, $coursename, $modname, $frubric) {
-
-    // Course, assingment and Frubric definition section.
-    $format     = $workbook->add_format(array('size' => 18, 'bold' => 1));
-    $sheet->write_string(0, 0, $coursename, $format);
-    $sheet->set_row(0, 24, $format);
-    $format     = $workbook->add_format(array('size' => 16, 'bold' => 1));
-    $sheet->write_string(1, 0, $modname, $format);
-    $sheet->set_row(1, 21, $format);
-    $methodname = "Frubric : $frubric->name";
-    $sheet->write_string(2, 0, $methodname, $format);
-    $sheet->set_row(2, 21, $format);
-
-    // Column headers - two rows for grouping.
-    $format     = $workbook->add_format(HEADINGTITLES);
-    $format2    = $workbook->add_format(HEADINGSUBTITLES);
-    $sheet->write_string(HEADINGSROW, 0, get_string('student', 'report_assignfeedback_download'), $format);
-    $sheet->merge_cells(HEADINGSROW, 0, HEADINGSROW, 2, $format); // Student section.
-    $col        = 0;
-    $sheet->write_string(5, $col++, get_string('firstname', 'report_assignfeedback_download'), $format2);
-    $sheet->write_string(5, $col++, get_string('lastname', 'report_assignfeedback_download'), $format2);
-    $sheet->write_string(5, $col++, get_string('username', 'report_assignfeedback_download'), $format2);
-
-    $sheet->set_column(0, $col, 20); // Set column widths to 20.
-    return $col;
 }
 
 /**
@@ -233,7 +194,7 @@ function report_assignfeedback_download_get_descriptors_and_titles($levels) {
  * Get the students grading details
  *    descritors checked, level sscore, criteria total score, final grade
  */
-function report_assignfeedback_download_students_data($cmid, $selectedusers, $cm, $areaid) {
+function report_assignfeedback_download_students_frubric_data($cmid, $selectedusers, $cm, $areaid) {
     global $DB, $CFG;
     require_once($CFG->libdir . '/gradelib.php');
 

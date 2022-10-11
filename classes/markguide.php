@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Exports an Excel spreadsheet of the component grades in a rubric-graded assignment.
+ *  Exports an Excel spreadsheet of the component grades in a Marking Guide-graded assignment.
  *
  * Adapted from
  * @package    report_componentgrades
@@ -28,17 +28,19 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace report_assignfeedback_download\rubric;
+namespace report_assignfeedback_download\markguide;
+
+use AssignfedbackDownloaderExcelWorkbook;
+use context_module;
+use MoodleExcelWorkbook;
+use MoodleExcelWorksheet;
 
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot.'/lib/excellib.class.php');
 require_once($CFG->dirroot . '/mod/assign/locallib.php');
 
-use context_module;
-use AssignfedbackDownloaderExcelWorkbook;
-
-function report_assignfeedback_download_setup_rubric_workbook($id, $modid, $selectedusers, $tempdir) {
+function report_assignfeedback_download_setup_marking_guide_workbook($id, $modid, $selectedusers, $tempdir) {
     global $DB;
 
     $course = $DB->get_record('course', array('id' => $id), '*', MUST_EXIST);
@@ -53,14 +55,14 @@ function report_assignfeedback_download_setup_rubric_workbook($id, $modid, $sele
     $workbook->send($filename);
 
     $sheet      = $workbook->add_worksheet($cm->name);
-    $rubric     = report_assignfeedback_get_rubric_data($cm);
-    $first      = reset($rubric);
-    $methodname = "Rubric : $first->rubric";
+    $mguide      = report_assignfeedback_get_marking_guide_data($cm);
+    $first      = reset($mguide);
+    $methodname = "Marking guide: $first->guide";
     $pos        = report_assignfeedback_download_add_header($workbook, $sheet, $course->fullname, $cm->name, $methodname);
-    $pos        = report_assignfeedback_download_add_advanced_method_and_grading_info_header($workbook, $sheet, $rubric, $pos);
+    $pos        = report_assignfeedback_download_add_advanced_method_and_grading_info_header($workbook, $sheet, $mguide, $pos);
     $students   = report_assignfeedback_download_get_advanced_method_students_data($modcontext, $cm, $selectedusers);
     // Get data for each student.
-    $students   = report_assignfeedback_process_data($students, $rubric);
+    $students   = report_assignfeedback_process_data($students, $mguide);
 
     report_assignfeedback_set_students_rows($sheet, $students, $pos);
 
@@ -68,34 +70,36 @@ function report_assignfeedback_download_setup_rubric_workbook($id, $modid, $sele
 
 }
 
-function report_assignfeedback_get_rubric_data($cm) {
-
+function report_assignfeedback_get_marking_guide_data($cm) {
     global $DB;
-    $sql = "SELECT grf.id AS grfid, crs.shortname AS course, asg.name AS assignment, gd.name AS rubric,
-            grc.description, grl.definition, grl.score, grf.remark, grf.criterionid,
-            rubm.username AS grader, stu.id AS userid, stu.idnumber AS idnumber, stu.firstname,
-            stu.lastname, stu.username AS student, gin.timemodified AS modified
+
+    $sql = "SELECT ggf.id AS ggfid, crs.shortname AS course, asg.name AS assignment,
+                  gd.name AS guide, ggc.shortname, ggf.score, ggf.remark, ggf.criterionid,
+                  rubm.username AS grader, stu.id AS userid, stu.idnumber AS idnumber,
+                  ggc.description, stu.firstname, stu.lastname, stu.username AS student,
+                  gin.timemodified AS modified
             FROM {course} crs
             JOIN {course_modules} cm ON crs.id = cm.course
             JOIN {assign} asg ON asg.id = cm.instance
             JOIN {context} c ON cm.id = c.instanceid
-            JOIN {grading_areas}  ga ON c.id=ga.contextid
+            JOIN {grading_areas} ga ON c.id=ga.contextid
             JOIN {grading_definitions} gd ON ga.id = gd.areaid
-            JOIN {gradingform_rubric_criteria} grc ON (grc.definitionid = gd.id)
-            JOIN {gradingform_rubric_levels} grl ON (grl.criterionid = grc.id)
+            JOIN {gradingform_guide_criteria} ggc ON (ggc.definitionid = gd.id)
             JOIN {grading_instances} gin ON gin.definitionid = gd.id
             JOIN {assign_grades} ag ON ag.id = gin.itemid
             JOIN {user} stu ON stu.id = ag.userid
             JOIN {user} rubm ON rubm.id = gin.raterid
-            JOIN {gradingform_rubric_fillings} grf ON (grf.instanceid = gin.id)
-            AND (grf.criterionid = grc.id) AND (grf.levelid = grl.id)
+            JOIN {gradingform_guide_fillings} ggf ON (ggf.instanceid = gin.id)
+            AND (ggf.criterionid = ggc.id)
             WHERE cm.id = ? AND gin.status = 1
-            ORDER BY lastname ASC, firstname ASC, userid ASC, grc.sortorder ASC,
-            grc.description ASC";
+            ORDER BY lastname ASC, firstname ASC, userid ASC, ggc.sortorder ASC,
+            ggc.shortname ASC";
 
     $params = array($cm->id);
     $data   = $DB->get_records_sql($sql, $params);
 
     return $data;
-
 }
+
+
+

@@ -28,6 +28,7 @@ use RecursiveIteratorIterator;
 use zip_packer;
 
 use function report_assignfeedback_download\frubric\report_assignfeedback_download_setup_frubric_workbook;
+use function report_assignfeedback_download\markguide\report_assignfeedback_download_setup_marking_guide_workbook;
 use function report_assignfeedback_download\pdflib\report_assignfeedback_download_create_frubric_pdf;
 use function report_assignfeedback_download\pdflib\report_assignfeedback_download_generatefeedbackpdf;
 use function report_assignfeedback_download\rubric\report_assignfeedback_download_setup_rubric_workbook;
@@ -37,6 +38,7 @@ defined('MOODLE_INTERNAL') || die();
 require($CFG->dirroot . '/report/assignfeedback_download/classes/pdflib.php');
 require($CFG->dirroot . '/report/assignfeedback_download/classes/frubric.php');
 require($CFG->dirroot . '/report/assignfeedback_download/classes/rubric.php');
+require($CFG->dirroot . '/report/assignfeedback_download/classes/markguide.php');
 require_once($CFG->libdir . '/filestorage/zip_archive.php');
 require_once($CFG->dirroot . '/report/assignfeedback_download/vendor/autoload.php');
 
@@ -573,6 +575,11 @@ class reportmanager {
             case 'rubric':
                 report_assignfeedback_download_setup_rubric_workbook($courseid, $cmid, $selectedusers, $tempdir);
                 break;
+            case 'guide':
+                report_assignfeedback_download_setup_marking_guide_workbook($courseid, $cmid, $selectedusers, $tempdir);
+                break;
+
+
         }
     }
 
@@ -582,7 +589,11 @@ class reportmanager {
         $gradingmanager = get_grading_manager($context, 'mod_assign', 'submissions');
         $controller = $gradingmanager->get_controller( $gradingmanager->get_active_method());
         $currentinstance = $controller->get_current_instance($USER->id, $itemid);
-        return  $currentinstance->get_status();
+
+        if (!is_null($currentinstance)) {
+            return  $currentinstance->get_status();
+        }
+        return -1;
     }
 
     public function download_all_files($itemids, $id) {
@@ -642,6 +653,9 @@ class reportmanager {
                 break;
             case 'rubric' :
                 return ['rubric' => 'rubric'];
+                break;
+            case 'guide' :
+                return ['guide' => 'guide'];
                 break;
 
             default:
