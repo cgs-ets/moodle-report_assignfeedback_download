@@ -76,8 +76,8 @@ function report_assignfeedback_get_marking_guide_data($cm) {
     $sql = "SELECT ggf.id AS ggfid, crs.shortname AS course, asg.name AS assignment,
                   gd.name AS guide, ggc.shortname, ggf.score, ggf.remark, ggf.criterionid,
                   rubm.username AS grader, stu.id AS userid, stu.idnumber AS idnumber,
-                  ggc.description, stu.firstname, stu.lastname, stu.username AS student,
-                  gin.timemodified AS modified
+                  ggc.description AS definition, stu.firstname, stu.lastname, stu.username AS student,
+                  gin.timemodified AS modified, asg.markingworkflow
             FROM {course} crs
             JOIN {course_modules} cm ON crs.id = cm.course
             JOIN {assign} asg ON asg.id = cm.instance

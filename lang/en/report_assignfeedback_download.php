@@ -38,6 +38,7 @@ $string['feedbackcomments']             = 'Feedback comments';
 $string['commenthelp']                  = 'Comments with embedded files only display files';
 $string['finalgrade']                   = 'Final grade';
 $string['rubric']                       = 'Rubric';
+$string['mguide']                       = 'Marking guide';
 $string['adv_grading']                  = 'Advanced grading method';
 $string['adv_grading_help']             = 'Only frubric method can be downloaded as a PDF';
 $string['rubrictitle']                  = 'Download Frubric';

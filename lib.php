@@ -95,7 +95,11 @@ function report_assignfeedback_download_add_advanced_method_and_grading_info_hea
         if ($line->userid !== $firstel->userid) { // We have all the rubrics titles needed.
             break;
         }
-        $sheet->write_string(HEADINGSROW, $pos, $line->description);
+        if(isset($line->description)) {
+            $sheet->write_string(HEADINGSROW, $pos, $line->description);
+        } else if (isset($line->shortname)) {
+            $sheet->write_string(HEADINGSROW, $pos, $line->shortname);
+        }
         $sheet->merge_cells(HEADINGSROW, $pos, HEADINGSROW, $pos + 2);
         $sheet->write_string(5, $pos, get_string('score_rubric', 'report_assignfeedback_download'), $format2);
         $sheet->set_column($pos, $pos++, 6); // Set column width to 6.
@@ -147,6 +151,15 @@ function report_assignfeedback_download_get_advanced_method_students_data($modco
             $r->student = get_string('participant', 'assign') .
              ' ' . \report_assignfeedback_download_get_anonymous_submission_id($cm, $r->userid);
         }
+    }
+    // In case the assessment is graded using workflow only add the student that their assessment was released.
+    if ($assign->get_instance()->markingworkflow) {
+        foreach ($result as $i => $r) {
+            if ($assign->get_grading_status($r->userid) != ASSIGN_MARKING_WORKFLOW_STATE_RELEASED) {
+                unset($result[$i]);
+            }
+        }
+
     }
     return $result;
 }
@@ -211,7 +224,9 @@ function report_assignfeedback_set_students_rows (MoodleExcelWorksheet $sheet, $
             }
 
             $sheet->set_column($col, $col, 35);
-            $sheet->write_string($row, $col++, $line->definition);
+            if (isset($line->definition)) {
+                $sheet->write_string($row, $col++, $line->definition);
+            }
             $sheet->write_string($row, $col++, $line->remark);
             $sheet->set_row($row, 25, $format);
 

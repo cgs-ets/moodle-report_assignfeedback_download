@@ -493,13 +493,13 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
         }
     }
 
-    private function get_assessment_rubric_tree($cmid, $assess, &$userassessment, &$cmidcollection) {
+    private function get_assessment_rubric_tree($cmid, $assess, &$userassessment, &$cmidcollection, $rubricname) {
             $userassessment->rubric = 1;
 
             $htmlid     = 'assessement_rubric_tree_' . uniqid();
             $this->page->requires->js_init_call('M.report_assignfeedback_download.init_tree', array(false, $htmlid), true);
             $html       = '<div id="' . $htmlid . '">';
-            $rubricname = get_string('rubric', 'report_assignfeedback_download');
+            // $rubricname = get_string('rubric', 'report_assignfeedback_download');
             $icon       = $this->output->pix_icon('rubric-icon', '', 'report_assignfeedback_download');
             $html      .= $this->htmlize_rubric($rubricname, $icon, 'rubric');
             $html      .= '</div>';
@@ -520,8 +520,9 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
 
         if (isset($rubric['frubric'])) {
             $this->get_assessment_frubric_tree($cmid, $courseid, $assess, $userassessment, $user, $cmidcollection, $coursename, $rubricparams);
-        } else if ($rubric['rubric'] || $rubric['guide']) {
-            $this->get_assessment_rubric_tree($cmid, $assess, $userassessment, $cmidcollection );
+        } else if (isset($rubric['rubric']) || isset($rubric['guide'])) {
+            $mn = isset($rubric['rubric']) ?  get_string('rubric', 'report_assignfeedback_download') : get_string('mguide', 'report_assignfeedback_download');
+            $this->get_assessment_rubric_tree($cmid, $assess, $userassessment, $cmidcollection, $mn);
             $userassessment->rubricparams = json_encode($rubricparams);
         }
 
