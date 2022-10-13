@@ -457,12 +457,6 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
     private function get_assessment_frubric_tree($cmid, $courseid, $assess, &$userassessment, $user, &$cmidcollection, $coursename, &$rubricparams) {
 
         $rubric = $this->manager->get_advanced_method($cmid, $courseid, $assess->userid, $assess->assignmentid);
-        // $rubricparams = new \stdClass();
-        // $rubricparams->cmid = $cmid;
-        // $rubricparams->courseid = $courseid;
-        // $rubricparams->userid = $assess->userid;
-        // $rubricparams->assignmentid = $assess->assignmentid;
-        // $rubricparams->gradeid = $assess->gradeid;
 
         if (isset($rubric['frubric'])) {
 

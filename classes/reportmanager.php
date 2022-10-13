@@ -245,29 +245,53 @@ class reportmanager {
     }
 
     public function get_assessment_feedback_comments($itemid, $userid, $createpdf = false) {
-        global $DB;
 
-        $sql = "SELECT  distinct ac.id, ac.commenttext, f.contextid
-                FROM {assignfeedback_comments} ac
-                JOIN {files} f on f.itemid = ac.grade
-                JOIN {assign_grades} ag ON f.itemid = ag.id
-                WHERE f.itemid = ? AND f.component = ? AND f.filearea = ? AND  ac.grade = ? AND ag.userid = ?
-                AND f.filename <> '.'";
-
-        $paramsarray = ['itemid' => $itemid, 'component' => 'assignfeedback_comments', 'filearea' => 'feedback', 'grade' => $itemid, 'userid' => $userid];
-
-        $results = array_values($DB->get_records_sql($sql, $paramsarray));
-        $comments = [];
+        $txtwithfile = $this->get_assessment_feedback_comments_with_file($itemid, $userid);
+        $onlytxt     = $this->get_assessment_feedback_comments_text($itemid, $userid);
+        $results     = $txtwithfile + $onlytxt;
+        $comments    = [];
 
         foreach ($results as $i => $r) {
-            if (!$createpdf) {
+
+            if (!$createpdf && isset($r->contextid)) {
                 $comments[] = shorten_text(file_rewrite_pluginfile_urls($r->commenttext, 'pluginfile.php', $r->contextid, 'assignfeedback_comments', 'feedback', $itemid));
-            } else {
+            } else if ($createpdf && isset($r->contextid)) {
                 $comments[] = file_rewrite_pluginfile_urls($r->commenttext, 'pluginfile.php', $r->contextid, 'assignfeedback_comments', 'feedback', $itemid);
+            } else {
+                $comments[] = shorten_text($r->commenttext);
             }
         }
 
         return $comments;
+    }
+
+    // Get the comments that have both files and text.
+    private function get_assessment_feedback_comments_with_file($itemid, $userid) {
+        global $DB;
+        // Get the comments that have both files and text.
+        $sql = "SELECT distinct ac.id, ac.commenttext, f.contextid
+        FROM {assignfeedback_comments} ac
+        JOIN {files} f on f.itemid = ac.grade
+        JOIN {assign_grades} ag ON f.itemid = ag.id
+        WHERE f.itemid = ? AND f.component = ? AND f.filearea = ? AND  ac.grade = ? AND ag.userid = ?
+        AND f.filename <> '.'";
+
+        $paramsarray = ['itemid' => $itemid, 'component' => 'assignfeedback_comments', 'filearea' => 'feedback', 'grade' => $itemid, 'userid' => $userid];
+        $results     = $DB->get_records_sql($sql, $paramsarray);
+
+        return $results;
+    }
+
+    private function get_assessment_feedback_comments_text($itemid, $userid) {
+        global $DB;
+
+        $sql = "SELECT distinct ac.id, ac.commenttext
+                FROM {assignfeedback_comments} ac
+                WHERE ac.grade = ?";
+        $paramsarray = ['grade' => $itemid];
+
+        $results = $DB->get_records_sql($sql, $paramsarray);
+        return $results;
     }
 
     public function get_final_grade($assignmentinstance, $userid) {
