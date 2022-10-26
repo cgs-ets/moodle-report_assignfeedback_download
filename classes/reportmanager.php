@@ -608,13 +608,16 @@ class reportmanager {
 
     public function get_grading_instance_status($cmid, $itemid) {
         global $USER;
-        $context = \context_module::instance($cmid);
+        $context         = \context_module::instance($cmid);
         $gradingmanager = get_grading_manager($context, 'mod_assign', 'submissions');
-        $controller = $gradingmanager->get_controller( $gradingmanager->get_active_method());
-        $currentinstance = $controller->get_current_instance($USER->id, $itemid);
 
-        if (!is_null($currentinstance)) {
-            return  $currentinstance->get_status();
+        if ($activemethod   = $gradingmanager->get_active_method()) {
+            $controller = $gradingmanager->get_controller( $activemethod);
+            $currentinstance = $controller->get_current_instance($USER->id, $itemid);
+            if (!is_null($currentinstance)) {
+                return  $currentinstance->get_status();
+            }
+
         }
         return -1;
     }
