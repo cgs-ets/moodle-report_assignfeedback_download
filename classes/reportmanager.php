@@ -343,11 +343,12 @@ class reportmanager {
     private function get_assessments_by_course($assessmentids) {
         global $DB;
 
-        $sql = "SELECT  grades.id as gradeid,
-                        grades.assignment as assignmentid,
-                        u.id as userid, u.firstname,
-                        u.lastname,  assign.name as 'assignmentname',
-                        assign.duedate, assign.markingworkflow, grades.grade
+        $sql = "SELECT  grades.id AS gradeid,
+                        grades.assignment AS assignmentid,
+                        u.id AS userid, u.firstname,
+                        u.lastname,  assign.name AS 'assignmentname',
+                        assign.duedate, assign.markingworkflow, grades.grade,
+                        assign.grade AS gradeoutof
                 FROM {assign_grades}  grades
                 JOIN {assign}  assign ON grades.assignment = assign.id
                 JOIN {user}  u ON grades.userid = u.id

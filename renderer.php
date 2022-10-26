@@ -236,7 +236,7 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
             // If student didnt submit anything, then dont display.
             if (!isset(($userassessment->submtree['tree'])->submissionfiletree)
                 && $userassessment->onlinetextsubmission == ''
-                && !isset($assess->grade))  {
+                && !isset($assess->grade)) {
                 continue;
             }
 
@@ -295,8 +295,10 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
 
                 if ($gradingstatus == '1' ) {
                     $userassessment->finalgrade = $fg;
-                } else if ($gradingstatus === -1) {
+                } else if ($gradingstatus === -1 && $assess->grade == -1) {
                     $userassessment->finalgrade = $tag;
+                } else if ($assess->grade > -1) { // Simple grading.
+                    $userassessment->finalgrade = strval(number_format($assess->grade, 2)) . "/ " . "$assess->gradeoutof";
                 }
                 // Check if the assessment is using workflow.
                 if ($assess->markingworkflow) {
