@@ -35,6 +35,7 @@ use MoodleExcelWorkbook;
 use MoodleExcelWorksheet;
 use stdClass;
 use AssignfedbackDownloaderExcelWorkbook;
+use phpDocumentor\Reflection\PseudoTypes\True_;
 
 function report_assignfeedback_download_setup_frubric_workbook($id, $modid, $areaid, $selectedusers, $maxscore, $tempdir) {
     global $DB;
@@ -56,7 +57,7 @@ function report_assignfeedback_download_setup_frubric_workbook($id, $modid, $are
     $methodname     = "Frubric : $frubric->name";
     $pos            = report_assignfeedback_download_add_header($workbook, $sheet, $course->fullname, $cm->name, $methodname);
     $pos            = report_assignfeedback_download_add_frubric_and_grading_info_header($workbook, $sheet, $frubric, $pos);
-    $data           = report_assignfeedback_download_students_frubric_data($modid, $selectedusers, $cm, $areaid);
+    $data           = report_assignfeedback_download_students_frubric_data($modid, $selectedusers, $cm, $frubric);
 
     report_assignfeedback_set_students_rows($sheet, $data, $maxscore);
 
@@ -193,43 +194,46 @@ function report_assignfeedback_download_get_descriptors_and_titles($levels) {
 
 /**
  * Get the students grading details
- *    descritors checked, level sscore, criteria total score, final grade
+ *    descritors checked, level score, criteria total score, final grade
  */
-function report_assignfeedback_download_students_frubric_data($cmid, $selectedusers, $cm, $areaid) {
+function report_assignfeedback_download_students_frubric_data($cmid, $selectedusers, $cm, $frubricdefinition) {
     global $DB, $CFG;
     require_once($CFG->libdir . '/gradelib.php');
 
-    $sql = "SELECT grf.id AS grfid, grl.id AS levelid, grf.leveljson  AS selections,
-            grf.remark, grf.levelscore AS score, grf.criterionid,
-            rubm.username AS grader, stu.id AS userid,
-            stu.idnumber AS idnumber, stu.firstname,stu.lastname,
-            stu.username, gin.timemodified AS modified,
-            crs.id AS courseid, asg.id AS itemid, asg.blindmarking
-            FROM {course} crs
-            JOIN {course_modules} cm ON crs.id = cm.course
-            JOIN {assign} asg ON asg.id = cm.instance
-            JOIN {context} c ON cm.id = c.instanceid
-            JOIN {grading_areas}  ga ON c.id=ga.contextid
-            JOIN {grading_definitions} gd ON ga.id = gd.areaid
-            JOIN {gradingform_frubric_criteria} grc ON (grc.definitionid = gd.id)
-            JOIN {gradingform_frubric_levels} grl ON (grl.criterionid = grc.id)
-            JOIN {grading_instances} gin ON gin.definitionid = gd.id
-            JOIN {assign_grades} ag ON ag.id = gin.itemid
-            JOIN {user} stu ON stu.id = ag.userid
-            JOIN {user} rubm ON rubm.id = gin.raterid
-            JOIN {gradingform_frubric_fillings} grf ON (grf.instanceid = gin.id)
-            AND (grf.criterionid = grc.id)  -- AND (grf.levelid = grl.id)
-            WHERE cm.id = :cmid AND gin.status = 1 AND stu.id in ($selectedusers)
-            ORDER BY lastname ASC, firstname ASC, userid ASC, grc.sortorder ASC";
+    $sql        = "SELECT grf.id AS grfid, grl.id AS levelid, grf.leveljson  AS selections,
+                    grf.remark, grf.levelscore AS score, grf.criterionid,
+                    rubm.username AS grader, stu.id AS userid,
+                    stu.idnumber AS idnumber, stu.firstname,stu.lastname,
+                    stu.username, gin.timemodified AS modified,
+                    crs.id AS courseid, asg.id AS itemid, asg.blindmarking
+                    FROM {course} crs
+                    JOIN {course_modules} cm ON crs.id = cm.course
+                    JOIN {assign} asg ON asg.id = cm.instance
+                    JOIN {context} c ON cm.id = c.instanceid
+                    JOIN {grading_areas}  ga ON c.id=ga.contextid
+                    JOIN {grading_definitions} gd ON ga.id = gd.areaid
+                    JOIN {gradingform_frubric_criteria} grc ON (grc.definitionid = gd.id)
+                    JOIN {gradingform_frubric_levels} grl ON (grl.criterionid = grc.id)
+                    JOIN {grading_instances} gin ON gin.definitionid = gd.id
+                    JOIN {assign_grades} ag ON ag.id = gin.itemid
+                    JOIN {user} stu ON stu.id = ag.userid
+                    JOIN {user} rubm ON rubm.id = gin.raterid
+                    JOIN {gradingform_frubric_fillings} grf ON (grf.instanceid = gin.id)
+                    AND (grf.criterionid = grc.id)  AND (grf.levelid = grl.id)
+                    WHERE cm.id = :cmid AND gin.status = 1 AND stu.id in ($selectedusers)
+                    ORDER BY lastname ASC, firstname ASC, userid ASC, grc.sortorder ASC,  grf.levelid ASC";
 
     $params     = ['cmid' => $cmid, 'cmid2' => $cmid];
     $results    = $DB->get_recordset_sql($sql, $params);
     $data       = [];
+
     // When no descriptor is selected, the levelid is missing in the gradingform_frubric_fillings table.
     // This is not a bug in frubric plugin.
     // To avoid PHP notice unique id, I used get_recordset_sql this brigs all records.
     // Filter here the duplicate.
+
     $trackfill  = [];
+
     foreach ($results as $result) {
 
         if (in_array($result->grfid, $trackfill)) {
@@ -266,23 +270,27 @@ function report_assignfeedback_download_students_frubric_data($cmid, $selectedus
                 $gradebookgrade = $gradingitem->grades[$result->userid];
                 $gradebookgrade->str_long_grade;
                 $filling->finalgrade = $gradebookgrade->str_long_grade;
-                // $filling->modified      = $result->modified;
             }
 
         } else {
             $filling = $data[$result->userid];
         }
 
-        $level                       = new stdClass();
-        $level->id                   = $result->levelid;
-        $level->feedback             = $result->remark;
-        $level->score                = $result->score;
-        $level->descriptors          = report_assignfeedback_download_decode_level_descriptors($result->selections);
-        $filling->levels[$level->id] = $level;
+        $level                                                 = new stdClass();
+        $level->id                                             = $result->levelid;
+        $level->feedback                                       = $result->remark;
+        $level->score                                          = $result->score;
+        $level->descriptors                                    = report_assignfeedback_download_decode_level_descriptors($result->selections);
+        $filling->levels[$level->id]                           = $level;
+
         $data[$result->userid]       = $filling;
+
     }
 
     $results->close(); // Remember to close the set.
+
+    // Now, get all de descriptors the frubric has and compared with the descritors in the filling.
+    $data = report_assignfeedback_download_complete_descriptors($data, $frubricdefinition);
     return $data;
 }
 
@@ -290,8 +298,11 @@ function report_assignfeedback_download_students_frubric_data($cmid, $selectedus
  * Helper function to set a ✔ to the checked levels
  */
 function report_assignfeedback_download_decode_level_descriptors($selections) {
-    $selections = json_decode($selections);
-    $decoded    = [];
+
+    $selections           = json_decode($selections);
+    $decoded              = [];
+    // $descriptoridstracker = [];
+
     foreach ($selections as $levelid => $filling) {
         $definition = json_decode($filling->definition);
 
@@ -302,13 +313,126 @@ function report_assignfeedback_download_decode_level_descriptors($selections) {
             } else {
                 $descriptor->checked = '';
             }
-
+            // $descriptoridstracker[$descriptor->descriptorid] = $descriptor->checked;
             $decoded[] = $descriptor->checked;
         }
 
     }
+
     return $decoded;
 
+}
+
+/**
+ * Get all the levels from the definition.
+ * This function helps to fill levels that might be missing
+ * because the teacher didnt complete grading
+ * returns an array with the format [criterionid][levelid] = descriptorid
+ */
+function report_assignfeedback_download_download_get_all_descriptors($criteria) {
+
+    $levelgroupbycriterion       = [];
+
+    foreach ($criteria as $i => $criterion) {
+        $auxid                = 0;
+        if (!is_array($criterion)) {
+            continue;
+        }
+        foreach ($criterion as $criterionid => $criterio) {
+
+            $order[] = $criterionid;
+            foreach ($criterio as $q => $prop) {
+                if ($q == 'levels') {
+                    foreach ($prop as $p) {
+                        foreach ($p as $i => $clp) {
+                            if ($i == 'id') {
+                                $auxid = $clp;
+                            }
+                            if ($i == 'descriptors') {
+                                foreach ($clp as $descriptor) {
+                                    $extra = new stdClass();
+                                    $extra->levelid = $auxid;
+                                    $levelgroupbycriterion[$criterionid][ $auxid][] = $descriptor->descriptorid; // Group the levelids by their criterion.
+
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return $levelgroupbycriterion;
+}
+
+/**
+ * There might be cases where the frubric is not complete (frubric was requested to save work in progress)
+ * The filling has only the info the teacher completed so far. We need to fill the rest with a dummy value
+ */
+function report_assignfeedback_download_complete_descriptors($data, $frubricdefinition) {
+
+    $levelgroupbycriterion  = report_assignfeedback_download_download_get_all_descriptors($frubricdefinition);
+
+    foreach ($data as $userid => &$details) {
+        $dummylevels = report_assignfeedback_download_complete_fill_missing_levels(array_keys($details->levels), $levelgroupbycriterion);
+        $details->levels = $details->levels + $dummylevels;
+        ksort($details->levels);
+    }
+
+    return $data;
+}
+
+/**
+ * This function returns an array with the format [missinglevelid] = dummy levelfilling
+ */
+function report_assignfeedback_download_complete_fill_missing_levels($currentlevelids, $levelgroupbycriterion) {
+
+    $levelgroupbyaux = $levelgroupbycriterion;
+    foreach ($levelgroupbycriterion as $criterionid => $levelsingroup) {
+        $lingroup = array_keys($levelsingroup);
+
+        if (count(array_intersect($currentlevelids, $lingroup)) > 0) { // Found in the group, remove the criterion.
+
+            unset($levelgroupbyaux[$criterionid]);;
+        }
+    }
+
+    $fl = [];
+
+    foreach ($levelgroupbyaux as $li => $aux) {
+
+        $fl[array_key_first($aux)] = [];
+        foreach ($aux as $au) {
+            array_merge($fl[array_key_first($aux)], $au);
+            foreach ($au as $desc) {
+                array_push($fl[array_key_first($aux)], '');
+            }
+        }
+    }
+
+    $fl = report_assignfeedback_download_complete_fill_missing_levels_helper($fl);
+
+    return $fl;
+
+}
+
+/**
+ * Helper function to add the dummy stdClass to the missing levels
+ */
+function report_assignfeedback_download_complete_fill_missing_levels_helper($dummylevels) {
+
+    $levelsaux  = $dummylevels;
+    foreach ($dummylevels as $id => $dl) {
+        $dummyfilling               = new stdClass();
+        $dummyfilling->id           = 0;
+        $dummyfilling->feedback     = '';
+        $dummyfilling->score        = 0.00000;
+        $dummyfilling->descriptors = $dl;
+        $levelsaux[$id] = $dummyfilling;
+    }
+
+    return $levelsaux;
 }
 
 /**

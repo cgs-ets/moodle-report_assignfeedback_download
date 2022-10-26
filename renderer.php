@@ -234,7 +234,9 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
             $userassessment->onlinetextsubmission   = $this->get_assessment_submission_onlinetext($assess->assignmentid, $user->id);
 
             // If student didnt submit anything, then dont display.
-            if (!isset(($userassessment->submtree['tree'])->submissionfiletree) && $userassessment->onlinetextsubmission == '') {
+            if (!isset(($userassessment->submtree['tree'])->submissionfiletree)
+                && $userassessment->onlinetextsubmission == ''
+                && !isset($assess->grade))  {
                 continue;
             }
 
@@ -286,11 +288,16 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
                     $userassessment->url = $url;
                 }
 
+                $tag                        = "Not graded";
                 $gradingstatus              = $this->manager->get_grading_instance_status($cmid, $assess->gradeid);
                 $fg                         = $this->manager->get_final_grade($assess->assignmentid, $assess->userid);
-                $userassessment->finalgrade = ($gradingstatus == '1') ? $fg : get_string('rubricneedsupdate', 'report_assignfeedback_download');
+                $userassessment->finalgrade = get_string('rubricneedsupdate', 'report_assignfeedback_download');
 
-                $tag = "Not graded";
+                if ($gradingstatus == '1' ) {
+                    $userassessment->finalgrade = $fg;
+                } else if ($gradingstatus === -1) {
+                    $userassessment->finalgrade = $tag;
+                }
                 // Check if the assessment is using workflow.
                 if ($assess->markingworkflow) {
                     $tag                        = $this->manager->get_marking_workflow_state($assess->userid, $assess->assignmentid);

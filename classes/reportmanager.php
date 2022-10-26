@@ -79,9 +79,9 @@ class reportmanager {
                 FROM {assign} assign
                 JOIN {assign_submission} asub
                 ON assign.id = asub.assignment
-                WHERE assign.course = ? AND asub.status = ?";
+                WHERE assign.course = ? "; /*AND asub.status = ?*/
 
-        $params = ['course' => $courseid, 'status' => 'submitted'];
+        $params = ['course' => $courseid];  /*, 'status' => 'submitted'*/
 
         $results = $DB->get_records_sql($sql, $params);
 
@@ -108,10 +108,11 @@ class reportmanager {
     // Combine graded and not graded (but submitted) assignments.
     public function get_assessments($assessmentids) {
         // Assessments not graded.
-        $notgraded = $this->get_assessments_by_course_2($assessmentids);
+        $notgraded       = $this->get_assessments_by_course_2($assessmentids);
         // Assessments that could be fully graded or in the process off.
         $gradedorstarted = $this->get_assessments_by_course($assessmentids);
-        $assessments = $gradedorstarted + $notgraded; // Combine the results.  The order matters here!!
+        $assessments     = $gradedorstarted + $notgraded; // Combine the results.  The order matters here!!
+
         return $assessments;
 
     }
@@ -602,8 +603,6 @@ class reportmanager {
             case 'guide':
                 report_assignfeedback_download_setup_marking_guide_workbook($courseid, $cmid, $selectedusers, $tempdir);
                 break;
-
-
         }
     }
 
