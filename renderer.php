@@ -237,7 +237,7 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
             if (!isset(($userassessment->submtree['tree'])->submissionfiletree)
                 && $userassessment->onlinetextsubmission == ''
                 && $userassessment->feedbackcommentxt == ''
-                && $assess->grade < 0) {
+                && (!isset($assess->grade) || $assess->grade < 0 )) {
                 continue;
             }
 
