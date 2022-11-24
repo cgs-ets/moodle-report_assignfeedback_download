@@ -209,8 +209,8 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
         $countfrubricfiles          = 0;
         $countgradedsubmissions     = 0;
 
-        foreach ($assessments as $assess) {
 
+        foreach ($assessments as $assess) {
             if (!isset($activeusers[$assess->userid])) {
                 continue;
             }
@@ -236,7 +236,8 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
             // If student didnt submit anything, then dont display.
             if (!isset(($userassessment->submtree['tree'])->submissionfiletree)
                 && $userassessment->onlinetextsubmission == ''
-                && !isset($assess->grade)) {
+                && $userassessment->feedbackcommentxt == ''
+                && $assess->grade < 0) {
                 continue;
             }
 

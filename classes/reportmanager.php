@@ -110,8 +110,17 @@ class reportmanager {
         $notgraded       = $this->get_assessments_by_course_2($assessmentids);
         // Assessments that could be fully graded or in the process off.
         $gradedorstarted = $this->get_assessments_by_course($assessmentids);
-        $assessments     = $gradedorstarted + $notgraded; // Combine the results.  The order matters here!!
 
+        // Clean the array to not show assessments that have no submissions and are not graded.
+        foreach($gradedorstarted as $gs) {
+            foreach($notgraded as $i => $ng) {
+                if ($gs->userid == $ng->userid) {
+                    unset($notgraded[$i]);
+                }
+            }
+        }
+
+        $assessments     = $gradedorstarted + $notgraded; // Combine the results.  The order matters here!!
         return $assessments;
 
     }
