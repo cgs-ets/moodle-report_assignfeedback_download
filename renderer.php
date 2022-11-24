@@ -288,31 +288,13 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
                     $userassessment->url = $url;
                 }
 
-                $tag                        = "Not graded";
-                $gradingstatus              = $this->manager->get_grading_instance_status($cmid, $assess->gradeid);
-                $fg                         = $this->manager->get_final_grade($assess->assignmentid, $assess->userid);
-                $userassessment->finalgrade = get_string('rubricneedsupdate', 'report_assignfeedback_download');
-
-                if ($gradingstatus == '1' ) {
-                    $userassessment->finalgrade = $fg;
-                } else if ($gradingstatus === -1 && $assess->grade == -1) {
-                    $userassessment->finalgrade = $tag;
-                } else if ($assess->grade > -1) { // Simple grading.
-                    $userassessment->finalgrade = strval(number_format($assess->grade, 2)) . "/ " . "$assess->gradeoutof";
-                }
-                // Check if the assessment is using workflow.
-                if ($assess->markingworkflow) {
-                    $tag                        = $this->manager->get_marking_workflow_state($assess->userid, $assess->assignmentid);
-                    $isreleased                 = ($tag == get_string('released', 'report_assignfeedback_download')) ? true : false;
-                    $userassessment->finalgrade = ($isreleased && $gradingstatus == '1') ? $userassessment->finalgrade : $tag;
-                }
-
+                $grade = $assess->grade > 0 ? number_format($assess->grade, 2, '.', '') : "0.00";
+                $maxgrade = number_format($assess->gradeoutof, 2, '.', '');
+                $userassessment->finalgrade = "$grade/$maxgrade";
                 $userassessment->frubric = 0;
                 $showfrubricicon         = false;
 
-                if ($assess->markingworkflow &&  $isreleased) {
-                    $showfrubricicon = true;
-                } else if ($assess->grade != -1.00000 && !$assess->markingworkflow && $gradingstatus == 1) {
+                if ($assess->grade > 0) {
                     $showfrubricicon = true;
                 }
 
@@ -524,7 +506,7 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
         if (isset($rubric['frubric'])) {
             $this->get_assessment_frubric_tree($cmid, $courseid, $assess, $userassessment, $user, $cmidcollection, $coursename, $rubricparams);
         } else if (isset($rubric['rubric']) || isset($rubric['guide'])) {
-            $mn = isset($rubric['rubric']) ?  get_string('rubric', 'report_assignfeedback_download') : get_string('mguide', 'report_assignfeedback_download');
+            $mn = isset($rubric['rubric']) ? get_string('rubric', 'report_assignfeedback_download') : get_string('mguide', 'report_assignfeedback_download');
             $this->get_assessment_rubric_tree($cmid, $assess, $userassessment, $cmidcollection, $mn);
             $userassessment->rubricparams = json_encode($rubricparams);
         }

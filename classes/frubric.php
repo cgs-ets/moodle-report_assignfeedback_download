@@ -269,7 +269,9 @@ function report_assignfeedback_download_students_frubric_data($cmid, $selectedus
                 $gradingitem = $gradinginfo->items[0];
                 $gradebookgrade = $gradingitem->grades[$result->userid];
                 $gradebookgrade->str_long_grade;
-                $filling->finalgrade = $gradebookgrade->str_long_grade;
+                error_log(print_r($gradebookgrade, true));
+                // $filling->finalgrade = $gradebookgrade->str_long_grade;
+                $filling->finalgrade = $gradebookgrade->str_grade;
             }
 
         } else {
@@ -283,7 +285,7 @@ function report_assignfeedback_download_students_frubric_data($cmid, $selectedus
         $level->descriptors                                    = report_assignfeedback_download_decode_level_descriptors($result->selections);
         $filling->levels[$level->id]                           = $level;
 
-        $data[$result->userid]       = $filling;
+        $data[$result->userid]                                = $filling;
 
     }
 
@@ -454,7 +456,7 @@ function report_assignfeedback_set_students_rows (MoodleExcelWorksheet $sheet, $
                 $sheet->write_string($row, $col++, $descriptor, array('align' => 'centre'));
             }
             $sheet->write_string($row, $col++, $level->feedback, $format);
-            $sheet->write_string($row, $col++, $level->score);
+            $sheet->write_number($row, $col++, $level->score);
             $total += $level->score;
 
         }
@@ -462,7 +464,7 @@ function report_assignfeedback_set_students_rows (MoodleExcelWorksheet $sheet, $
         $sheet->set_column($col, $col, 15, $format);
         $sheet->write_string($row, $col++, $total, $format);
         $sheet->set_column($col, $col, 25, $format);
-        $sheet->write_string($row, $col++, $student->finalgrade, $format);
+        $sheet->write_number($row, $col++, $student->finalgrade, $format);
         $sheet->write_string($row, $col++, $student->grader, $format);
         $sheet->write_string($row, $col++, $student->modified, $format);
 

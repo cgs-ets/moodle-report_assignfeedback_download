@@ -43,7 +43,6 @@ require_once($CFG->libdir . '/filestorage/zip_archive.php');
 require_once($CFG->dirroot . '/report/assignfeedback_download/vendor/autoload.php');
 
 /**
- *
  * @package       report
  * @subpackage    assignfeedback_download
  * @copyright     2021 Veronica Bermegui
@@ -79,9 +78,9 @@ class reportmanager {
                 FROM {assign} assign
                 JOIN {assign_submission} asub
                 ON assign.id = asub.assignment
-                WHERE assign.course = ? "; /*AND asub.status = ?*/
+                WHERE assign.course = ? ";
 
-        $params = ['course' => $courseid];  /*, 'status' => 'submitted'*/
+        $params = ['course' => $courseid];
 
         $results = $DB->get_records_sql($sql, $params);
 
@@ -116,28 +115,6 @@ class reportmanager {
         return $assessments;
 
     }
-
-    public function get_marking_workflow_state($userid, $assignmentid) {
-        global $DB;
-        $map = ['' => get_string('notmarked', 'report_assignfeedback_download'),
-                'inmarking' => get_string('inmarking', 'report_assignfeedback_download'),
-                'readyforreview' => get_string('readyforreview', 'report_assignfeedback_download'),
-                'inreview' => get_string('inreview', 'report_assignfeedback_download'),
-                'readyforrelease' => get_string('readyforrelease', 'report_assignfeedback_download'),
-                'released' => get_string('released', 'report_assignfeedback_download'),
-                ];
-
-        $sql = "SELECT workflowstate
-                FROM {assign_user_flags} auf
-                WHERE auf.userid = :userid AND auf.assignment = :assignmentid ";
-        $params = ['userid' => $userid, 'assignmentid' => $assignmentid];
-
-        $result = $DB->get_record_sql($sql, $params);
-
-        return $map[$result->workflowstate];
-
-    }
-
 
     public function get_assessment_submission_records($userid, $courseid, $assignmentid) {
         global $DB;
@@ -175,9 +152,7 @@ class reportmanager {
                 WHERE f.filearea = ?
                 AND f.component = ?
                 AND f.itemid = ?
-                AND f.userid = ?
-
-            ";
+                AND f.userid = ?";
 
         $params = [
                    'filearea' => 'submissions_onlinetext',
@@ -295,34 +270,6 @@ class reportmanager {
         return $results;
     }
 
-    public function get_final_grade($assignmentinstance, $userid) {
-        global $DB;
-
-        // Get the itemid.
-        $sql = "SELECT id FROM {grade_items} WHERE iteminstance = ?";
-        $paramsarray = ['iteminstance' => $assignmentinstance];
-        $itemid = $DB->get_records_sql($sql, $paramsarray);
-        $itemid = array_column($itemid, 'id');
-        $itemid = end($itemid);
-
-        $sql = "SELECT finalgrade, rawgrademax from {grade_grades} WHERE itemid = ? AND userid = ?";
-        $paramsarray = ['itemid' => $itemid, 'userid' => $userid];
-        $finalgrade = array_values($DB->get_records_sql($sql, $paramsarray));
-        $fg = '';
-
-        if ($finalgrade) {
-
-            $final = $finalgrade[0]->finalgrade;
-            $final = number_format($final, 2);
-            $maxgrade = $finalgrade[0]->rawgrademax;
-            $maxgrade = number_format($maxgrade, 2);
-
-            $fg = $final . ' / ' . $maxgrade;
-        }
-
-        return $fg;
-    }
-
     public function get_assessment_ids($courseid, $assessmentids) {
 
         $assessids = $assessmentids;
@@ -353,7 +300,6 @@ class reportmanager {
                 JOIN {assign}  assign ON grades.assignment = assign.id
                 JOIN {user}  u ON grades.userid = u.id
                 WHERE grades.assignment  IN ($assessmentids)
-              --  AND grades.grade != -1.00000
                 ORDER BY assign.name";
 
         $result = $DB->get_records_sql($sql);
@@ -605,22 +551,6 @@ class reportmanager {
                 report_assignfeedback_download_setup_marking_guide_workbook($courseid, $cmid, $selectedusers, $tempdir);
                 break;
         }
-    }
-
-    public function get_grading_instance_status($cmid, $itemid) {
-        global $USER;
-        $context         = \context_module::instance($cmid);
-        $gradingmanager = get_grading_manager($context, 'mod_assign', 'submissions');
-
-        if ($activemethod   = $gradingmanager->get_active_method()) {
-            $controller = $gradingmanager->get_controller( $activemethod);
-            $currentinstance = $controller->get_current_instance($USER->id, $itemid);
-            if (!is_null($currentinstance)) {
-                return  $currentinstance->get_status();
-            }
-
-        }
-        return -1;
     }
 
     public function download_all_files($itemids, $id) {
