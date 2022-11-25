@@ -44,6 +44,7 @@ $string['adv_grading_help']             = 'Only frubric method can be downloaded
 $string['rubrictitle']                  = 'Download Frubric';
 $string['chooseoperation']              = 'Choose operation';
 $string['withselectedlegend']           = 'With selected...';
+$string['select_help']                  = 'If an action is not active is because there are no files/grades available to download';
 $string['dldsubmission']                = 'Download files submission';
 $string['dldsubmissiononlinetext']      = 'Download online text submission';
 $string['dldanotated']                  = 'Download annotate PDF';

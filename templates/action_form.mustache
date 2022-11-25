@@ -14,12 +14,10 @@
     <div id="fgroup_id_actionsgrp" class="form-group row  fitem   " data-groupname="actionsgrp">
         <div class="col-md-3 col-form-label d-flex pb-0 pr-md-0">
             <p id="fgroup_id_actionsgrp_label" class="mb-0 word-break" aria-hidden="true" style="cursor: default;">
-                With selected...
+               {{#str}} withselectedlegend, report_assignfeedback_download{{/str}}
             </p>
 
-            <div class="ml-1 ml-md-auto d-flex align-items-center align-self-start">
-
-            </div>
+            <div class="ml-1 ml-md-auto d-flex align-items-center align-self-start"></div>
         </div>
         <div class="col-md-9 form-inline align-items-start felement" data-fieldtype="group">
             <fieldset class="w-100 m-0 p-0 border-0">
@@ -30,6 +28,8 @@
                         <label class="col-form-label sr-only" for="id_operation">
                             {{#str}} chooseoperation, report_assignfeedback_download{{/str}}
                         </label>
+                        <i class="icon fa fa-question-circle text-info fa-fw " title="{{#str}}select_help, report_assignfeedback_download {{/str}}" role="img" aria-label=""
+                        data-toggle="tooltip" data-placement="top"></i>
                         <span data-fieldtype="select">
                             <select class="custom-select" disabled name="operation" id="id_operation">
                                 <option value="dldsubmission" {{#noexistsubmissions}}disabled{{/noexistsubmissions}}>{{#str}} dldsubmission, report_assignfeedback_download{{/str}}</option>
