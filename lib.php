@@ -152,15 +152,7 @@ function report_assignfeedback_download_get_advanced_method_students_data($modco
              ' ' . \report_assignfeedback_download_get_anonymous_submission_id($cm, $r->userid);
         }
     }
-    // In case the assessment is graded using workflow only add the student that their assessment was released.
-    if ($assign->get_instance()->markingworkflow) {
-        foreach ($result as $i => $r) {
-            if ($assign->get_grading_status($r->userid) != ASSIGN_MARKING_WORKFLOW_STATE_RELEASED) {
-                unset($result[$i]);
-            }
-        }
 
-    }
     return $result;
 }
 
@@ -181,10 +173,6 @@ function report_assignfeedback_process_data(array $students, array $data) {
                 $student->data[$key] = $line;
                 unset($data[$key]);
             }
-        }
-        // It might be the case where we  want the grades for different grading methods and this student was not graded with rubric.
-        if (count($student->data) == 0) {
-            unset($students[$i]);
         }
     }
 

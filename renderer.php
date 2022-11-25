@@ -295,7 +295,7 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
                 $userassessment->frubric = 0;
                 $showfrubricicon         = false;
 
-                if ($assess->grade > 0) {
+                if ($assess->grade > -1) {
                     $showfrubricicon = true;
                 }
 

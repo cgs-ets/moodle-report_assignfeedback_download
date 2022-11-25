@@ -58,7 +58,7 @@ function report_assignfeedback_download_setup_frubric_workbook($id, $modid, $are
     $pos            = report_assignfeedback_download_add_header($workbook, $sheet, $course->fullname, $cm->name, $methodname);
     $pos            = report_assignfeedback_download_add_frubric_and_grading_info_header($workbook, $sheet, $frubric, $pos);
     $data           = report_assignfeedback_download_students_frubric_data($modid, $selectedusers, $cm, $frubric);
-
+    error_log(print_r($data, true));
     report_assignfeedback_set_students_rows($sheet, $data, $maxscore);
 
     $workbook->savetotempdir($tempdir);
@@ -241,10 +241,12 @@ function report_assignfeedback_download_students_frubric_data($cmid, $selectedus
         } else {
             $trackfill[] = $result->grfid;
         }
+
         if (!isset($data[$result->userid])) {
             $filling = new stdClass();
             $filling->firstname     = '';
             $filling->lastname      = '';
+
             if ($result->blindmarking == 1) {
                 $filling->username = report_assignfeedback_download_get_anonymous_submission_id($cm, $result->userid);
             } else {
@@ -271,7 +273,11 @@ function report_assignfeedback_download_students_frubric_data($cmid, $selectedus
                 $gradebookgrade->str_long_grade;
                 error_log(print_r($gradebookgrade, true));
                 // $filling->finalgrade = $gradebookgrade->str_long_grade;
-                $filling->finalgrade = $gradebookgrade->str_grade;
+                if ($gradebookgrade->str_grade == '-') {
+                    $filling->finalgrade = "0";
+                } else {
+                    $filling->finalgrade = $gradebookgrade->str_grade;
+                }
             }
 
         } else {
@@ -303,7 +309,7 @@ function report_assignfeedback_download_decode_level_descriptors($selections) {
 
     $selections           = json_decode($selections);
     $decoded              = [];
-    // $descriptoridstracker = [];
+
 
     foreach ($selections as $levelid => $filling) {
         $definition = json_decode($filling->definition);
@@ -315,7 +321,7 @@ function report_assignfeedback_download_decode_level_descriptors($selections) {
             } else {
                 $descriptor->checked = '';
             }
-            // $descriptoridstracker[$descriptor->descriptorid] = $descriptor->checked;
+
             $decoded[] = $descriptor->checked;
         }
 
