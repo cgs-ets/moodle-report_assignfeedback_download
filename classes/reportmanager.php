@@ -112,8 +112,8 @@ class reportmanager {
         $gradedorstarted = $this->get_assessments_by_course($assessmentids);
 
         // Clean the array to not show assessments that have no submissions and are not graded.
-        foreach($gradedorstarted as $gs) {
-            foreach($notgraded as $i => $ng) {
+        foreach ($gradedorstarted as $gs) {
+            foreach ($notgraded as $i => $ng) {
                 if ($gs->userid == $ng->userid) {
                     unset($notgraded[$i]);
                 }
@@ -652,6 +652,7 @@ class reportmanager {
             $methodname = $DB->get_record('grading_areas', ['id' => $controller->get_areaid()], 'activemethod', IGNORE_MISSING);
 
             if ($methodname->activemethod == 'frubric') {
+
                 return  $this->get_frubric_json($courseid, $userid, $instanceid, $controller);
             }
         }
@@ -800,7 +801,22 @@ class reportmanager {
 
     }
 
+    public function get_grading_instance_status($cmid, $itemid) {
+        global $USER;
+        $context         = \context_module::instance($cmid);
+        $gradingmanager = get_grading_manager($context, 'mod_assign', 'submissions');
 
+        if ($activemethod   = $gradingmanager->get_active_method()) {
+            $controller = $gradingmanager->get_controller( $activemethod);
+            $currentinstance = $controller->get_current_instance($USER->id, $itemid);
+
+            if (!is_null($currentinstance)) {
+                return  $currentinstance->get_status();
+            }
+
+        }
+        return -1;
+    }
     // Get the file extension.  https://docs.w3cub.com/http/basics_of_http/mime_types/complete_list_of_mime_types.html
     // Mac users sometimes dont have the extension in the file. To avoid issues, pick up the mimetype of the file
     // and get the extension from it/.

@@ -191,8 +191,7 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
     public function get_users_context($courseid, $assessmentids, $coursename) {
         global  $CFG;
 
-        $context = context_course::instance($courseid);
-
+        $context        = context_course::instance($courseid);
         $activeusers    = $this->get_active_users($context);
         $assessids      = $this->manager->get_assessment_ids($courseid, $assessmentids);
         $assessments    = $this->manager->get_assessments($assessids);
@@ -208,7 +207,6 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
         $countannotatedpdffiles     = 0;
         $countfrubricfiles          = 0;
         $countgradedsubmissions     = 0;
-
 
         foreach ($assessments as $assess) {
             if (!isset($activeusers[$assess->userid])) {
@@ -289,17 +287,29 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
                     $userassessment->url = $url;
                 }
 
+                $gradingstatus  = $this->manager->get_grading_instance_status($cmid, $assess->gradeid); // The rubric was modified after submission. And students needs to be regraded
+
                 $grade = $assess->grade > 0 ? number_format($assess->grade, 2, '.', '') : "0.00";
                 $maxgrade = number_format($assess->gradeoutof, 2, '.', '');
-                $userassessment->finalgrade = "$grade/$maxgrade";
+                if ($gradingstatus == '1') {
+                    $userassessment->finalgrade = "$grade/$maxgrade";
+                } else if ($gradingstatus == 2 && $assess->grade > -1) { // INSTANCE_STATUS_NEEDUPDATE = 2.
+                    $userassessment->finalgrade = get_string('rubricneedsupdate', 'report_assignfeedback_download');
+                } else if ($gradingstatus == -1 && $assess->grade > -1) { // The assingment has been graded but there is no rubric instance. We still have a grade.
+                    $userassessment->finalgrade = "$grade/$maxgrade";
+                }
+
                 $userassessment->frubric = 0;
                 $showfrubricicon         = false;
 
                 if ($assess->grade > -1) {
                     $showfrubricicon = true;
                 }
+                require_once($CFG->libdir . '/gradelib.php');
+                $context2 = \context_module::instance($cmids[$assess->assignmentid]->cmid);
+                $gradingmanager = get_grading_manager($context2, 'mod_assign', 'submissions');
 
-                if ($showfrubricicon) {
+                if ($showfrubricicon && $gradingmanager->get_active_controller() != null) {
 
                     $fr = $this->get_assessment_advanced_grading_tree($cmid,
                     $courseid,
