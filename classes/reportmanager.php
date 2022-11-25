@@ -309,7 +309,7 @@ class reportmanager {
                 JOIN {assign}  assign ON grades.assignment = assign.id
                 JOIN {user}  u ON grades.userid = u.id
                 WHERE grades.assignment  IN ($assessmentids)
-                ORDER BY assign.name";
+                ORDER BY assign.name DESC, grades.grade DESC, grades.id DESC";
 
         $result = $DB->get_records_sql($sql);
 
