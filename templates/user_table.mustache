@@ -20,6 +20,7 @@
                             <th> {{#str}}assessmentheader, report_assignfeedback_download{{/str}} </th>
                             <th> {{#str}}fileattach, report_assignfeedback_download{{/str}} </th>
                             <th> {{#str}}onlinesubmission, report_assignfeedback_download{{/str}} </th>
+                            <th> {{#str}}reflectionsubmission, report_assignfeedback_download{{/str}} </th>
                             <th> {{#str}}feedbackfiles, report_assignfeedback_download{{/str}} </th>
                             <th title = "{{#str}}commenthelp, report_assignfeedback_download{{/str}}">
                                  {{#str}}feedbackcomments, report_assignfeedback_download{{/str}}
@@ -37,17 +38,17 @@
                     <tbody>
                         {{#assessments}}
                         <tr class ='innertabletr' data-cmid={{cmid}}>
-                            <td style="width:14%;">
+                            <td style="width:11%;">
                                 <a href="{{assignmentnameurl}}" target="_blank">{{assignmentname}}</a>
                             </td>
-                            <td style="width:14%;">
+                            <td style="width:11%;">
                                 {{#submtree}}
                                 {{#tree}}
                                 {{{submissionfiletree}}}
                                 {{/tree}}
                                 {{/submtree}}
                             </td>
-                            <td>
+                            <td style="width:11%;">
                                 {{#onlinetxtsubmissionview}}
                                     <a href="{{{onlinetxturl}}}" target ="_blank">
                                     <i class="icon fa fa-search-plus fa-fw " title="View online text submission" aria-label="View online text submission"></i>
@@ -55,14 +56,22 @@
                                 {{/onlinetxtsubmissionview}}
                                 {{{onlinetextsubmission}}}
                             </td>
-                            <td style="width:14%;">
+                            <td style="width:11%;">
+                                {{#reflectionsubmissionview}}
+                                 <a href="{{{reflectiontxturl}}}" target ="_blank">
+                                    <i class="icon fa fa-search-plus fa-fw " title="View online text submission" aria-label="View reflection"></i>
+                                </a>
+                                {{/reflectionsubmissionview}}
+                                   {{{reflectionsubmission}}}
+                            </td>
+                            <td style="width:11%;">
                                 {{#feedbackfiletree}}
                                 {{#tree}}
                                 {{{feedbackfiletree}}}
                                 {{/tree}}
                                 {{/feedbackfiletree}}
                             </td>
-                            <td style="width:14%;">
+                            <td style="width:11%;">
                                 {{#feedbackview}}
                                 <a href="{{{url}}}" target ="_blank">
                                     <i class="icon fa fa-search-plus fa-fw " title="View feedback" aria-label="View feedback"></i>
@@ -70,14 +79,14 @@
                                 {{/feedbackview}}
                                 {{{feedbackcommentxt}}}
                             </td>
-                            <td style="width:14%;">
+                            <td style="width:11%;">
                                 {{#annottedpdftree}}
                                 {{#tree}}
                                 {{{feedbackfiletree}}}
                                 {{/tree}}
                                 {{/annottedpdftree}}
                             </td>
-                            <td style="width:14%;"  class ="rubric-cell">
+                            <td style="width:11%;"  class ="rubric-cell">
                             {{#frubric}}
                                 <div class = 'frubric-container' data-frubric-params = "{{rubricparams}}" data-frubric-filling = "{{rubric}}" data-rubric-file-name = "{{rubricfilename}}">
                                      {{{frubrictree}}}
@@ -89,7 +98,7 @@
                                 </div>
                              {{/rubric}}
                             </td>
-                            <td style="width:14%;">
+                            <td style="width:11%;">
                                 {{#notgraded}}
                                     Not Graded
                                 {{/notgraded}}

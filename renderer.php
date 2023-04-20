@@ -33,6 +33,8 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
     const GRADING_METHOD_FRUBRIC          = 'frubric';
     const EMBEDDEDFILEINCOMMENT           = 'embeddedfileincomment';
 
+    private $manager;
+
     public function __construct(moodle_page $page, $target) {
 
         $this->manager = new reportmanager();
@@ -207,6 +209,7 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
         $countannotatedpdffiles     = 0;
         $countfrubricfiles          = 0;
         $countgradedsubmissions     = 0;
+        $countsubmissionreflection  = 0;
 
         foreach ($assessments as $assess) {
             if (!isset($activeusers[$assess->userid])) {
@@ -230,11 +233,13 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
             $userassessment->assignmentnameurl      = new moodle_url("$CFG->wwwroot/mod/assign/view.php", ['id' => $cmid]);
             $userassessment->submtree               = $this->get_assessment_submission_files_tree($user->id, $courseid, $assess->assignmentid);
             $userassessment->onlinetextsubmission   = $this->get_assessment_submission_onlinetext($assess->assignmentid, $user->id);
+            $userassessment->reflectionsubmission   = $this->get_assessment_submission_reflection($assess->assignmentid, $user->id);
 
             // If student didnt submit anything, then dont display.
             if (!isset(($userassessment->submtree['tree'])->submissionfiletree)
                 && $userassessment->onlinetextsubmission == ''
-                && $userassessment->feedbackcommentxt == ''
+                && $userassessment->reflectionsubmission == ''
+                && !isset($userassessment->feedbackcommentxt)
                 && (!isset($assess->grade) || $assess->grade < 0 )) {
                 continue;
             }
@@ -251,6 +256,20 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
                             'action'    => 'viewpluginassignsubmission');
                 $url                          = new moodle_url('/mod/assign/view.php', $urlparams);
                 $userassessment->onlinetxturl = $url;
+            }
+
+            if ($userassessment->reflectionsubmission != '') {
+                $countsubmissionreflection++;
+                $userassessment->reflectionsubmissionview = true;
+                $sid = $this->manager->get_assesment_submission_id($assess->assignmentid, $user->id);
+                $urlparams  = array(
+                            'id'        => $cmid,
+                            'sid'       => $sid,
+                            'gid'       => $sid,
+                            'plugin'    => 'reflection',
+                            'action'    => 'viewpluginassignsubmission');
+                $url                          = new moodle_url('/mod/assign/view.php', $urlparams);
+                $userassessment->reflectiontxturl = $url;
             }
 
             if (isset(($userassessment->submtree['tree'])->submissionfiletree)) {
@@ -453,6 +472,17 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
             $onlinetext .= $aolt;
         }
         return $onlinetext;
+
+    }
+
+    protected function get_assessment_submission_reflection($itemid, $userid) {
+        $arrayreflectiontext = $this->manager->get_assessment_submission_reflection($itemid,  $userid, false);
+        $reflectiontext      = '';
+
+        foreach ($arrayreflectiontext as $areftxt) {
+            $reflectiontext .= $areftxt;
+        }
+        return $reflectiontext;
 
     }
 

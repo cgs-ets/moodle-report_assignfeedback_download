@@ -35,7 +35,7 @@ use MoodleExcelWorkbook;
 use MoodleExcelWorksheet;
 use stdClass;
 use AssignfedbackDownloaderExcelWorkbook;
-use phpDocumentor\Reflection\PseudoTypes\True_;
+
 
 function report_assignfeedback_download_setup_frubric_workbook($id, $modid, $areaid, $selectedusers, $maxscore, $tempdir) {
     global $DB;
@@ -58,7 +58,7 @@ function report_assignfeedback_download_setup_frubric_workbook($id, $modid, $are
     $pos            = report_assignfeedback_download_add_header($workbook, $sheet, $course->fullname, $cm->name, $methodname);
     $pos            = report_assignfeedback_download_add_frubric_and_grading_info_header($workbook, $sheet, $frubric, $pos);
     $data           = report_assignfeedback_download_students_frubric_data($modid, $selectedusers, $cm, $frubric);
-    error_log(print_r($data, true));
+    // error_log(print_r($data, true));
     report_assignfeedback_set_students_rows($sheet, $data, $maxscore);
 
     $workbook->savetotempdir($tempdir);

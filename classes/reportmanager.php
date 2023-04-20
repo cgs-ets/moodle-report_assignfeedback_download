@@ -185,6 +185,45 @@ class reportmanager {
         return $texts;
 
     }
+    public function get_assessment_submission_reflection($itemid, $userid) {
+        global $DB;
+
+        $sql = "SELECT *
+                FROM {assignsubmission_reflection} reflection
+                WHERE reflection.assignment = :assignment
+                AND reflection.submission = :submission";
+
+        $submissionid = $this->get_assesment_submission_id($itemid, $userid);
+        $params = ['assignment' => $itemid, 'submission' => $submissionid];
+        $result = $DB->get_record_sql($sql, $params);
+        $texts = [];
+
+        if ($result = $DB->get_record_sql($sql, $params)) {
+
+            $sql = "SELECT distinct contextid
+                    FROM {files} f
+                    WHERE f.filearea = ?
+                    AND f.component = ?
+                    AND f.itemid = ?
+                    AND f.userid = ?";
+
+            $params = [
+                       'filearea'  => 'submission_reflection',
+                       'component' => 'assignsubmission_reflection',
+                       'itemid'    => $result->id,
+                       'userid'   => $userid
+                    ];
+
+            $contextid = array_column($DB->get_records_sql($sql, $params), 'contextid');
+            $contextid = ( count($contextid) > 0 ) ? ($contextid[count($contextid) - 1]) : '0';
+
+            $text = file_rewrite_pluginfile_urls($result->reflectiontxt, 'pluginfile.php', $contextid, 'assignsubmission_reflection', 'submission_reflection', $result->id);
+            $texts[] = shorten_text($text, 30, true);
+        }
+
+        return $texts;
+
+    }
 
 
     public function get_assesment_submission_id($itemid, $userid) {
@@ -203,6 +242,21 @@ class reportmanager {
         return 0;
     }
 
+    public function get_assesment_submission_reflection_id($itemid, $userid) {
+        global $DB;
+        $sql = "SELECT id
+                FROM {assign_submission} assignsubmission_reflection
+                WHERE asub.assignment = :assignment AND userid = :userid";
+        $params = ['assignment' => $itemid, 'userid' => $userid ];
+
+        $result = array_values($DB->get_records_sql($sql, $params));
+        if (isset($result[ 0 ])) {
+            $result = $result[ 0 ];
+            return $result->id;
+        }
+
+        return 0;
+    }
 
     public function get_assessment_anotatepdf_files($itemid) {
         global $DB;
