@@ -47,7 +47,6 @@ function report_assignfeedback_download_create_frubric_pdf($rubric, $assessname,
     global $CFG, $OUTPUT;
 
     $rubric = json_decode($rubric);
-
     $jsonparts = explode('</div>', $rubric);
     $table = $jsonparts[0];
 

@@ -60,11 +60,12 @@ function report_assignfeedback_download_setup_rubric_workbook($id, $modid, $sele
     $pos        = report_assignfeedback_download_add_advanced_method_and_grading_info_header($workbook, $sheet, $rubric, $pos);
     $students   = report_assignfeedback_download_get_advanced_method_students_data($modcontext, $cm, $selectedusers);
     // Get data for each student.
-    $students   = report_assignfeedback_process_data($students, $rubric);
+    $students   = report_assignfeedback_process_data_rubric($students, $rubric);
 
-    report_assignfeedback_set_students_rows($sheet, $students, $pos);
-
-    $workbook->savetotempdir($tempdir);
+    if (count($students) > 0 ) { // Only generate the files if there is at least a student fully graded.
+        report_assignfeedback_set_students_rows($sheet, $students, $pos);
+        $workbook->savetotempdir($tempdir);
+    }
 
 }
 

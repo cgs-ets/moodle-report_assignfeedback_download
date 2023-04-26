@@ -23,6 +23,7 @@
 
 namespace report_assignfeedback_download;
 
+use moodle_url;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use zip_packer;
@@ -31,6 +32,7 @@ use function report_assignfeedback_download\frubric\report_assignfeedback_downlo
 use function report_assignfeedback_download\markguide\report_assignfeedback_download_setup_marking_guide_workbook;
 use function report_assignfeedback_download\pdflib\report_assignfeedback_download_create_frubric_pdf;
 use function report_assignfeedback_download\pdflib\report_assignfeedback_download_generatefeedbackpdf;
+use function report_assignfeedback_download\reflection\report_assignfeedback_download_setup_reflection_workbook;
 use function report_assignfeedback_download\rubric\report_assignfeedback_download_setup_rubric_workbook;
 
 defined('MOODLE_INTERNAL') || die();
@@ -39,6 +41,8 @@ require($CFG->dirroot . '/report/assignfeedback_download/classes/pdflib.php');
 require($CFG->dirroot . '/report/assignfeedback_download/classes/frubric.php');
 require($CFG->dirroot . '/report/assignfeedback_download/classes/rubric.php');
 require($CFG->dirroot . '/report/assignfeedback_download/classes/markguide.php');
+require($CFG->dirroot . '/report/assignfeedback_download/classes/reflection.php');
+
 require_once($CFG->libdir . '/filestorage/zip_archive.php');
 require_once($CFG->dirroot . '/report/assignfeedback_download/vendor/autoload.php');
 
@@ -50,7 +54,10 @@ require_once($CFG->dirroot . '/report/assignfeedback_download/vendor/autoload.ph
  */
 class reportmanager {
 
-    // Only display assessments that have at least one graded student.
+    /**
+     * @courseid course id
+     * @return assessments that have at least one graded student.
+     */
     public function get_assesments_with_grades($courseid) {
         global $DB;
 
@@ -69,7 +76,11 @@ class reportmanager {
         return $results;
     }
 
-    // Bring assessments that have submissions. it doesnt matter if they are graded.
+    /**
+     *
+     * @courseid course id
+     * @return  Get assessments that have submissions. it doesnt matter if they are graded.
+     */
     public function get_submitted_assessments($courseid) {
         global $DB;
 
@@ -87,7 +98,10 @@ class reportmanager {
         return $results;
     }
 
-    // Get the assessments that are submitted.
+    /**
+     * @assessmentids assesments ids
+     * @return the assessments that are submitted.
+     */
     private function get_assessments_by_course_2($assessmentids) {
         global $DB;
 
@@ -104,7 +118,11 @@ class reportmanager {
         return $results;
     }
 
-    // Combine graded and not graded (but submitted) assignments.
+    /**
+     *
+     * @assessmentids assesments ids
+     * @return Combine graded and not graded (but submitted) assignments.
+     */
     public function get_assessments($assessmentids) {
         // Assessments not graded.
         $notgraded       = $this->get_assessments_by_course_2($assessmentids);
@@ -125,6 +143,12 @@ class reportmanager {
 
     }
 
+    /**
+     * @userid user id
+     * @courseid course id
+     * @assignmentid assignment id
+     * @return the submissions related to the assignment passed as parametre.
+     */
     public function get_assessment_submission_records($userid, $courseid, $assignmentid) {
         global $DB;
 
@@ -143,6 +167,12 @@ class reportmanager {
         return $results;
     }
 
+    /**
+     * @itemid assignment id
+     * @userid user id
+     * @createpdf
+     * @return list of online text subimssion
+     */
     public function get_assessment_submission_onlinetext($itemid, $userid, $createpdf = false) {
         global $DB;
 
@@ -155,23 +185,7 @@ class reportmanager {
         $params = ['assignment' => $itemid, 'submission' => $submissionid];
         $results = array_values($DB->get_records_sql($sql, $params));
         $texts = [];
-
-        $sql = "SELECT distinct contextid
-                FROM {files} f
-                WHERE f.filearea = ?
-                AND f.component = ?
-                AND f.itemid = ?
-                AND f.userid = ?";
-
-        $params = [
-                   'filearea' => 'submissions_onlinetext',
-                   'component' => 'assignsubmission_onlinetext',
-                   'itemid' => $submissionid,
-                    'userid' => $userid
-                ];
-
-        $contextid = array_column($DB->get_records_sql($sql, $params), 'contextid');
-        $contextid = ( count($contextid) > 0 ) ? ($contextid[count($contextid) - 1]) : '0';
+        $contextid = $this->get_context_id_from_files($submissionid, $userid, 'submissions_onlinetext', 'assignsubmission_onlinetext');
 
         foreach ($results as $i => $r) {
             $text = file_rewrite_pluginfile_urls($r->onlinetext, 'pluginfile.php', $contextid, 'assignsubmission_onlinetext', 'submissions_onlinetext', $submissionid);
@@ -185,6 +199,12 @@ class reportmanager {
         return $texts;
 
     }
+
+    /**
+     * @itemid assignment id
+     * @userid user id
+     * @return list of reflection
+     */
     public function get_assessment_submission_reflection($itemid, $userid) {
         global $DB;
 
@@ -199,24 +219,7 @@ class reportmanager {
         $texts = [];
 
         if ($result = $DB->get_record_sql($sql, $params)) {
-
-            $sql = "SELECT distinct contextid
-                    FROM {files} f
-                    WHERE f.filearea = ?
-                    AND f.component = ?
-                    AND f.itemid = ?
-                    AND f.userid = ?";
-
-            $params = [
-                       'filearea'  => 'submission_reflection',
-                       'component' => 'assignsubmission_reflection',
-                       'itemid'    => $result->id,
-                       'userid'   => $userid
-                    ];
-
-            $contextid = array_column($DB->get_records_sql($sql, $params), 'contextid');
-            $contextid = ( count($contextid) > 0 ) ? ($contextid[count($contextid) - 1]) : '0';
-
+            $contextid = $this->get_context_id_from_files($result->id, $userid, 'submission_reflection', 'assignsubmission_reflection');
             $text = file_rewrite_pluginfile_urls($result->reflectiontxt, 'pluginfile.php', $contextid, 'assignsubmission_reflection', 'submission_reflection', $result->id);
             $texts[] = shorten_text($text, 30, true);
         }
@@ -225,7 +228,42 @@ class reportmanager {
 
     }
 
+    /**
+     * @itemid is the $itemid from mdl_files table.
+     * @userid userid
+     * Get the context id from the mdl_files table
+     *
+     */
+    public function get_context_id_from_files($itemid, $userid, $filearea, $component) {
+        global $DB;
 
+        $sql = "SELECT distinct contextid
+        FROM {files} f
+        WHERE f.filearea = ?
+        AND f.component = ?
+        AND f.itemid = ?
+        AND f.userid = ?";
+
+        $params = [
+                'filearea'  => $filearea,
+                'component' => $component,
+                'itemid'    => $itemid,
+                'userid'   => $userid
+                ];
+
+        $contextid = array_column($DB->get_records_sql($sql, $params), 'contextid');
+        $contextid = ( count($contextid) > 0 ) ? ($contextid[count($contextid) - 1]) : '0';
+
+        return $contextid;
+
+    }
+
+    /**
+     *
+     * @itemid assignment id
+     * @userid user id
+     * @return the submission ids for the assignment given.
+     */
     public function get_assesment_submission_id($itemid, $userid) {
         global $DB;
         $sql = "SELECT id
@@ -242,6 +280,11 @@ class reportmanager {
         return 0;
     }
 
+    /**
+     * @itemid assignment id
+     * @userid user id
+     * @returns the id of the reflection saved.
+     */
     public function get_assesment_submission_reflection_id($itemid, $userid) {
         global $DB;
         $sql = "SELECT id
@@ -250,7 +293,7 @@ class reportmanager {
         $params = ['assignment' => $itemid, 'userid' => $userid ];
 
         $result = array_values($DB->get_records_sql($sql, $params));
-        if (isset($result[ 0 ])) {
+        if (isset($result[0])) {
             $result = $result[ 0 ];
             return $result->id;
         }
@@ -258,6 +301,10 @@ class reportmanager {
         return 0;
     }
 
+    /**
+     * @itemid assignmentid
+     * @return the anotaed file for the assignment given
+     */
     public function get_assessment_anotatepdf_files($itemid) {
         global $DB;
 
@@ -271,6 +318,10 @@ class reportmanager {
         return $results;
     }
 
+    /**
+     * @itemid assignment id
+     * @return the list of files given as feedback
+     */
     public function get_assessment_feedback_files($itemid, $createpdf = false) {
         global $DB, $USER;
         $sql = "SELECT *
@@ -382,7 +433,12 @@ class reportmanager {
 
         return $results;
     }
-
+    /**
+     * Downloads files from submission type files.
+     * @assignmentids ID of the assignment
+     * @id Course id
+     * @selected users list of users selected
+     */
     public function download_submission_files($assignmentids, $id, $selectedusers) {
         global $DB;
         // Increase the server timeout to handle the creation and sending of large zip files.
@@ -427,6 +483,11 @@ class reportmanager {
         }
     }
 
+    /**
+     * Downloads the anotated PDF feedback
+     * @itemids submission ids
+     * @id course id
+     */
     public function download_anotatepdf_files($itemids, $id) {
         global $DB;
         // Increase the server timeout to handle the creation and sending of large zip files.
@@ -479,6 +540,11 @@ class reportmanager {
         }
     }
 
+    /**
+     * Downloads the feedback type files
+     * @itemids submission ids
+     * @id course id
+     */
     public function download_feedback_files($itemids, $id) {
         global $DB;
 
@@ -526,7 +592,11 @@ class reportmanager {
         }
     }
 
-    // Generate PDFs with the feedback comments.
+    /**
+     * Downloads the feedback type comments as PDFS
+     * @itemids submission ids
+     * @id course id
+     */
     public function download_feedback_comments($itemids, $id) {
         global $DB;
         // Increase the server timeout to handle the creation and sending of large zip files.
@@ -554,6 +624,12 @@ class reportmanager {
 
     }
 
+    /**
+     * Download the submission type onlinetext as PDF
+     * @assignmentids assignments id
+     * @id course id
+     * @selectedusers list of users selected.
+     */
     public function download_submission_onlinetext($assignmentids, $id, $selectedusers) {
         global $DB;
         // Increase the server timeout to handle the creation and sending of large zip files.
@@ -582,21 +658,34 @@ class reportmanager {
 
     }
 
-    // Generate an excel file with the grades.
-    public function download_assessment_grades($cmids, $courseid, $instaceids, $selectedusers) {
+    /**
+     * Generate an excel file with the grades.
+     * @cmids Course module ids
+     * @instaceids assignments id
+     * @courseid course id
+     * @selectedusers list of users selected.
+     */
+    public function download_assessment_grades($cmids, $courseid, $instaceids, $selecteduser, $cmid) {
         \core_php_time_limit::raise();
         $cmids = (array) json_decode($cmids);
         $instaceids = explode(',', $instaceids);
-        $selectedusers = implode(',', $selectedusers);
+        $selectedusers = implode(',', $selecteduser);
         $tempdir = make_temp_directory('report_assing_fdownloader/excel');
         foreach ($cmids as $cmid) {
             $this->download_grades_helper($cmid, $courseid, $selectedusers, $tempdir);
         }
+
         // Now make a zip file of the temp dir and then delete it.
-        $this->zip_excelworkbook();
+        $this->zip_excelworkbook($courseid, $cmid);
 
     }
-
+    /**
+     * Helper function for download_assessment_grades
+     * @cmid Course module id
+     * @courseid course id
+     * @selectedusers list of users selected.
+     * @tempdir temporary directory where the files are saved
+     */
     private function download_grades_helper($cmid, $courseid, $selectedusers, $tempdir) {
         $context = \context_module::instance($cmid);
         $gradingmanager = get_grading_manager($context, 'mod_assign', 'submissions');
@@ -616,10 +705,81 @@ class reportmanager {
         }
     }
 
+    /**
+     * Generate an excel file with the reflections.
+     * @instanceids assessment id
+     * @id course id
+     * @selectedusers list of users selected
+     */
+    public function download_submission_reflection($instaceids, $id, $selectedusers, $cmids) {
+        \core_php_time_limit::raise();
+        $cmids = (array) json_decode($cmids);
+        $selectedusers = implode(',', $selectedusers);
+        // $reflections = $this->get_submission_reflections($instaceids, $selectedusers);
+
+        $tempdir = make_temp_directory('report_assing_fdownloader/excel');
+
+        foreach ($cmids as $cmid) {
+            report_assignfeedback_download_setup_reflection_workbook($id, $cmid, $selectedusers, $tempdir);
+        }
+
+        // Now make a zip file of the temp dir and then delete it.
+        $this->zip_excelworkbook();
+
+    }
+
+
+    /**
+     * @instanceid assignment id
+     * @selectedusers selected users
+     * @return list of objects that contains the user id and the user reflection.
+     */
+    public function get_submission_reflections($instanceid, $selectedusers) {
+        global $DB;
+
+        $reflections = [];
+
+        if (strlen($instanceid) > 0 && strlen($selectedusers)) {
+
+            $sql = "SELECT ref.*, u.firstname, u.lastname, u.username
+                    FROM {assignsubmission_reflection} ref
+                    JOIN {user} u ON ref.userid = u.id
+                    WHERE assignment = $instanceid AND userid IN ($selectedusers)";
+
+            $results = $DB->get_records_sql($sql);
+
+            foreach ($results as $result) {
+                $contextid = $this->get_context_id_from_files($result->id, $result->userid);
+                $reflectiontxt = file_rewrite_pluginfile_urls($result->reflectiontxt, 'pluginfile.php', $contextid, 'assignsubmission_reflection', 'submission_reflection', $result->id);
+                $data = new \stdClass();
+                $data->userid = $result->userid;
+                $data->firstname = $result->firstname;
+                $data->lastname = $result->lastname;
+                $data->username = $result->username;
+                $data->submission = $result->submission;
+                $data->assignment = $result->assignment;
+                $data->reflectiontxt = strip_tags($reflectiontxt);
+                $reflections[] = $data;
+            }
+
+        }
+        return $reflections;
+
+    }
+
+    // TODO
     public function download_all_files($itemids, $id) {
         \core_php_time_limit::raise();
     }
 
+    /**
+     * Downloads flexible rubric grading results as PDF
+     * @cmids course module ids
+     * @instanceids assignment ids
+     * @courseid course id
+     * @frubricselection the content of the flexible rubrics selected
+     *
+     */
     public function download_frubric($cmids, $instaceids, $courseid, $frubricselection) {
         global $DB;
 
@@ -660,6 +820,10 @@ class reportmanager {
 
     /**
      * Based on the active method, return what is needed.
+     * @cmid course module id
+     * @courseid course id
+     * @userid user id
+     * @instanceid assignment id
      */
     public function get_advanced_method($cmid, $courseid, $userid, $instanceid) {
         global $CFG;
@@ -685,6 +849,7 @@ class reportmanager {
 
     /**
      * Returns the current active method for the assessment.
+     * @cmid course module id
      */
     public function get_active_grading_method($cmid) {
         global $CFG;
@@ -694,7 +859,12 @@ class reportmanager {
         return $gradingmanager->get_active_method();
     }
 
-    // Get the frubric that is rendered to a student. With the checked descriptors.
+    /**
+     * @cmid course module id
+     * @courseid course id
+     * @instanceid assignment id
+     * @return Get the frubric that is rendered to a student. With the checked descriptors.
+     */
     public function get_rubric($cmid, $courseid, $userid, $instanceid) {
         global $DB, $CFG;
         require_once($CFG->libdir . '/gradelib.php');
@@ -808,7 +978,10 @@ class reportmanager {
         die(); // If not set, a invalid zip file error is thrown.
     }
 
-    private function zip_excelworkbook() {
+    /**
+     * Creates a zip file with excel files in it
+     */
+    private function zip_excelworkbook($courseid, $cmid) {
         global $CFG;
         $foldertozip = $CFG->tempdir.'/report_assing_fdownloader/excel';
         // Get real path for our folder.
@@ -839,22 +1012,32 @@ class reportmanager {
             }
         }
 
-        // Zip archive will be created only after closing object.
-        $zip->close();
+        if ($zip->numFiles > 0) {
+            // Zip archive will be created only after closing object.
+            $zip->close();
 
-        foreach ($filestodelete as $file) {
-            unlink($file);
+            foreach ($filestodelete as $file) {
+                unlink($file);
+            }
+
+            header("Content-Type: application/zip");
+            header("Content-Disposition: attachment; filename=grades.zip");
+            header("Content-Length: " . filesize("$filename"));
+            readfile("$filename");
+            unlink("$filename");
+        } else {
+            $url = new moodle_url('/report/assignfeedback_download/index.php', array('id' => $courseid, 'cmid' => $cmid));
+            redirect($url, get_string('nofilestocompress', 'report_assignfeedback_download'), null, \core\output\notification::NOTIFY_INFO);
         }
 
-        header("Content-Type: application/zip");
-        header("Content-Disposition: attachment; filename=grades.zip");
-        header("Content-Length: " . filesize("$filename"));
-        readfile("$filename");
-        unlink("$filename");
         die(); // If not set, a invalid zip file error is thrown.
 
     }
 
+    /**
+     * @cmid course module id
+     * @itemid assignment id
+     */
     public function get_grading_instance_status($cmid, $itemid) {
         global $USER;
         $context         = \context_module::instance($cmid);

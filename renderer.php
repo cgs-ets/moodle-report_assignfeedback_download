@@ -51,6 +51,7 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
 
         $templatename = 'report_assignfeedback_download/main';
         $context = $this->get_table_context($courseid, $assessmentids, $url, $moduleid, $filter, $coursename);
+        // print_object($context);
         echo $this->render_from_template($templatename, $context);
     }
 
@@ -184,7 +185,6 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
             'noexistsubmissiononlinetext'   => $userscontext['noexistsubmissiononlinetext'],
             'noexistfeedbackcomments'       => $userscontext['noexistfeedbackcommentfiles'],
             'noexistgrades'                 => $userscontext['noexistgrades']
-
         ];
 
         return $context;
@@ -198,6 +198,7 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
         $assessids      = $this->manager->get_assessment_ids($courseid, $assessmentids);
         $assessments    = $this->manager->get_assessments($assessids);
         $cmids          = $this->manager->get_course_module($courseid, $assessids);
+
         $cmidsaux       = [];
         $rubricparams   = [];
         $users          = ['users' => []];
@@ -212,6 +213,7 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
         $countsubmissionreflection  = 0;
 
         foreach ($assessments as $assess) {
+
             if (!isset($activeusers[$assess->userid])) {
                 continue;
             }
@@ -234,6 +236,7 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
             $userassessment->submtree               = $this->get_assessment_submission_files_tree($user->id, $courseid, $assess->assignmentid);
             $userassessment->onlinetextsubmission   = $this->get_assessment_submission_onlinetext($assess->assignmentid, $user->id);
             $userassessment->reflectionsubmission   = $this->get_assessment_submission_reflection($assess->assignmentid, $user->id);
+            $userassessment->candownload            = true; // Assume you can download the rubric.
 
             // If student didnt submit anything, then dont display.
             if (!isset(($userassessment->submtree['tree'])->submissionfiletree)
@@ -270,10 +273,10 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
                             'action'    => 'viewpluginassignsubmission');
                 $url                          = new moodle_url('/mod/assign/view.php', $urlparams);
                 $userassessment->reflectiontxturl = $url;
+                $cmidsaux[$assess->assignmentid]  = $cmid;
             }
 
             if (isset(($userassessment->submtree['tree'])->submissionfiletree)) {
-
                 $countsubmissionfiles++;
             }
 
@@ -310,12 +313,15 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
 
                 $grade = $assess->grade > 0 ? number_format($assess->grade, 2, '.', '') : "0.00";
                 $maxgrade = number_format($assess->gradeoutof, 2, '.', '');
+
                 if ($gradingstatus == '1') {
                     $userassessment->finalgrade = "$grade/$maxgrade";
-                } else if ($gradingstatus == 2 && $assess->grade > -1) { // INSTANCE_STATUS_NEEDUPDATE = 2.
+                } else if ($gradingstatus == 2 && $assess->grade > -1) { // INSTANCE_STATUS_NEEDUPDATE = 2. TODO:
                     $userassessment->finalgrade = get_string('rubricneedsupdate', 'report_assignfeedback_download');
+                    $userassessment->candownload = false;
                 } else if ($gradingstatus == -1 && $assess->grade > -1) { // The assingment has been graded but there is no rubric instance. We still have a grade.
                     $userassessment->finalgrade = "$grade/$maxgrade";
+                    $userassessment->candownload = false;
                 }
 
                 $userassessment->frubric = 0;
@@ -335,7 +341,8 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
                     $assess,
                     $userassessment,
                     $user, $cmidsaux,
-                    $coursename);
+                    $coursename,
+                    $userassessment->candownload);
                     $supported = in_array($this->manager->get_active_grading_method($cmid), SUPPORTED_ADVANCED_GRADING_METHODS);
 
                     if ($fr != ''  && $supported) {
@@ -368,6 +375,10 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
         $users = array_values($users['users']);
         usort($users, "report_assignfeedback_download_sort_by_firstname");
 
+        if (count($cmidsaux) == 0) {
+            $cmidsaux = $cmids;
+        }
+
         $cmidsaux        = json_encode($cmidsaux);
         $rubricparams    = json_encode($rubricparams);
 
@@ -385,7 +396,10 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
             'noexistannotatedpdffiles'      => $countannotatedpdffiles == 0,
             'noexistfrubrics'               => $countfrubricfiles == 0,
             'noexistsubmissiononlinetext'   => $countsubmissiononlinetxt == 0,
-            'noexistgrades'                 => $countgradedsubmissions == 0
+            'noexistgrades'                 => $countgradedsubmissions == 0,
+            'noexistreflection'             => $countsubmissionreflection == 0,
+            'candownload'                   => $candownload,
+
         ];
 
         return $context;
@@ -535,7 +549,7 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
 
     }
 
-    private function get_assessment_advanced_grading_tree($cmid, $courseid, $assess, &$userassessment, $user, &$cmidcollection, $coursename) {
+    private function get_assessment_advanced_grading_tree($cmid, $courseid, $assess, &$userassessment, $user, &$cmidcollection, $coursename, $candownload) {
         $rubric = $this->manager->get_advanced_method($cmid, $courseid, $assess->userid, $assess->assignmentid);
         $rubricparams               = new \stdClass();
         $rubricparams->cmid         = $cmid;
@@ -543,6 +557,7 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
         $rubricparams->userid       = $assess->userid;
         $rubricparams->assignmentid = $assess->assignmentid;
         $rubricparams->gradeid      = $assess->gradeid;
+        $rubricparams->candownload  = $candownload;
 
         if (isset($rubric['frubric'])) {
             $this->get_assessment_frubric_tree($cmid, $courseid, $assess, $userassessment, $user, $cmidcollection, $coursename, $rubricparams);

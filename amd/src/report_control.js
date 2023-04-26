@@ -24,7 +24,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
- define(["jquery", "core/ajax", "core/log", "report_assignfeedback_download/html2pdf"], function ($, Ajax, Log, html2pdf) {
+define(["jquery", "core/ajax", "core/log", "report_assignfeedback_download/html2pdf"], function ($, Ajax, Log, html2pdf) {
     "use strict";
 
     function init() {
@@ -39,6 +39,10 @@
         self.userids = userids;
         self.useritemids = useritemids;
         self.frcollection = new Map();
+        self.indexFrubric = (Array.from(document.querySelector('td.rubric-cell').parentElement.cells)).indexOf(document.querySelector('td.rubric-cell'));
+        self.indexGrade = (Array.from(document.querySelector('td.grade-cell').parentElement.cells)).indexOf(document.querySelector('td.grade-cell'));
+        console.log(self.indexGrade);
+
 
     }
 
@@ -66,12 +70,22 @@
             .getElementById("downloadactionform")
             .querySelector('input[name="cmids"]').value = cmids;
 
+
+        document.querySelector('.cant-download-btn').addEventListener('click', self.cantdownloadbuttonhandler);
         //  self.downloadrubric();
 
         //  document.getElementById("rubrictestdownload").addEventListener("click", self.downloadrubric);
 
     };
 
+    Controls.prototype.cantdownloadbuttonhandler = function (e) {
+        if (document.querySelector('.alert-cant-download').style.display == 'none') {
+            document.querySelector('.alert-cant-download').style.display = 'block';
+        } else {
+            document.querySelector('.alert-cant-download').style.display = 'none';
+        }
+
+    }
     Controls.prototype.selectbyone = function () {
         let self = this;
         let t = document.getElementById("iassignfeedbacktb");
@@ -145,12 +159,20 @@
                     // Check FRubric
                     const innertabletr = document.getElementById(`innertable_${userid}`).querySelector('tbody');
                     for (let i = 0; i < innertabletr.rows.length; i++) {
-                        if (innertabletr.rows[i].cells[6].children.length > 0) { // It has  a rubric
+                        if (innertabletr.rows[i].cells[s.indexFrubric].children.length > 0) { // It has  a rubric
                             if (!s.frcollection.has(userid)) {
                                 s.frcollection.set(userid, []);
                             }
-                            const frcontainer = innertabletr.rows[i].cells[6].firstElementChild;
+                            const frcontainer = innertabletr.rows[i].cells[s.indexFrubric].firstElementChild;
                             s.frcollection.get(userid).push(frcontainer.getAttribute('data-frubric-params'));
+
+                            // Check if the rubric will be able to download
+                            //alert-cant-download
+                            const gradecontainer = innertabletr.rows[i].cells[s.indexGrade];
+
+                            if (gradecontainer.getAttribute('data-candownload') == 0) {
+                                document.querySelector('.alert-cant-download').style.display = 'block'
+                            }
                         }
                     }
 
@@ -186,6 +208,7 @@
     };
 
     Controls.prototype.selectbyonehandler = function (s, e) {
+        console.log("selectbyonehandler");
         let userid = e.target.id;
         userid = userid.split("_");
         userid = userid[userid.length - 1];
@@ -217,7 +240,7 @@
                         return el;
                     }
                 }, userid);
-
+                console.log(s.frcollection);
                 // Remove from Frubric
                 s.frcollection.delete(userid);
                 frubricdetails.value = JSON.stringify(Object.fromEntries(s.frcollection));
@@ -226,12 +249,19 @@
             s.userids.push(userid);
             // Check FRubric
             for (let i = 0; i < innertable.rows.length; i++) {
-                if (innertable.rows[i].cells[6].children.length > 0) { // It has  a rubric
+                if (innertable.rows[i].cells[s.indexFrubric].children.length > 0) { // It has  a rubric
                     if (!s.frcollection.has(userid)) {
                         s.frcollection.set(userid, []);
                     }
-                    const frcontainer = innertable.rows[i].cells[6].firstElementChild;
+                    const frcontainer = innertable.rows[i].cells[s.indexFrubric].firstElementChild;
                     s.frcollection.get(userid).push(frcontainer.getAttribute('data-frubric-params'));
+
+                    // Check if the rubric will be able to download
+                    //alert-cant-download
+                    const gradecontainer = innertable.rows[i].cells[s.indexGrade];
+                    if (gradecontainer.getAttribute('data-candownload') == 0) {
+                        document.querySelector('.alert-cant-download').style.display = 'block'
+                    }
                 }
             }
 

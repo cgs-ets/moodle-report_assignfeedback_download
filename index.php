@@ -65,7 +65,10 @@ if ($selectedusers != '') {
             $manager->download_submission_onlinetext($instaceids, $id, $selectedusers);
             break;
         case 'dldgrades':
-            $manager->download_assessment_grades($cmids, $id, $instaceids, $selectedusers);
+            $manager->download_assessment_grades($cmids, $id, $instaceids, $selectedusers, $cmid);
+            break;
+        case 'dldreflection':
+            $manager->download_submission_reflection($instaceids, $id, $selectedusers, $cmids);
             break;
 
     }

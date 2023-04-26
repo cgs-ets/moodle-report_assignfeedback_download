@@ -1,6 +1,12 @@
 <div class = 'report-container'>
 {{^noresult}}
     {{#filter}}
+    <div class="alert alert-warning alert-dismissible fade show alert-cant-download hidden" role="alert">
+        {{#str}}cantgeneratepdf, report_assignfeedback_download {{/str}}
+        <button type="button" class="close cant-download-btn" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
     {{> report_assignfeedback_download/user_table }}
     <hr>
     {{> report_assignfeedback_download/action_form }}

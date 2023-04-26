@@ -28,7 +28,7 @@ namespace report_assignfeedback_download\frubric;
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot.'/lib/excellib.class.php');
-require($CFG->dirroot . '/report/assignfeedback_download/classes/excelmanager.php');
+require_once($CFG->dirroot . '/report/assignfeedback_download/classes/excelmanager.php');
 
 use context_module;
 use MoodleExcelWorkbook;
@@ -58,10 +58,11 @@ function report_assignfeedback_download_setup_frubric_workbook($id, $modid, $are
     $pos            = report_assignfeedback_download_add_header($workbook, $sheet, $course->fullname, $cm->name, $methodname);
     $pos            = report_assignfeedback_download_add_frubric_and_grading_info_header($workbook, $sheet, $frubric, $pos);
     $data           = report_assignfeedback_download_students_frubric_data($modid, $selectedusers, $cm, $frubric);
-    // error_log(print_r($data, true));
-    report_assignfeedback_set_students_rows($sheet, $data, $maxscore);
 
-    $workbook->savetotempdir($tempdir);
+    if (count($data) > 0 ) {
+        report_assignfeedback_set_students_rows($sheet, $data, $maxscore);
+        $workbook->savetotempdir($tempdir);
+    }
 
 }
 
@@ -271,8 +272,7 @@ function report_assignfeedback_download_students_frubric_data($cmid, $selectedus
                 $gradingitem = $gradinginfo->items[0];
                 $gradebookgrade = $gradingitem->grades[$result->userid];
                 $gradebookgrade->str_long_grade;
-                error_log(print_r($gradebookgrade, true));
-                // $filling->finalgrade = $gradebookgrade->str_long_grade;
+
                 if ($gradebookgrade->str_grade == '-') {
                     $filling->finalgrade = "0";
                 } else {
@@ -291,7 +291,7 @@ function report_assignfeedback_download_students_frubric_data($cmid, $selectedus
         $level->descriptors                                    = report_assignfeedback_download_decode_level_descriptors($result->selections);
         $filling->levels[$level->id]                           = $level;
 
-        $data[$result->userid]                                = $filling;
+        $data[$result->userid]                                 = $filling;
 
     }
 
@@ -309,7 +309,6 @@ function report_assignfeedback_download_decode_level_descriptors($selections) {
 
     $selections           = json_decode($selections);
     $decoded              = [];
-
 
     foreach ($selections as $levelid => $filling) {
         $definition = json_decode($filling->definition);
@@ -431,6 +430,7 @@ function report_assignfeedback_download_complete_fill_missing_levels($currentlev
 function report_assignfeedback_download_complete_fill_missing_levels_helper($dummylevels) {
 
     $levelsaux  = $dummylevels;
+
     foreach ($dummylevels as $id => $dl) {
         $dummyfilling               = new stdClass();
         $dummyfilling->id           = 0;

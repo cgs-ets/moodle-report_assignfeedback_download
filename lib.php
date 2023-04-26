@@ -157,7 +157,6 @@ function report_assignfeedback_download_get_advanced_method_students_data($modco
 }
 
 /**
- * This method is common for rubric and marking guide
  * Get data for each student
  *
  * @param array $students
@@ -173,6 +172,31 @@ function report_assignfeedback_process_data(array $students, array $data) {
                 $student->data[$key] = $line;
                 unset($data[$key]);
             }
+        }
+    }
+
+    return $students;
+}
+
+/**
+ * Get data for each student
+ *
+ * @param array $students
+ * @param array $data array of objects
+ * @return array
+ */
+function report_assignfeedback_process_data_rubric(array $students, array $data) {
+
+    foreach ($students as $i => $student) {
+        $student->data = array();
+        foreach ($data as $key => $line) {
+            if ($line->userid == $student->userid) {
+                $student->data[$key] = $line;
+                unset($data[$key]);
+            }
+        }
+        if (count($student->data) == 0) {
+            unset($students[$i]);
         }
     }
 
