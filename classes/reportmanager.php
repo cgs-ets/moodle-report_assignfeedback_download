@@ -711,12 +711,10 @@ class reportmanager {
      * @id course id
      * @selectedusers list of users selected
      */
-    public function download_submission_reflection($instaceids, $id, $selectedusers, $cmids) {
+    public function download_submission_reflection($id, $selectedusers, $cmids, $cmid) {
         \core_php_time_limit::raise();
         $cmids = (array) json_decode($cmids);
         $selectedusers = implode(',', $selectedusers);
-        // $reflections = $this->get_submission_reflections($instaceids, $selectedusers);
-
         $tempdir = make_temp_directory('report_assing_fdownloader/excel');
 
         foreach ($cmids as $cmid) {
@@ -724,7 +722,7 @@ class reportmanager {
         }
 
         // Now make a zip file of the temp dir and then delete it.
-        $this->zip_excelworkbook();
+        $this->zip_excelworkbook($id, $cmid);
 
     }
 
@@ -749,7 +747,7 @@ class reportmanager {
             $results = $DB->get_records_sql($sql);
 
             foreach ($results as $result) {
-                $contextid = $this->get_context_id_from_files($result->id, $result->userid);
+                $contextid = $this->get_context_id_from_files($result->id, $result->userid, 'submission_reflection', 'assignsubmission_reflection');
                 $reflectiontxt = file_rewrite_pluginfile_urls($result->reflectiontxt, 'pluginfile.php', $contextid, 'assignsubmission_reflection', 'submission_reflection', $result->id);
                 $data = new \stdClass();
                 $data->userid = $result->userid;

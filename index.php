@@ -68,7 +68,7 @@ if ($selectedusers != '') {
             $manager->download_assessment_grades($cmids, $id, $instaceids, $selectedusers, $cmid);
             break;
         case 'dldreflection':
-            $manager->download_submission_reflection($instaceids, $id, $selectedusers, $cmids);
+            $manager->download_submission_reflection($id, $selectedusers, $cmids, $cmid);
             break;
 
     }

@@ -59,9 +59,10 @@ function report_assignfeedback_download_setup_reflection_workbook($id, $modid, $
     $manager = new reportmanager();
     $reflections = $manager->get_submission_reflections($cm->instance, $selectedusers);
 
-    report_assignfeedback_set_students_rows($sheet, $reflections);
-
-    $workbook->savetotempdir($tempdir);
+    if (count($reflections) > 0 ) {
+        report_assignfeedback_set_students_rows($sheet, $reflections);
+        $workbook->savetotempdir($tempdir);
+    }
 
 }
 
