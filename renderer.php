@@ -51,7 +51,6 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
 
         $templatename = 'report_assignfeedback_download/main';
         $context = $this->get_table_context($courseid, $assessmentids, $url, $moduleid, $filter, $coursename);
-        // print_object($context);
         echo $this->render_from_template($templatename, $context);
     }
 
@@ -184,7 +183,8 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
             'noexistfrubrics'               => $userscontext['noexistfrubrics'],
             'noexistsubmissiononlinetext'   => $userscontext['noexistsubmissiononlinetext'],
             'noexistfeedbackcomments'       => $userscontext['noexistfeedbackcommentfiles'],
-            'noexistgrades'                 => $userscontext['noexistgrades']
+            'noexistreflections'            => $userscontext['noexistreflection'],
+            'noexistgrades'                 => $userscontext['noexistgrades'],
         ];
 
         return $context;
@@ -261,6 +261,7 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
                 $userassessment->onlinetxturl = $url;
             }
 
+            // var_dump($userassessment->reflectionsubmission);
             if ($userassessment->reflectionsubmission != '') {
                 $countsubmissionreflection++;
                 $userassessment->reflectionsubmissionview = true;
@@ -398,7 +399,7 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
             'noexistsubmissiononlinetext'   => $countsubmissiononlinetxt == 0,
             'noexistgrades'                 => $countgradedsubmissions == 0,
             'noexistreflection'             => $countsubmissionreflection == 0,
-            'candownload'                   => $candownload,
+            // 'candownload'                   => $candownload,
 
         ];
 
@@ -535,11 +536,9 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
 
     private function get_assessment_rubric_tree($cmid, $assess, &$userassessment, &$cmidcollection, $rubricname) {
             $userassessment->rubric = 1;
-
             $htmlid     = 'assessement_rubric_tree_' . uniqid();
             $this->page->requires->js_init_call('M.report_assignfeedback_download.init_tree', array(false, $htmlid), true);
             $html       = '<div id="' . $htmlid . '">';
-            // $rubricname = get_string('rubric', 'report_assignfeedback_download');
             $icon       = $this->output->pix_icon('rubric-icon', '', 'report_assignfeedback_download');
             $html      .= $this->htmlize_rubric($rubricname, $icon, 'rubric');
             $html      .= '</div>';
