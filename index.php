@@ -39,6 +39,7 @@ $instaceids              = optional_param('instanceids', '', PARAM_TEXT);
 $selectedusers           = optional_param('selectedusers', '', PARAM_TEXT);
 $selectedaction          = optional_param('operation', '', PARAM_TEXT);
 $frubricselection        = optional_param('frubricdetails', '', PARAM_TEXT);
+
 $manager                 = new report_assignfeedback_download\reportmanager();
 
 // Download.

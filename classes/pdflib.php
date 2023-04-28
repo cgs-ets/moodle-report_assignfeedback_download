@@ -57,9 +57,12 @@ function report_assignfeedback_download_create_frubric_pdf($rubric, $assessname,
         $table
     );
 
-    $totalgrade = $jsonparts[count($jsonparts) - 1];
-    $totalgrade = "<strong>TOTAL:  $totalgrade </strong>";
-    $rubric = $table . '<br> ' . $totalgrade;
+    $totalgrade = "<strong>TOTAL:  $frubric->grade </strong>";
+    $rubric = $table .
+              '<br><br><strong> FEEDBACK COMMENT </strong><br><br>' .
+              $frubric->feedbackcomment .
+              '<br><br>' .
+               $totalgrade;
 
     $mpdf = new Mpdf(['tempDir' => $CFG->tempdir . '/', 'assignment_', 'mode' => 's', 'debug' => false]);
     $mpdf->SetFont('DejaVuSans', '', 9);
@@ -70,7 +73,7 @@ function report_assignfeedback_download_create_frubric_pdf($rubric, $assessname,
     $data->rubric = $rubric;
 
     $mpdf->WriteHTML($rubric);
-
+    $mpdf->showImageErrors = true;
     $pathfilename = $assessname;
     $fd = new \stdClass();
     $fd->filename = $frubric->rubricfilename;

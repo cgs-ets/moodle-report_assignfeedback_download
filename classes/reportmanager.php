@@ -347,6 +347,8 @@ class reportmanager {
                 $comments[] = shorten_text(file_rewrite_pluginfile_urls($r->commenttext, 'pluginfile.php', $r->contextid, 'assignfeedback_comments', 'feedback', $itemid));
             } else if ($createpdf && isset($r->contextid)) {
                 $comments[] = file_rewrite_pluginfile_urls($r->commenttext, 'pluginfile.php', $r->contextid, 'assignfeedback_comments', 'feedback', $itemid);
+            } else if ($createpdf) { // We need the entire text for the PDF.
+                $comments[] = $r->commenttext;
             } else {
                 $comments[] = shorten_text($r->commenttext);
             }
@@ -747,8 +749,17 @@ class reportmanager {
             $results = $DB->get_records_sql($sql);
 
             foreach ($results as $result) {
-                $contextid = $this->get_context_id_from_files($result->id, $result->userid, 'submission_reflection', 'assignsubmission_reflection');
-                $reflectiontxt = file_rewrite_pluginfile_urls($result->reflectiontxt, 'pluginfile.php', $contextid, 'assignsubmission_reflection', 'submission_reflection', $result->id);
+                $contextid = $this->get_context_id_from_files($result->id,
+                                                            $result->userid,
+                                                            'submission_reflection',
+                                                            'assignsubmission_reflection');
+
+                $reflectiontxt = file_rewrite_pluginfile_urls($result->reflectiontxt,
+                                                            'pluginfile.php',
+                                                            $contextid,
+                                                            'assignsubmission_reflection',
+                                                            'submission_reflection',
+                                                            $result->id);
                 $data = new \stdClass();
                 $data->userid = $result->userid;
                 $data->firstname = $result->firstname;
@@ -787,7 +798,6 @@ class reportmanager {
         $instaceids = explode(',', $instaceids);
         $userpdfs = [];
         $frubricselection = (array) json_decode($frubricselection);
-
         // Construct the zip file name.
         $course = $DB->get_record('course', array('id' => $courseid));
         $dirname = clean_filename($course->fullname . '.zip'); // Main folder.
@@ -1038,7 +1048,7 @@ class reportmanager {
      */
     public function get_grading_instance_status($cmid, $itemid) {
         global $USER;
-        $context         = \context_module::instance($cmid);
+        $context        = \context_module::instance($cmid);
         $gradingmanager = get_grading_manager($context, 'mod_assign', 'submissions');
 
         if ($activemethod   = $gradingmanager->get_active_method()) {
