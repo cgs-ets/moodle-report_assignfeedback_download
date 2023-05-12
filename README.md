@@ -1,6 +1,6 @@
 # moodle-report_assignfeedback_download
 
-This plugin allows teachers to download files that are part of a student's assessment submission and feedback. It also allows teachers to export advanced grading methods grades (Frubric, Rubric and Marking guide) to an excel file, and export online text submissions, feedback comments and Frubric graded template as PDF.
+This plugin allows teachers to download files that are part of a student's assessment submission and feedback. It also allows teachers to export advanced grading methods grades (Frubric, Rubric and Marking guide) to an spreadsheet file, and export online text submissions (both PDF and spreadsheet), feedback comments and Frubric graded template as PDF.
 
 
 ## Installing via uploaded ZIP file ##
