@@ -65,6 +65,9 @@ if ($selectedusers != '') {
         case 'dldsubmissiononlinetext':
             $manager->download_submission_onlinetext($instaceids, $id, $selectedusers);
             break;
+        case 'dldsubmissiononlinetextexcel':
+            $manager->download_submission_onlinetextexcel($id, $selectedusers, $cmids, $cmid);
+            break;
         case 'dldgrades':
             $manager->download_assessment_grades($cmids, $id, $instaceids, $selectedusers, $cmid);
             break;

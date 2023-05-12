@@ -30,6 +30,7 @@ use zip_packer;
 
 use function report_assignfeedback_download\frubric\report_assignfeedback_download_setup_frubric_workbook;
 use function report_assignfeedback_download\markguide\report_assignfeedback_download_setup_marking_guide_workbook;
+use function report_assignfeedback_download\onlinetext\report_assignfeedback_download_setup_onlinetext_workbook;
 use function report_assignfeedback_download\pdflib\report_assignfeedback_download_create_frubric_pdf;
 use function report_assignfeedback_download\pdflib\report_assignfeedback_download_generatefeedbackpdf;
 use function report_assignfeedback_download\reflection\report_assignfeedback_download_setup_reflection_workbook;
@@ -42,6 +43,7 @@ require($CFG->dirroot . '/report/assignfeedback_download/classes/frubric.php');
 require($CFG->dirroot . '/report/assignfeedback_download/classes/rubric.php');
 require($CFG->dirroot . '/report/assignfeedback_download/classes/markguide.php');
 require($CFG->dirroot . '/report/assignfeedback_download/classes/reflection.php');
+require($CFG->dirroot . '/report/assignfeedback_download/classes/onlinetext.php');
 
 require_once($CFG->libdir . '/filestorage/zip_archive.php');
 require_once($CFG->dirroot . '/report/assignfeedback_download/vendor/autoload.php');
@@ -278,6 +280,28 @@ class reportmanager {
         }
 
         return 0;
+    }
+
+    /**
+     *
+     * @itemid assignment id
+     * @userid user id
+     * @return the submission ids for the assignment given.
+     */
+    public function get_assesment_submission_ids($itemid, $userids) {
+        global $DB;
+
+        $sql = "SELECT asub.id AS 'assignsubmissionid', u.id AS userid, u.username, u.firstname, u.lastname
+                FROM {assign_submission} asub
+                JOIN {user} u ON asub.userid = u.id
+                WHERE asub.assignment = :assignment AND userid IN ($userids)";
+
+        $params = ['assignment' => $itemid];
+
+        $results = $DB->get_records_sql($sql, $params);
+        $assignsubmissionids = implode(',', array_keys($results));
+
+        return [$results, $assignsubmissionids];
     }
 
     /**
@@ -645,10 +669,11 @@ class reportmanager {
         foreach ($assignmentids as $assignmentid) {
             $select = "id = {$assignmentid}";
             $asessn = $DB->get_field_select('assign', 'name', $select);
+
             foreach ($selectedusers as $user) {
+                $filerecords = $this->get_assessment_submission_onlinetext($assignmentid, $user, true);
                 $user = $DB->get_record('user', ['id' => $user], 'id, firstname, lastname');
 
-                $filerecords = $this->get_assessment_submission_onlinetext($assignmentid, $user->id, true);
                 foreach ($filerecords as $fr) {
                     $userpdfs[$user->id][] = report_assignfeedback_download_generatefeedbackpdf($fr, $asessn, $user, $course);
                 }
@@ -661,6 +686,26 @@ class reportmanager {
     }
 
     /**
+     * Download the submission type onlinetext as a spreadsheet
+     * @assignmentids assignments id
+     * @id course id
+     * @selectedusers list of users selected.
+     */
+    public function download_submission_onlinetextexcel($id, $selectedusers, $cmids, $cmid) {
+        $cmids = (array) json_decode($cmids);
+        $selectedusers = implode(',', $selectedusers);
+        $tempdir = make_temp_directory('report_assing_fdownloader/excel');
+
+        foreach ($cmids as $cmid) {
+            report_assignfeedback_download_setup_onlinetext_workbook($id, $cmid, $selectedusers, $tempdir);
+        }
+
+        // Now make a zip file of the temp dir and then delete it.
+        $this->zip_excelworkbook($id, $cmid);
+
+    }
+
+    /**
      * Generate an excel file with the grades.
      * @cmids Course module ids
      * @instaceids assignments id
@@ -669,10 +714,12 @@ class reportmanager {
      */
     public function download_assessment_grades($cmids, $courseid, $instaceids, $selecteduser, $cmid) {
         \core_php_time_limit::raise();
+
         $cmids = (array) json_decode($cmids);
         $instaceids = explode(',', $instaceids);
         $selectedusers = implode(',', $selecteduser);
         $tempdir = make_temp_directory('report_assing_fdownloader/excel');
+
         foreach ($cmids as $cmid) {
             $this->download_grades_helper($cmid, $courseid, $selectedusers, $tempdir);
         }
@@ -730,6 +777,59 @@ class reportmanager {
 
 
     /**
+     * TODO
+     * This function is called to collect all the online text submission
+     * to export them to an spreadsheet.
+     * @instanceid assignment id
+     * @selectedusers selected users
+     * @return list of objects that contains the user id and the user reflection.
+     */
+    public function get_submission_onlinetext($instanceid, $selectedusers) {
+        global $DB;
+
+        if (strlen($instanceid) > 0 && strlen($selectedusers)) {
+
+            list($submissionsanduser, $submissionsids) = $this->get_assesment_submission_ids($instanceid, $selectedusers);
+
+            $sql = "SELECT *
+                    FROM {assignsubmission_onlinetext} onlinetxt
+                    WHERE onlinetxt.assignment = :assignment
+                    AND onlinetxt.submission IN ($submissionsids)";
+            $params = ['assignment' => $instanceid];
+
+            $results = $DB->get_records_sql($sql, $params);
+
+            foreach ($results as $result) {
+
+                $user = $submissionsanduser[$result->submission];
+                $contextid = $this->get_context_id_from_files($result->id,
+                                                              $user->userid,
+                                                            'submissions_onlinetext',
+                                                            'assignsubmission_onlinetext');
+
+                $txt = file_rewrite_pluginfile_urls($result->onlinetext,
+                                                            'pluginfile.php',
+                                                            $contextid,
+                                                            'assignsubmission_onlinetext',
+                                                            'submissions_onlinetext',
+                                                            $result->id);
+                $data                = new \stdClass();
+                $data->userid        = $user->userid;
+                $data->firstname     = $user->firstname;
+                $data->lastname      = $user->lastname;
+                $data->username      = $user->username;
+                $data->submission    = $result->submission;
+                $data->assignment    = $result->assignment;
+                $data->txt = strip_tags($txt);
+
+                $texts[]       = $data;
+            }
+
+        }
+        return $texts;
+
+    }
+    /**
      * @instanceid assignment id
      * @selectedusers selected users
      * @return list of objects that contains the user id and the user reflection.
@@ -749,6 +849,7 @@ class reportmanager {
             $results = $DB->get_records_sql($sql);
 
             foreach ($results as $result) {
+
                 $contextid = $this->get_context_id_from_files($result->id,
                                                             $result->userid,
                                                             'submission_reflection',
@@ -760,15 +861,16 @@ class reportmanager {
                                                             'assignsubmission_reflection',
                                                             'submission_reflection',
                                                             $result->id);
-                $data = new \stdClass();
-                $data->userid = $result->userid;
-                $data->firstname = $result->firstname;
-                $data->lastname = $result->lastname;
-                $data->username = $result->username;
-                $data->submission = $result->submission;
-                $data->assignment = $result->assignment;
+                $data                = new \stdClass();
+                $data->userid        = $result->userid;
+                $data->firstname     = $result->firstname;
+                $data->lastname      = $result->lastname;
+                $data->username      = $result->username;
+                $data->submission    = $result->submission;
+                $data->assignment    = $result->assignment;
                 $data->reflectiontxt = strip_tags($reflectiontxt);
-                $reflections[] = $data;
+
+                $reflections[]       = $data;
             }
 
         }
