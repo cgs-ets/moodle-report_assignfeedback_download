@@ -58,7 +58,7 @@ class reportmanager {
 
     /**
      * @courseid course id
-     * @return assessments that have at least one graded student.
+     * returns assessments that have at least one graded student.
      */
     public function get_assesments_with_grades($courseid) {
         global $DB;
@@ -73,7 +73,7 @@ class reportmanager {
 
         $paramsarray = ['course' => $courseid];
 
-        $results = ($DB->get_records_sql($sql, $paramsarray));
+        $results = $DB->get_records_sql($sql, $paramsarray);
 
         return $results;
     }
@@ -81,7 +81,7 @@ class reportmanager {
     /**
      *
      * @courseid course id
-     * @return  array assessments that have submissions. it doesnt matter if they are graded.
+     * return  array assessments that have submissions. it doesnt matter if they are graded.
      */
     public function get_submitted_assessments($courseid) {
         global $DB;
@@ -101,6 +101,7 @@ class reportmanager {
     }
 
     /**
+     * Get Assessments that are not graded.
      * @assessmentids assesments ids
      * @return array
      */
@@ -140,7 +141,7 @@ class reportmanager {
      * @userid user id
      * @courseid course id
      * @assignmentid assignment id
-     * @return the submissions related to the assignment passed as parametre.
+     * return the submissions related to the assignment passed as parametre.
      */
     public function get_assessment_submission_records($userid, $courseid, $assignmentid) {
         global $DB;
@@ -164,7 +165,7 @@ class reportmanager {
      * @itemid assignment id
      * @userid user id
      * @createpdf
-     * @return list of online text subimssion
+     * return list of online text subimssion
      */
     public function get_assessment_submission_onlinetext($itemid, $userid, $createpdf = false) {
         global $DB;
@@ -196,7 +197,7 @@ class reportmanager {
     /**
      * @itemid assignment id
      * @userid user id
-     * @return list of reflection
+     * return list of reflection
      */
     public function get_assessment_submission_reflection($itemid, $userid) {
         global $DB;
@@ -222,10 +223,9 @@ class reportmanager {
     }
 
     /**
+     * Get the context id from the mdl_files table
      * @itemid is the $itemid from mdl_files table.
      * @userid userid
-     * Get the context id from the mdl_files table
-     *
      */
     public function get_context_id_from_files($itemid, $userid, $filearea, $component) {
         global $DB;
@@ -252,10 +252,10 @@ class reportmanager {
     }
 
     /**
-     *
+     * Get the submission ids for the assignment given.
      * @itemid assignment id
      * @userid user id
-     * @return the submission ids for the assignment given.
+     * @return int
      */
     public function get_assesment_submission_id($itemid, $userid) {
         global $DB;
@@ -274,10 +274,10 @@ class reportmanager {
     }
 
     /**
-     *
+     * Get the submission ids for the assignment given
      * @itemid assignment id
      * @userid user id
-     * @return the submission ids for the assignment given.
+     * @return list.
      */
     public function get_assesment_submission_ids($itemid, $userids) {
         global $DB;
@@ -298,7 +298,7 @@ class reportmanager {
     /**
      * @itemid assignment id
      * @userid user id
-     * @returns the id of the reflection saved.
+     * returns the id of the reflection saved.
      */
     public function get_assesment_submission_reflection_id($itemid, $userid) {
         global $DB;
@@ -318,7 +318,7 @@ class reportmanager {
 
     /**
      * @itemid assignmentid
-     * @return the anotaed file for the assignment given
+     * @return array
      */
     public function get_assessment_anotatepdf_files($itemid) {
         global $DB;
@@ -335,7 +335,7 @@ class reportmanager {
 
     /**
      * @itemid assignment id
-     * @return the list of files given as feedback
+     * @return array
      */
     public function get_assessment_feedback_files($itemid, $createpdf = false) {
         global $DB, $USER;
@@ -348,7 +348,9 @@ class reportmanager {
         $results = array_values($DB->get_records_sql($sql, $paramsarray));
         return $results;
     }
-
+    /**
+     * @return array
+     */
     public function get_assessment_feedback_comments($itemid, $userid, $createpdf = false) {
 
         $txtwithfile = $this->get_assessment_feedback_comments_with_file($itemid, $userid);
@@ -372,7 +374,9 @@ class reportmanager {
         return $comments;
     }
 
-    // Get the comments that have both files and text.
+    /**
+     *  Get the assessment feedback comments that have both files and text.
+     */
     private function get_assessment_feedback_comments_with_file($itemid, $userid) {
         global $DB;
         // Get the comments that have both files and text.
@@ -389,6 +393,9 @@ class reportmanager {
         return $results;
     }
 
+    /**
+     *  Get the assessment feedback comments that have text.
+     */
     private function get_assessment_feedback_comments_text($itemid, $userid) {
         global $DB;
 
@@ -401,6 +408,9 @@ class reportmanager {
         return $results;
     }
 
+    /**
+     * get the assessments ids as a string separated by comma.
+     */
     public function get_assessment_ids($courseid, $assessmentids) {
 
         $assessids = $assessmentids;
@@ -416,8 +426,11 @@ class reportmanager {
         return $assessids;
     }
 
-    // Get the assessments that are graded or that are not but the teacher already started working on.
-    // For example, editing the annotated PDF or adding comments.
+
+    /**
+     *  Get the assessments that are graded or that are not but the teacher already started working on.
+     * For example, editing the annotated PDF or adding comments.
+     */
     private function get_assessments_by_course($assessmentids) {
         global $DB;
 
@@ -438,6 +451,9 @@ class reportmanager {
         return $result;
     }
 
+    /**
+     * Get course module
+     */
     public function get_course_module($courseid, $assessids) {
         global $DB;
 
@@ -452,6 +468,7 @@ class reportmanager {
 
         return $results;
     }
+
     /**
      * Downloads files from submission type files.
      * @assignmentids ID of the assignment
@@ -532,7 +549,7 @@ class reportmanager {
                     $files = $fs->get_area_files($fr->contextid, $fr->component, $fr->filearea,  $fr->itemid);
                     foreach ($files as $file) {
 
-                        // Naming convention would be LAST Name, FirstName, Year, Subject, Level, Component.
+                        // Naming convention is LAST Name, FirstName, Year, Subject, Level, Component.
                         $extension = '.' . $this->get_extension($file);
                         $n = shorten_text($file->get_filename(), 30, false, '') . $extension;
                         $notname  = $user->lastname . ' ' . $user->firstname . ' ' . $course->fullname . ' ' . $n;
@@ -772,7 +789,6 @@ class reportmanager {
 
 
     /**
-     * TODO
      * This function is called to collect all the online text submission
      * to export them to an spreadsheet.
      * @instanceid assignment id
@@ -815,7 +831,7 @@ class reportmanager {
                 $data->username      = $user->username;
                 $data->submission    = $result->submission;
                 $data->assignment    = $result->assignment;
-                $data->txt = strip_tags($txt);
+                $data->txt           = str_replace("&nbsp;", "", strip_tags($txt));
 
                 $texts[]       = $data;
             }
@@ -991,7 +1007,8 @@ class reportmanager {
 
     /**
      * Only Frubric can be downloaded as PDF.
-     * This function generats the JSON needed to downloand from the front page (Using JS) --> Which is not active yet.
+     * This function generats the JSON needed to download from the front page (Using JS) --> NOTE: is not active yet. The JS code is commented out
+     *
      *
      */
     private function get_frubric_json($courseid, $userid, $instanceid, $controller) {
