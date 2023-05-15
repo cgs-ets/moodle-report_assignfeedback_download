@@ -831,7 +831,7 @@ class reportmanager {
                 $data->username      = $user->username;
                 $data->submission    = $result->submission;
                 $data->assignment    = $result->assignment;
-                $data->txt           = str_replace("&nbsp;", "", strip_tags($txt));
+                $data->txt           = str_replace("&nbsp;", "\r\n", strip_tags($txt)); // Replace non break space entity to new line character
 
                 $texts[]       = $data;
             }
