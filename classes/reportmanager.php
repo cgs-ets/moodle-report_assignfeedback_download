@@ -81,7 +81,7 @@ class reportmanager {
     /**
      *
      * @courseid course id
-     * @return  Get assessments that have submissions. it doesnt matter if they are graded.
+     * @return  array assessments that have submissions. it doesnt matter if they are graded.
      */
     public function get_submitted_assessments($courseid) {
         global $DB;
@@ -102,7 +102,7 @@ class reportmanager {
 
     /**
      * @assessmentids assesments ids
-     * @return the assessments that are submitted.
+     * @return array
      */
     private function get_assessments_by_course_2($assessmentids) {
         global $DB;
@@ -123,24 +123,15 @@ class reportmanager {
     /**
      *
      * @assessmentids assesments ids
-     * @return Combine graded and not graded (but submitted) assignments.
+     * @return array
      */
     public function get_assessments($assessmentids) {
         // Assessments not graded.
         $notgraded       = $this->get_assessments_by_course_2($assessmentids);
         // Assessments that could be fully graded or in the process off.
         $gradedorstarted = $this->get_assessments_by_course($assessmentids);
+        $assessments = $gradedorstarted + $notgraded; // Combine the results.  The order matters here!!
 
-        // Clean the array to not show assessments that have no submissions and are not graded.
-        foreach ($gradedorstarted as $gs) {
-            foreach ($notgraded as $i => $ng) {
-                if ($gs->userid == $ng->userid) {
-                    unset($notgraded[$i]);
-                }
-            }
-        }
-
-        $assessments     = $gradedorstarted + $notgraded; // Combine the results.  The order matters here!!
         return $assessments;
 
     }
@@ -450,12 +441,14 @@ class reportmanager {
     public function get_course_module($courseid, $assessids) {
         global $DB;
 
-        $sql = "SELECT cm.instance, cm.id as cmid FROM mdl_course_modules AS cm
-        JOIN  mdl_modules AS m ON cm.module = m.id
-        WHERE cm.course = ? AND cm.instance IN ($assessids) AND m.name = 'assign'; ";
+        $sql = "SELECT cm.instance, cm.id as cmid
+                FROM mdl_course_modules  cm
+                JOIN  mdl_modules  m ON cm.module = m.id
+                WHERE cm.course = ? AND cm.instance IN ($assessids) AND m.name = 'assign'; ";
+
         $paramsarray = ['course' => $courseid];
 
-        $results = ($DB->get_records_sql($sql, $paramsarray));
+        $results = $DB->get_records_sql($sql, $paramsarray);
 
         return $results;
     }
@@ -691,17 +684,17 @@ class reportmanager {
      * @id course id
      * @selectedusers list of users selected.
      */
-    public function download_submission_onlinetextexcel($id, $selectedusers, $cmids, $cmid) {
+    public function download_submission_onlinetextexcel($courseid, $selectedusers, $cmids, $cmid) {
         $cmids = (array) json_decode($cmids);
         $selectedusers = implode(',', $selectedusers);
         $tempdir = make_temp_directory('report_assing_fdownloader/excel');
 
         foreach ($cmids as $cmid) {
-            report_assignfeedback_download_setup_onlinetext_workbook($id, $cmid, $selectedusers, $tempdir);
+            report_assignfeedback_download_setup_onlinetext_workbook($courseid, $cmid, $selectedusers, $tempdir);
         }
 
         // Now make a zip file of the temp dir and then delete it.
-        $this->zip_excelworkbook($id, $cmid);
+        $this->zip_excelworkbook($courseid, $cmid);
 
     }
 

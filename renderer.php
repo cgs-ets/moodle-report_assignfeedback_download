@@ -51,6 +51,7 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
 
         $templatename = 'report_assignfeedback_download/main';
         $context = $this->get_table_context($courseid, $assessmentids, $url, $moduleid, $filter, $coursename);
+
         echo $this->render_from_template($templatename, $context);
     }
 
@@ -197,6 +198,9 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
         return $context;
     }
 
+    /**
+     * Collects the assessment information that will be used as a context for the template
+     */
     public function get_users_context($courseid, $assessmentids, $coursename) {
         global  $CFG;
 
@@ -220,10 +224,10 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
         $countsubmissionreflection  = 0;
 
         foreach ($assessments as $assess) {
-
             if (!isset($activeusers[$assess->userid])) {
                 continue;
             }
+
             $user = $activeusers[$assess->userid];
 
             if (!isset($user)) {
@@ -234,6 +238,8 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
                 'course' => $courseid,
                 'includefullname' => true, 'class' => 'userpicture'
             ));
+
+            $cmidsaux[$assess->assignmentid]  = $cmids[$assess->assignmentid]->cmid;
 
             $userassessment                         = new \stdClass();
             $userassessment->assignmentid           = $assess->assignmentid;
@@ -251,9 +257,9 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
                 && $userassessment->reflectionsubmission == ''
                 && !isset($userassessment->feedbackcommentxt)
                 && (!isset($assess->grade) || $assess->grade < 0 )) {
+
                 continue;
             }
-
             if ($userassessment->onlinetextsubmission != '') {
                 $countsubmissiononlinetxt++;
                 $userassessment->onlinetxtsubmissionview = true;
@@ -278,9 +284,9 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
                             'gid'       => $sid,
                             'plugin'    => 'reflection',
                             'action'    => 'viewpluginassignsubmission');
-                $url                          = new moodle_url('/mod/assign/view.php', $urlparams);
+                $url = new moodle_url('/mod/assign/view.php', $urlparams);
+
                 $userassessment->reflectiontxturl = $url;
-                $cmidsaux[$assess->assignmentid]  = $cmid;
             }
 
             if (isset(($userassessment->submtree['tree'])->submissionfiletree)) {
@@ -351,11 +357,13 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
                     $courseid,
                     $assess,
                     $userassessment,
-                    $user, $cmidsaux,
+                    $user,
+                    $cmidsaux,
                     $coursename,
                     $userassessment->candownload,
                     $userassessment->finalgrade,
                     $fullfeedbackcomment);
+
                     $supported = in_array($this->manager->get_active_grading_method($cmid), SUPPORTED_ADVANCED_GRADING_METHODS);
 
                     if ($fr != ''  && $supported) {
@@ -387,10 +395,6 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
 
         $users = array_values($users['users']);
         usort($users, "report_assignfeedback_download_sort_by_firstname");
-
-        if (count($cmidsaux) == 0) {
-            $cmidsaux = $cmids;
-        }
 
         $cmidsaux        = json_encode($cmidsaux);
         $rubricparams    = json_encode($rubricparams);

@@ -90,6 +90,7 @@ $string['rubricneedsupdate']            = 'The rubric definition was changed aft
 $string['submission']                   = 'Submission';
 $string['reflection']                   = 'Reflection';
 $string['cantgeneratepdf']              = 'Some of the rubric definitions changed after the student has been graded.
-                                           If you want to download Flexrubric PDFS and/or grades, make sure the grade(s)/flexrubric are updated';
+                                           If you want to download Flexrubric PDFS and/or grades, make sure the grade(s)/flexrubric are updated.
+                                           Otherwise, those students whose grades/flexrubrics were not updated, will not be exported to the spreadhsheet.';
 $string['nofilestocompress']            = 'Files could not be generated. Please verify the grades have been updated and/or the rubric has been filled';
 
