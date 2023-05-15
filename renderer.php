@@ -260,6 +260,7 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
 
                 continue;
             }
+
             if ($userassessment->onlinetextsubmission != '') {
                 $countsubmissiononlinetxt++;
                 $userassessment->onlinetxtsubmissionview = true;

@@ -734,9 +734,11 @@ class reportmanager {
 
         switch ($gradingmanager->get_active_method()) {
             case 'frubric':
-                $areaid = $gradingmanager->get_active_controller()->get_areaid();
-                $maxscore = $gradingmanager->get_active_controller()->get_min_max_score()['maxscore'];
-                report_assignfeedback_download_setup_frubric_workbook($courseid, $cmid, $areaid, $selectedusers, $maxscore, $tempdir);
+                if ($gradingmanager->get_active_controller() != null) {
+                    $areaid = $gradingmanager->get_active_controller()->get_areaid();
+                    $maxscore = $gradingmanager->get_active_controller()->get_min_max_score()['maxscore'];
+                    report_assignfeedback_download_setup_frubric_workbook($courseid, $cmid, $areaid, $selectedusers, $maxscore, $tempdir);
+                }
                 break;
             case 'rubric':
                 report_assignfeedback_download_setup_rubric_workbook($courseid, $cmid, $selectedusers, $tempdir);
