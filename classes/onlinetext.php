@@ -75,7 +75,9 @@ function report_assignfeedback_download_setup_onlinetext_workbook($id, $modid, $
  *  Submission
  *      Online text
  */
-function report_assignfeedback_download_add_onlinetext_info_header(MoodleExcelWorkbook $workbook, MoodleExcelWorksheet $sheet, $pos) {
+function report_assignfeedback_download_add_onlinetext_info_header(MoodleExcelWorkbook $workbook,
+                                                                   MoodleExcelWorksheet $sheet,
+                                                                   $pos) {
     $format     = $workbook->add_format(HEADINGTITLES);
     $format2    = $workbook->add_format(HEADINGSUBTITLES);
 
