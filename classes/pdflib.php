@@ -49,8 +49,6 @@ function report_assignfeedback_download_create_frubric_pdf($rubric, $assessname,
     $rubric = json_decode($rubric);
     $jsonparts = explode('</div>', $rubric);
     $table = $jsonparts[0];
-
-    $table = str_replace('<table class="criteria-table table-light criteria-table-evaluated ">', '<table "style=\'font-family:helvetica\'"> ', $table);
     $table = str_replace(
         '<input disabled type="checkbox" id ="" name = ""  value = "1" checked = "checked"  class ="frubric-evaluated-checkbox" >',
         '<span style=\'font-family:helvetica\'>&#9745;</span>',

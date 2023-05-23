@@ -1037,7 +1037,7 @@ class reportmanager {
             $gradebookgrade = $gradingitem->grades[$userid];
         }
 
-        $fr = json_encode($controller->render_grade(
+        $fr = json_encode($controller->render_grade_to_download(
             $PAGE,
             $grade[0]->id,
             $gradinginfo,
