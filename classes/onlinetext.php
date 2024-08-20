@@ -62,6 +62,7 @@ function report_assignfeedback_download_setup_onlinetext_workbook($id, $modid, $
 
     $manager = new reportmanager();
     $texts = $manager->get_submission_onlinetext($cm->instance, $selectedusers);
+    $texts = $texts == null ? [] : $texts;
 
     if (count($texts) > 0 ) {
         report_assignfeedback_set_students_rows($sheet, $texts);
