@@ -23,6 +23,7 @@
 
 namespace report_assignfeedback_download;
 
+use DOMDocument;
 use moodle_url;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -37,6 +38,8 @@ use function report_assignfeedback_download\reflection\report_assignfeedback_dow
 use function report_assignfeedback_download\rubric\report_assignfeedback_download_setup_rubric_workbook;
 
 defined('MOODLE_INTERNAL') || die();
+
+global $CFG;
 
 require($CFG->dirroot . '/report/assignfeedback_download/classes/pdflib.php');
 require($CFG->dirroot . '/report/assignfeedback_download/classes/frubric.php');
@@ -489,8 +492,8 @@ class reportmanager {
 
         foreach ($selectedusers as $userid) {
 
-            $filerecords = $this->get_assessment_submission_records($userid, $id, $assignmentids);
             $user = $DB->get_record('user', array('id' => $userid));
+            $filerecords = $this->get_assessment_submission_records($userid, $id, $assignmentids);
 
             foreach ($filerecords as $fr) {
 
@@ -549,6 +552,10 @@ class reportmanager {
                     $files = $fs->get_area_files($fr->contextid, $fr->component, $fr->filearea,  $fr->itemid);
                     foreach ($files as $file) {
 
+                        if ($file->get_filename() == '.') {
+                            continue;
+                        }
+
                         // Naming convention is LAST Name, FirstName, Year, Subject, Level, Component.
                         $extension = '.' . $this->get_extension($file);
                         $n = shorten_text($file->get_filename(), 30, false, '') . $extension;
@@ -562,11 +569,11 @@ class reportmanager {
         }
 
         // Remove folder.
-        foreach ($filesforzipping as $path => $files) {
-            if ($path[-1] == '.') {
-                unset($filesforzipping[$path]);
-            }
-        }
+        // foreach ($filesforzipping as $path => $files) {
+        //     if ($path[-1] == '.') {
+        //         unset($filesforzipping[$path]);
+        //     }
+        // }
 
         if (count($filesforzipping) > 0) {
             $zipfile = $this->pack_files($filesforzipping);
@@ -651,6 +658,7 @@ class reportmanager {
                 $filerecords = $this->get_assessment_feedback_comments($itemid, $user->id, true);
 
                 foreach ($filerecords as $fr) {
+                    $fr = $this->ensureWellFormedHtml($fr);
                     $userspdfs [$user->id][] = report_assignfeedback_download_generatefeedbackpdf($fr, $assessname, $user, $course);
                 }
             }
@@ -659,6 +667,30 @@ class reportmanager {
         $this->save_generated_pdf_files($userspdfs , $dirname);
 
     }
+    /**
+     * Check the HTML is well formed, so it can be displayed in the PDF properly
+     */
+    private function ensureWellFormedHtml($html) {
+        // Remove hidden characters
+        $html = preg_replace('/[\x00-\x1F\x7F\xA0]/u', '', $html);
+           // Ensure HTML is UTF-8 encoded
+        $html = mb_convert_encoding($html, 'HTML-ENTITIES', 'UTF-8');
+        $dom = new DOMDocument();
+        
+        // Suppress errors due to malformed HTML
+        libxml_use_internal_errors(true);
+        
+        // Load the HTML
+        $dom->loadHTML($html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+        
+        // Clear any errors
+        libxml_clear_errors();
+        
+        // Save and return the well-formed HTML
+        return $dom->saveHTML();
+    }
+    
+
 
     /**
      * Download the submission type onlinetext as PDF
