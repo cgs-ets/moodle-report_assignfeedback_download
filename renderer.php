@@ -68,6 +68,10 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
         return $html;
     }
 
+    public function render_assignfeedback_busy() {
+        echo $this->render_from_template('report_assignfeedback_download/busy', '');
+    }
+
     /**
      * Internal function - creates htmls structure suitable for YUI tree.
      */

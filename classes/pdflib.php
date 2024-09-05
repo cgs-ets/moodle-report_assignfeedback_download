@@ -64,10 +64,16 @@ function report_assignfeedback_download_create_frubric_pdf($rubric, $assessname,
               '<br><br>' .
                $totalgrade;
 
-    $mpdf = new Mpdf(['tempDir' => $CFG->tempdir . '/', 'assignment_', 'mode' => 's', 'debug' => false]);
-    $mpdf->SetFont('DejaVuSans', '', 9);
-    $mpdf->backupSubsFont = ['dejavusans'];
-    $mpdf->allow_charset_conversion = true;
+    $mpdf = new Mpdf(['tempDir' => $CFG->tempdir . '/', 'assignment_', 'mode' => 'utf-8', 'debug' => false]);
+    
+    //  Enable auto language and font detection
+    $mpdf->autoScriptToLang = true;
+    $mpdf->autoLangToFont = true;
+
+    $mpdf->SetFont('DejaVuSans', '', 12);
+    $mpdf->useSubstitutions = true;
+    $mpdf->backupSubsFont = ['dejavusanscondensed', 'arialunicodems', 'sun-exta'];
+
 
     $data = new stdClass();
     $data->rubric = $rubric;
@@ -86,6 +92,7 @@ function report_assignfeedback_download_create_frubric_pdf($rubric, $assessname,
 function report_assignfeedback_download_generatefeedbackpdf($content, $assessmentname, $student, $course) {
 
     $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
+   
     // Set default header data.
     $pdfheaderstring = "ASSESSMENT: $assessmentname \n STUDENT: $student->firstname $student->lastname";
 
@@ -109,7 +116,6 @@ function report_assignfeedback_download_generatefeedbackpdf($content, $assessmen
     // Add a page.
     $pdf->AddPage();
     $html = pdfassessmentdownloader_fix_image_links($content);
-
     // Output the HTML content.
     $pdf->writeHTML($html);
     $pathfilename = $assessmentname;
@@ -187,8 +193,8 @@ function pdfassessmentdownloader_fix_image_links($html) {
             $html = str_replace($matches[1], $content, $html);
         }
     }
-
-        return $html;
+    
+    return $html;
 }
 
 function pdfassessmentdownloader_fix_svg_images($html) {

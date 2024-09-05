@@ -41,11 +41,14 @@ $selectedaction          = optional_param('operation', '', PARAM_TEXT);
 $frubricselection        = optional_param('frubricdetails', '', PARAM_TEXT);
 
 $manager                 = new report_assignfeedback_download\reportmanager();
+$show = new stdClass();
+$show->show = false;
 
 // Download.
 if ($selectedusers != '') {
-    $selectedusers = explode(',', $selectedusers);
 
+    $selectedusers = explode(',', $selectedusers);
+    
     switch ($selectedaction) {
         case 'dldsubmission':
             $manager->download_submission_files($instaceids, $id, $selectedusers);
@@ -74,7 +77,6 @@ if ($selectedusers != '') {
         case 'dldreflection':
             $manager->download_submission_reflection($id, $selectedusers, $cmids, $cmid);
             break;
-
     }
 }
 
@@ -131,6 +133,8 @@ if ($id == 0 || $id == 1) {  // 1 is the main page.
     if ($filter) {
         $url            = $PAGE->url;
         $coursename     = $DB->get_field('course', 'fullname', ['id' => $id], $strictness = IGNORE_MISSING);
+        
+        //echo $renderer->render_assignfeedback_busy();
         echo $renderer->render_assignfeedback_download($id, $assessmentids, $url, $cmid, $filter, $coursename);
     }
 

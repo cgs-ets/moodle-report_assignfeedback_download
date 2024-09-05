@@ -24,7 +24,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-define(["jquery", "core/ajax", "core/log", "report_assignfeedback_download/html2pdf"], function ($, Ajax, Log, html2pdf) {
+define(["jquery", "core/ajax", "core/log"/*, "report_assignfeedback_download/html2pdf"*/], function ($, Ajax, Log, /*html2pdf*/) {
     "use strict";
 
     function init() {
@@ -43,6 +43,7 @@ define(["jquery", "core/ajax", "core/log", "report_assignfeedback_download/html2
         self.indexGrade = (Array.from(document.querySelector('td.grade-cell').parentElement.cells)).indexOf(document.querySelector('td.grade-cell'));
         console.log(self.indexGrade);
 
+        $('.report-assignfeedback-downloading').toggle();
 
     }
 
