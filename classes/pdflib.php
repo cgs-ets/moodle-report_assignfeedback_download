@@ -65,7 +65,7 @@ function report_assignfeedback_download_create_frubric_pdf($rubric, $assessname,
                $totalgrade;
 
     $mpdf = new Mpdf(['tempDir' => $CFG->tempdir . '/', 'assignment_', 'mode' => 'utf-8', 'debug' => false]);
-    
+
     //  Enable auto language and font detection
     $mpdf->autoScriptToLang = true;
     $mpdf->autoLangToFont = true;
@@ -112,6 +112,12 @@ function report_assignfeedback_download_generatefeedbackpdf($content, $assessmen
 
     // Set image scale factor.
     $pdf->setImageScale(PDF_IMAGE_SCALE_RATIO);
+
+    // Set default monospaced font.
+    $pdf->SetDefaultMonospacedFont(PDF_FONT_MONOSPACED);
+    $pdf->setFont('stsongstdlight', '', 12);
+
+
 
     // Add a page.
     $pdf->AddPage();

@@ -675,13 +675,17 @@ class reportmanager {
         $html = preg_replace('/[\x00-\x1F\x7F\xA0]/u', '', $html);
            // Ensure HTML is UTF-8 encoded
         $html = mb_convert_encoding($html, 'HTML-ENTITIES', 'UTF-8');
-        $dom = new DOMDocument();
+        // $dom = new DOMDocument();
         
         // Suppress errors due to malformed HTML
         libxml_use_internal_errors(true);
+
+        // Create a new DOMDocument with UTF-8 encoding
+        $dom = new DOMDocument('1.0', 'UTF-8');
         
         // Load the HTML
-        $dom->loadHTML($html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+        $dom->loadHTML( $html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+        
         
         // Clear any errors
         libxml_clear_errors();
