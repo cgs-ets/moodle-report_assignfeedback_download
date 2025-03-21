@@ -64,7 +64,7 @@ function report_assignfeedback_download_setup_marking_guide_workbook($id, $modid
     // Get data for each student.
     $students   = report_assignfeedback_process_data($students, $mguide);
 
-    report_assignfeedback_set_students_rows($sheet, $students, $pos);
+    report_assignfeedback_set_students_rows($sheet, $students, $selectedusers, $pos);
 
     $workbook->savetotempdir($tempdir);
 

@@ -103,6 +103,7 @@ function report_assignfeedback_set_students_rows (MoodleExcelWorksheet $sheet, $
         $sheet->write_string($row, $col++, $text->firstname, $format);
         $sheet->write_string($row, $col++, $text->lastname, $format);
         $sheet->write_string($row, $col++, $text->username, $format);
+        $sheet->write_string($row, $col++, $text->studiescode, $format);
         $sheet->write_string($row, $col++, $text->txt, $format);
 
     }

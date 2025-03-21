@@ -44,11 +44,14 @@ $manager                 = new report_assignfeedback_download\reportmanager();
 $show = new stdClass();
 $show->show = false;
 
+// var_dump($selectedusers); exit;
 // Download.
 if ($selectedusers != '') {
 
-    $selectedusers = explode(',', $selectedusers);
-    
+    // $selectedusers = explode(',', $selectedusers);
+    $selectedusers = report_assignfeedback_get_customfields($selectedusers);
+
+    // var_dump($selectedusers);
     switch ($selectedaction) {
         case 'dldsubmission':
             $manager->download_submission_files($instaceids, $id, $selectedusers);
@@ -133,8 +136,7 @@ if ($id == 0 || $id == 1) {  // 1 is the main page.
     if ($filter) {
         $url            = $PAGE->url;
         $coursename     = $DB->get_field('course', 'fullname', ['id' => $id], $strictness = IGNORE_MISSING);
-        
-        //echo $renderer->render_assignfeedback_busy();
+
         echo $renderer->render_assignfeedback_download($id, $assessmentids, $url, $cmid, $filter, $coursename);
     }
 

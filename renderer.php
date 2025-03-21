@@ -227,6 +227,8 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
         $countgradedsubmissions     = 0;
         $countsubmissionreflection  = 0;
 
+
+
         foreach ($assessments as $assess) {
             if (!isset($activeusers[$assess->userid])) {
                 continue;
@@ -332,11 +334,10 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
 
                 // The rubric was modified after submission. And students needs to be regraded.
                 $gradingstatus  = $this->manager->get_grading_instance_status($cmid, $assess->gradeid);
-
                 $grade = $assess->grade > 0 ? number_format($assess->grade, 2, '.', '') : "0.00";
                 $maxgrade = number_format($assess->gradeoutof, 2, '.', '');
 
-                if ($gradingstatus == '1') {
+                if ($gradingstatus == '1' && $assess->gradeoutof > 0) {
                     $userassessment->finalgrade = "$grade/$maxgrade";
                 } else if ($gradingstatus == 2 && $assess->grade > -1) { // INSTANCE_STATUS_NEEDUPDATE = 2.
                     $userassessment->finalgrade = get_string('rubricneedsupdate', 'report_assignfeedback_download');
@@ -344,6 +345,10 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
                 } else if ($gradingstatus == -1 && $assess->grade > -1) { // The assingment has been graded but there is no rubric instance. We still have a grade.
                     $userassessment->finalgrade = "$grade/$maxgrade";
                     $userassessment->candownload = false;
+                }
+
+                if ($assess->gradeoutof < 0) { // Scale
+                    $userassessment->finalgrade = $this->get_scale_grade($assess->assignmentid, $assess->grade);
                 }
 
                 $userassessment->frubric = 0;
@@ -597,6 +602,25 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
         }
 
         return $rubricparams;
+    }
+
+    private function get_scale_grade($iteminstance, $grade) {
+        global $DB;
+
+        $sql = 'SELECT s.scale
+                FROM {grade_items} gi
+                JOIN {scale} s ON gi.scaleid = s.id
+                WHERE iteminstance =:iteminstance';
+
+        $params = ['iteminstance' => $iteminstance];
+        $result = $DB->get_record_sql($sql, $params);
+
+        $grade = intval($grade) - 1;
+        $scale = explode(',', $result->scale);
+        $scale = $scale[$grade];
+       return $scale;
+
+
     }
 
 

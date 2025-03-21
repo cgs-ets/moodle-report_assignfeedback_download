@@ -201,6 +201,10 @@ function report_assignfeedback_download_students_frubric_data($cmid, $selectedus
     global $DB, $CFG;
     require_once($CFG->libdir . '/gradelib.php');
 
+    $suaux = $selectedusers;
+    $selectedusers = implode(',', array_keys($selectedusers));
+
+
     $sql        = "SELECT grf.id AS grfid, grl.id AS levelid, grf.leveljson  AS selections,
                     grf.remark, grf.levelscore AS score, grf.criterionid,
                     rubm.username AS grader, stu.id AS userid,
@@ -255,6 +259,7 @@ function report_assignfeedback_download_students_frubric_data($cmid, $selectedus
                 $filling->firstname     = $result->firstname;
                 $filling->lastname      = $result->lastname;
                 $filling->username      = $result->username;
+                $filling->studiescode   = ($suaux[$result->userid])->profile['StudiesCode'];
             }
 
             $filling->grader        = $result->grader;
@@ -272,6 +277,9 @@ function report_assignfeedback_download_students_frubric_data($cmid, $selectedus
                 $gradingitem = $gradinginfo->items[0];
                 $gradebookgrade = $gradingitem->grades[$result->userid];
                 $gradebookgrade->str_long_grade;
+                //scaleid = 0 => Grade type Point
+                //Scale > 0 => Grade type Scale
+                $filling->scaleid = $gradingitem->scaleid;
 
                 if ($gradebookgrade->str_grade == '-') {
                     $filling->finalgrade = "0";
@@ -446,9 +454,10 @@ function report_assignfeedback_download_complete_fill_missing_levels_helper($dum
 /**
  * Fill the rows with the student info
  */
-function report_assignfeedback_set_students_rows (MoodleExcelWorksheet $sheet, $students, $maxscore) {
+function report_assignfeedback_set_students_rows(MoodleExcelWorksheet $sheet, $students, $maxscore) {
     $row = 5;
     $format = array('text_wrap' => true);
+// var_dump($students); exit;
     foreach ($students as $student) {
         $col = 0;
         $row++;
@@ -456,6 +465,9 @@ function report_assignfeedback_set_students_rows (MoodleExcelWorksheet $sheet, $
         $sheet->write_string($row, $col++, $student->firstname, $format);
         $sheet->write_string($row, $col++, $student->lastname, $format);
         $sheet->write_string($row, $col++, $student->username, $format);
+        $sheet->write_string($row, $col++, $student->studiescode, $format);
+
+        // Get the students studiescode
 
         foreach ($student->levels as $level) {
             foreach ($level->descriptors as $descriptor) {
@@ -470,7 +482,13 @@ function report_assignfeedback_set_students_rows (MoodleExcelWorksheet $sheet, $
         $sheet->set_column($col, $col, 15, $format);
         $sheet->write_string($row, $col++, $total, $format);
         $sheet->set_column($col, $col, 25, $format);
-        $sheet->write_number($row, $col++, $student->finalgrade, $format);
+        // Check if its a number or  a string as if the grade type is scale  it will be a string
+        if(is_numeric($student->finalgrade)) {
+            $sheet->write_number($row, $col++, $student->finalgrade, $format);
+        } else {
+            $sheet->write_string($row, $col++, $student->finalgrade, $format);
+        }
+
         $sheet->write_string($row, $col++, $student->grader, $format);
         $sheet->write_string($row, $col++, $student->modified, $format);
 

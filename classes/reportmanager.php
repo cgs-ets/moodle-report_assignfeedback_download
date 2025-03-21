@@ -285,7 +285,7 @@ class reportmanager {
     public function get_assesment_submission_ids($itemid, $userids) {
         global $DB;
 
-        $sql = "SELECT asub.id AS 'assignsubmissionid', u.id AS userid, u.username, u.firstname, u.lastname
+        $sql = "SELECT asub.id AS 'assignsubmissionid', u.id AS userid
                 FROM {assign_submission} asub
                 JOIN {user} u ON asub.userid = u.id
                 WHERE asub.assignment = :assignment AND userid IN ($userids)";
@@ -490,10 +490,10 @@ class reportmanager {
         $course = $DB->get_record('course', array('id' => $id));
         $filename = clean_filename($course->fullname . '.zip'); // Main folder.
 
-        foreach ($selectedusers as $userid) {
+        foreach ($selectedusers as $user) {
 
-            $user = $DB->get_record('user', array('id' => $userid));
-            $filerecords = $this->get_assessment_submission_records($userid, $id, $assignmentids);
+            $user = $DB->get_record('user', array('id' => $user->id));
+            $filerecords = $this->get_assessment_submission_records($user->id, $id, $assignmentids);
 
             foreach ($filerecords as $fr) {
 
@@ -676,24 +676,24 @@ class reportmanager {
            // Ensure HTML is UTF-8 encoded
         $html = mb_convert_encoding($html, 'HTML-ENTITIES', 'UTF-8');
         // $dom = new DOMDocument();
-        
+
         // Suppress errors due to malformed HTML
         libxml_use_internal_errors(true);
 
         // Create a new DOMDocument with UTF-8 encoding
         $dom = new DOMDocument('1.0', 'UTF-8');
-        
+
         // Load the HTML
         $dom->loadHTML( $html, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
-        
-        
+
+
         // Clear any errors
         libxml_clear_errors();
-        
+
         // Save and return the well-formed HTML
         return $dom->saveHTML();
     }
-    
+
 
 
     /**
@@ -716,10 +716,13 @@ class reportmanager {
             $select = "id = {$assignmentid}";
             $asessn = $DB->get_field_select('assign', 'name', $select);
 
-            foreach ($selectedusers as $user) {
-                $filerecords = $this->get_assessment_submission_onlinetext($assignmentid, $user, true);
-                $user = $DB->get_record('user', ['id' => $user], 'id, firstname, lastname');
-
+            foreach ($selectedusers as $userid => $user) {
+                $filerecords = $this->get_assessment_submission_onlinetext($assignmentid, $userid, true);
+                // $user = $DB->get_record('user', ['id' => $user], 'id, firstname, lastname');
+//                 echo '<pre>';
+//                 echo print_r($filerecords);
+//                 echo '</pre>';
+// exit;
                 foreach ($filerecords as $fr) {
                     $userpdfs[$user->id][] = report_assignfeedback_download_generatefeedbackpdf($fr, $asessn, $user, $course);
                 }
@@ -739,7 +742,7 @@ class reportmanager {
      */
     public function download_submission_onlinetextexcel($courseid, $selectedusers, $cmids, $cmid) {
         $cmids = (array) json_decode($cmids);
-        $selectedusers = implode(',', $selectedusers);
+        // $selectedusers = implode(',', $selectedusers);
         $tempdir = make_temp_directory('report_assing_fdownloader/excel');
 
         foreach ($cmids as $cmid) {
@@ -763,11 +766,9 @@ class reportmanager {
 
         $cmids = (array) json_decode($cmids);
         $instaceids = explode(',', $instaceids);
-        $selectedusers = implode(',', $selecteduser);
         $tempdir = make_temp_directory('report_assing_fdownloader/excel');
-
         foreach ($cmids as $cmid) {
-            $this->download_grades_helper($cmid, $courseid, $selectedusers, $tempdir);
+            $this->download_grades_helper($cmid, $courseid, $selecteduser, $tempdir);
         }
 
         // Now make a zip file of the temp dir and then delete it.
@@ -811,7 +812,7 @@ class reportmanager {
     public function download_submission_reflection($id, $selectedusers, $cmids, $cmid) {
         \core_php_time_limit::raise();
         $cmids = (array) json_decode($cmids);
-        $selectedusers = implode(',', $selectedusers);
+        $selectedusers = implode(',', array_keys($selectedusers));
         $tempdir = make_temp_directory('report_assing_fdownloader/excel');
 
         foreach ($cmids as $cmid) {
@@ -834,9 +835,9 @@ class reportmanager {
     public function get_submission_onlinetext($instanceid, $selectedusers) {
         global $DB;
 
-        if (strlen($instanceid) > 0 && strlen($selectedusers)) {
-
-            list($submissionsanduser, $submissionsids) = $this->get_assesment_submission_ids($instanceid, $selectedusers);
+        if (strlen($instanceid) > 0 && count($selectedusers) > 0) {
+            $userids = implode(',', array_keys($selectedusers));
+            list($submissionsanduser, $submissionsids) = $this->get_assesment_submission_ids($instanceid, $userids);
 
             $sql = "SELECT *
                     FROM {assignsubmission_onlinetext} onlinetxt
@@ -862,9 +863,10 @@ class reportmanager {
                                                             $result->id);
                 $data                = new \stdClass();
                 $data->userid        = $user->userid;
-                $data->firstname     = $user->firstname;
-                $data->lastname      = $user->lastname;
-                $data->username      = $user->username;
+                $data->firstname     = ($selectedusers[$user->userid])->firstname;
+                $data->lastname      = ($selectedusers[$user->userid])->lastname;
+                $data->username      = ($selectedusers[$user->userid])->username;
+                $data->studiescode   = ($selectedusers[$user->userid])->profile['StudiesCode'];
                 $data->submission    = $result->submission;
                 $data->assignment    = $result->assignment;
                 // Replace non break space entity to new line character.

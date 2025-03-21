@@ -63,7 +63,7 @@ function report_assignfeedback_download_setup_rubric_workbook($id, $modid, $sele
     $students   = report_assignfeedback_process_data_rubric($students, $rubric);
 
     if (count($students) > 0 ) { // Only generate the files if there is at least a student fully graded.
-        report_assignfeedback_set_students_rows($sheet, $students, $pos);
+        report_assignfeedback_set_students_rows($sheet, $students, $selectedusers, $pos);
         $workbook->savetotempdir($tempdir);
     }
 

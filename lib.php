@@ -25,6 +25,8 @@
 
 define("SUPPORTED_ADVANCED_GRADING_METHODS", ['frubric', 'rubric', 'guide']);
 
+require_once($CFG->dirroot . '/user/profile/lib.php');
+
 const HEADINGSROW = 4;
 const HEADINGTITLES = array('size' => 12, 'bold' => 1, 'text_wrap' => true, 'align' => 'centre');
 const HEADINGSUBTITLES = array('bold' => 1, 'text_wrap' => true, 'align' => 'fill');
@@ -69,11 +71,12 @@ function report_assignfeedback_download_add_header(MoodleExcelWorkbook $workbook
     $format = $workbook->add_format(HEADINGTITLES);
     $format2 = $workbook->add_format(HEADINGSUBTITLES);
     $sheet->write_string(HEADINGSROW, 0, get_string('student', 'report_assignfeedback_download'), $format);
-    $sheet->merge_cells(HEADINGSROW, 0, HEADINGSROW, 2, $format); // Student section.
+    $sheet->merge_cells(HEADINGSROW, 0, HEADINGSROW, 3, $format); // Student section.
     $col = 0;
     $sheet->write_string(5, $col++, get_string('firstname', 'report_assignfeedback_download'), $format2);
     $sheet->write_string(5, $col++, get_string('lastname', 'report_assignfeedback_download'), $format2);
     $sheet->write_string(5, $col++, get_string('username', 'report_assignfeedback_download'), $format2);
+    $sheet->write_string(5, $col++, get_string('studiescode', 'report_assignfeedback_download'), $format2);
     $sheet->set_column(0, $col, 10); // Set column widths to 10.
 
     return $col;
@@ -134,7 +137,7 @@ function report_assignfeedback_download_add_advanced_method_and_grading_info_hea
  */
 function report_assignfeedback_download_get_advanced_method_students_data($modcontext, $cm, $selectedusers) {
     global $DB;
-
+    $selectedusers = implode(',', array_keys($selectedusers));
     $sql = "SELECT stu.id AS userid, stu.idnumber AS idnumber,
             stu.firstname, stu.lastname, stu.username
             FROM {user} stu
@@ -217,7 +220,7 @@ function report_assignfeedback_process_data_rubric(array $students, array $data)
  *       Grader
  *       Time graded
  */
-function report_assignfeedback_set_students_rows (MoodleExcelWorksheet $sheet, $students, $pos) {
+function report_assignfeedback_set_students_rows (MoodleExcelWorksheet $sheet, $students, $selectedusers, $pos) {
 
     $row           = 5;
     $pos          -= 1;
@@ -229,6 +232,8 @@ function report_assignfeedback_set_students_rows (MoodleExcelWorksheet $sheet, $
         $sheet->write_string($row, $col++, $student->firstname, $format);
         $sheet->write_string($row, $col++, $student->lastname, $format);
         $sheet->write_string($row, $col++, $student->username, $format);
+        $sheet->write_string($row, $col++, ($selectedusers[$student->userid])->profile['StudiesCode'], $format);
+
         foreach ($student->data as $line) {
 
             if (is_numeric($line->score)) {
@@ -251,6 +256,23 @@ function report_assignfeedback_set_students_rows (MoodleExcelWorksheet $sheet, $
         }
 
     }
+
+}
+
+function report_assignfeedback_get_customfields($selectedusers) {
+    global $DB;
+
+    $sql = "SELECT id, firstname, lastname, username from {user} where id in ($selectedusers)";
+    $users = $DB->get_records_sql($sql);
+    $aux = [];
+
+    foreach($users as $user) {
+        profile_load_custom_fields($user);
+        $aux[$user->id] = $user;
+        // echo print_r($aux, true);
+    }
+
+   return $aux;
 
 }
 
