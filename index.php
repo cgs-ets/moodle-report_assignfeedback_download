@@ -44,14 +44,11 @@ $manager                 = new report_assignfeedback_download\reportmanager();
 $show = new stdClass();
 $show->show = false;
 
-// var_dump($selectedusers); exit;
 // Download.
 if ($selectedusers != '') {
 
-    // $selectedusers = explode(',', $selectedusers);
-    $selectedusers = report_assignfeedback_get_customfields($selectedusers);
+    $selectedusers = report_assignfeedback_get_customfields($selectedusers, $id);
 
-    // var_dump($selectedusers);
     switch ($selectedaction) {
         case 'dldsubmission':
             $manager->download_submission_files($instaceids, $id, $selectedusers);

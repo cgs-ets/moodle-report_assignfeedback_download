@@ -259,7 +259,7 @@ function report_assignfeedback_download_students_frubric_data($cmid, $selectedus
                 $filling->firstname     = $result->firstname;
                 $filling->lastname      = $result->lastname;
                 $filling->username      = $result->username;
-                $filling->studiescode   = ($suaux[$result->userid])->profile['StudiesCode'];
+                $filling->studiescode   = ($suaux[$result->userid])->classcode;
             }
 
             $filling->grader        = $result->grader;

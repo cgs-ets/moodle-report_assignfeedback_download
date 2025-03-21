@@ -76,7 +76,7 @@ function report_assignfeedback_download_add_header(MoodleExcelWorkbook $workbook
     $sheet->write_string(5, $col++, get_string('firstname', 'report_assignfeedback_download'), $format2);
     $sheet->write_string(5, $col++, get_string('lastname', 'report_assignfeedback_download'), $format2);
     $sheet->write_string(5, $col++, get_string('username', 'report_assignfeedback_download'), $format2);
-    $sheet->write_string(5, $col++, get_string('studiescode', 'report_assignfeedback_download'), $format2);
+    $sheet->write_string(5, $col++, get_string('classcode', 'report_assignfeedback_download'), $format2);
     $sheet->set_column(0, $col, 10); // Set column widths to 10.
 
     return $col;
@@ -232,7 +232,7 @@ function report_assignfeedback_set_students_rows (MoodleExcelWorksheet $sheet, $
         $sheet->write_string($row, $col++, $student->firstname, $format);
         $sheet->write_string($row, $col++, $student->lastname, $format);
         $sheet->write_string($row, $col++, $student->username, $format);
-        $sheet->write_string($row, $col++, ($selectedusers[$student->userid])->profile['StudiesCode'], $format);
+        $sheet->write_string($row, $col++,($selectedusers[$student->userid])->classcode, $format);
 
         foreach ($student->data as $line) {
 
@@ -259,17 +259,22 @@ function report_assignfeedback_set_students_rows (MoodleExcelWorksheet $sheet, $
 
 }
 
-function report_assignfeedback_get_customfields($selectedusers) {
-    global $DB;
+function report_assignfeedback_get_customfields($selectedusers, $courseid) {
+    global $DB, $COURSE;
 
     $sql = "SELECT id, firstname, lastname, username from {user} where id in ($selectedusers)";
+
+    $sql = "SELECT u.id, u.firstname, u.lastname, u.username, g.name as classcode
+            FROM mdl_groups g
+            JOIN mdl_groups_members  gm ON g.id = gm.groupid
+            JOIN mdl_user u ON  u.id = gm.userid
+            WHERE courseid = $courseid AND u.id IN ($selectedusers)";
     $users = $DB->get_records_sql($sql);
     $aux = [];
 
     foreach($users as $user) {
         profile_load_custom_fields($user);
         $aux[$user->id] = $user;
-        // echo print_r($aux, true);
     }
 
    return $aux;

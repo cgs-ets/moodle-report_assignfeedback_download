@@ -718,11 +718,6 @@ class reportmanager {
 
             foreach ($selectedusers as $userid => $user) {
                 $filerecords = $this->get_assessment_submission_onlinetext($assignmentid, $userid, true);
-                // $user = $DB->get_record('user', ['id' => $user], 'id, firstname, lastname');
-//                 echo '<pre>';
-//                 echo print_r($filerecords);
-//                 echo '</pre>';
-// exit;
                 foreach ($filerecords as $fr) {
                     $userpdfs[$user->id][] = report_assignfeedback_download_generatefeedbackpdf($fr, $asessn, $user, $course);
                 }
@@ -866,7 +861,7 @@ class reportmanager {
                 $data->firstname     = ($selectedusers[$user->userid])->firstname;
                 $data->lastname      = ($selectedusers[$user->userid])->lastname;
                 $data->username      = ($selectedusers[$user->userid])->username;
-                $data->studiescode   = ($selectedusers[$user->userid])->profile['StudiesCode'];
+                $data->classcode     = ($selectedusers[$user->userid])->classcode;
                 $data->submission    = $result->submission;
                 $data->assignment    = $result->assignment;
                 // Replace non break space entity to new line character.
