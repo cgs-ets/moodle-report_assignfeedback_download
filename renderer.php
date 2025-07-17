@@ -160,16 +160,18 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
         $extrafields = \core_user\fields::for_identity($context)->get_required_fields();
         $ufields = \core_user\fields::for_userpic()->including(...$extrafields);
         $ufields = $ufields->get_sql('u', false, '', '', false)->selects;
-        return  get_enrolled_users(
-            $context,
-            "mod/assign:submit",
-            null,
-            $ufields,
-            'firstname',
-            0,
-            0,
-            true
-        );
+        // return  get_enrolled_users(
+        //     $context,
+        //     "mod/assign:submit",
+        //     null,
+        //     $ufields,
+        //     'firstname',
+        //     0,
+        //     0,
+        //     false
+        // );
+        // If the course is finished (locked) the previos code was not returning anything
+        return get_enrolled_users($context, '', null, $ufields); 
     }
 
     protected function get_table_context($courseid, $assessmentids, $url, $moduleid, $filter = false, $coursename) {
@@ -227,7 +229,7 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
         $countgradedsubmissions     = 0;
         $countsubmissionreflection  = 0;
 
-
+// var_dump($context); exit;
 
         foreach ($assessments as $assess) {
             if (!isset($activeusers[$assess->userid])) {
@@ -426,6 +428,8 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
             'noexistgrades'                 => $countgradedsubmissions == 0,
             'noexistreflection'             => $countsubmissionreflection == 0,
         ];
+
+        // var_dump($context);
 
         return $context;
     }

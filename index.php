@@ -93,7 +93,31 @@ if (!$course = $DB->get_record('course', array('id' => $id))) {
 
 require_login($course);
 $context = context_course::instance($course->id);
-require_capability('report/assignfeedback_download:grade', $context);
+//$CFG->contextlocking If the course is finished and its locked, teachers will not have athe capability
+if ($CFG->contextlocking) {
+    // Verificamos si el usuario es admin o tiene rol docente en el contexto del curso.
+    $isallowed = false;
+
+    if (is_siteadmin($USER)) {
+        $isallowed = true;
+    } else {
+        $roles = get_user_roles($context, $USER->id, false);
+        foreach ($roles as $role) {
+            if ($role->shortname === 'editingteacher' || $role->shortname === 'teacher') {
+                $isallowed = true;
+                break;
+            }
+        }
+    }
+
+    if (!$isallowed) {
+        throw new required_capability_exception($context, 'report/assignfeedback_download:grade', 'nopermissions', '');
+    }
+
+} else {
+    require_capability('report/assignfeedback_download:grade', $context);
+}
+
 // Display the backup report.
 $PAGE->set_title(format_string($course->shortname, true, array('context' => $context)));
 $PAGE->set_heading(format_string($course->fullname, true, array('context' => $context)));
@@ -106,6 +130,7 @@ $filter = false;
 $noasses = 0;
 // Form processing and displaying is done here.
 if ($data = $mform->get_data()) {
+
     // In this case you process validated data. $mform->get_data() returns data posted in form.
     $assessmentids = $data->assessments; // Get the selected assessments.
     $filter        = true;
