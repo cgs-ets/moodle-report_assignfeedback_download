@@ -259,6 +259,37 @@ function report_assignfeedback_set_students_rows (MoodleExcelWorksheet $sheet, $
 
 }
 
+/**
+ * Clean filename for Windows compatibility
+ * Removes or replaces problematic characters that can cause issues in file systems
+ */
+function report_assignfeedback_download_clean_filename($filename) {
+    // Remove or replace problematic characters for Windows file systems
+    $filename = preg_replace('/[<>:"|?*;]/', '_', $filename);
+    
+    // Replace spaces and dashes with underscores
+    $filename = str_replace([' ', '-'], '_', $filename);
+    
+    // Remove leading/trailing spaces, dots and underscores
+    $filename = trim($filename, ' ._');
+    
+    // Replace multiple consecutive underscores with single underscore
+    $filename = preg_replace('/_+/', '_', $filename);
+    
+    // Ensure filename is not empty
+    if (empty($filename)) {
+        $filename = 'file';
+    }
+    
+    // Limit filename length (Windows has 255 char limit, but let's be safe)
+    if (strlen($filename) > 200) {
+        $filename = substr($filename, 0, 200);
+        $filename = rtrim($filename, '_');
+    }
+    
+    return $filename;
+}
+
 function report_assignfeedback_get_customfields($selectedusers, $courseid) {
     global $DB, $COURSE;
 

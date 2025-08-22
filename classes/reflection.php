@@ -46,7 +46,7 @@ function report_assignfeedback_download_setup_reflection_workbook($id, $modid, $
 
     require_capability('mod/assign:grade', $modcontext);
 
-    $filename       = $course->shortname . ' - ' . $cm->name . '.xls';
+    $filename       = report_assignfeedback_download_clean_filename($course->shortname . ' - ' . $cm->name) . '.xls';
     $workbook       = new AssignfedbackDownloaderExcelWorkbook("-");
 
     $workbook->send($filename);

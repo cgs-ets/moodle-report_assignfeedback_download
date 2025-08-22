@@ -49,7 +49,7 @@ function report_assignfeedback_download_setup_marking_guide_workbook($id, $modid
     $modcontext = context_module::instance($cm->id);
     require_capability('mod/assign:grade', $modcontext);
 
-    $filename = $course->shortname . ' - ' . $cm->name . '.xls';
+    $filename = report_assignfeedback_download_clean_filename($course->shortname . ' - ' . $cm->name) . '.xls';
     $workbook = new AssignfedbackDownloaderExcelWorkbook("-");
 
     $workbook->send($filename);

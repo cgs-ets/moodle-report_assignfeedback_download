@@ -47,12 +47,12 @@ function report_assignfeedback_download_setup_frubric_workbook($id, $modid, $are
 
     require_capability('mod/assign:grade', $modcontext);
 
-    $filename       = $course->shortname . ' - ' . $cm->name . '.xls';
+    $filename       = report_assignfeedback_download_clean_filename($course->shortname . ' - ' . $cm->name) . '.xls';
     $workbook       = new AssignfedbackDownloaderExcelWorkbook("-");
 
     $workbook->send($filename);
 
-    $sheet          = $workbook->add_worksheet($cm->name);
+    $sheet          = $workbook->add_worksheet(report_assignfeedback_download_clean_filename($cm->name));
     $frubric        = report_assignfeedback_download_decode_level_filling($areaid);
     $methodname     = "Frubric : $frubric->name";
     $pos            = report_assignfeedback_download_add_header($workbook, $sheet, $course->fullname, $cm->name, $methodname);

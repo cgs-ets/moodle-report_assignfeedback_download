@@ -47,7 +47,7 @@ function report_assignfeedback_download_setup_rubric_workbook($id, $modid, $sele
     $modcontext = context_module::instance($cm->id);
     require_capability('mod/assign:grade', $modcontext);
 
-    $filename = $course->shortname . ' - ' . $cm->name . '.xls';
+    $filename = report_assignfeedback_download_clean_filename($course->shortname . ' - ' . $cm->name) . '.xls';
     $workbook = new AssignfedbackDownloaderExcelWorkbook("-");
 
     $workbook->send($filename);
