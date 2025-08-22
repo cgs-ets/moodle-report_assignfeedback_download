@@ -262,23 +262,30 @@ function report_assignfeedback_set_students_rows (MoodleExcelWorksheet $sheet, $
 function report_assignfeedback_get_customfields($selectedusers, $courseid) {
     global $DB, $COURSE;
 
-    $sql = "SELECT id, firstname, lastname, username from {user} where id in ($selectedusers)";
-
-    $sql = "SELECT u.id, u.firstname, u.lastname, u.username, g.name as classcode
-            FROM mdl_groups g
-            JOIN mdl_groups_members  gm ON g.id = gm.groupid
-            JOIN mdl_user u ON  u.id = gm.userid
-            WHERE courseid = $courseid AND u.id IN ($selectedusers)";
-    $users = $DB->get_records_sql($sql);
+    // First try with groups - use LEFT JOIN to include users without groups
+    $sql = "SELECT u.id, u.firstname, u.lastname, u.username, COALESCE(g.name, '') as classcode
+            FROM {user} u
+            LEFT JOIN {groups_members} gm ON u.id = gm.userid
+            LEFT JOIN {groups} g ON gm.groupid = g.id AND g.courseid = :courseid
+            WHERE u.id IN ($selectedusers)";
+    
+    $params = ['courseid' => $courseid];
+    $users = $DB->get_records_sql($sql, $params);
+    
+    // If no users found (shouldn't happen with LEFT JOIN), fallback to simple query
+    if (empty($users)) {
+        $sql = "SELECT id, firstname, lastname, username, '' as classcode 
+                FROM {user} WHERE id IN ($selectedusers)";
+        $users = $DB->get_records_sql($sql);
+    }
+    
     $aux = [];
-
     foreach($users as $user) {
         profile_load_custom_fields($user);
         $aux[$user->id] = $user;
     }
 
-   return $aux;
-
+    return $aux;
 }
 
 
