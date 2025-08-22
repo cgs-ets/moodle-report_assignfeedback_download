@@ -266,50 +266,50 @@ function report_assignfeedback_set_students_rows (MoodleExcelWorksheet $sheet, $
 function report_assignfeedback_download_clean_filename($filename) {
     // Remove or replace problematic characters for Windows file systems
     $filename = preg_replace('/[<>:"|?*;]/', '_', $filename);
-    
+
     // Replace spaces and dashes with underscores
     $filename = str_replace([' ', '-'], '_', $filename);
-    
+
     // Remove leading/trailing spaces, dots and underscores
     $filename = trim($filename, ' ._');
-    
+
     // Replace multiple consecutive underscores with single underscore
     $filename = preg_replace('/_+/', '_', $filename);
-    
+
     // Ensure filename is not empty
     if (empty($filename)) {
         $filename = 'file';
     }
-    
-    // Limit filename length (Windows has 255 char limit, but let's be safe)
+
+    // Limit filename length (Windows has 255 char limit)
     if (strlen($filename) > 200) {
         $filename = substr($filename, 0, 200);
         $filename = rtrim($filename, '_');
     }
-    
+
     return $filename;
 }
 
 function report_assignfeedback_get_customfields($selectedusers, $courseid) {
     global $DB, $COURSE;
 
-    // First try with groups - use LEFT JOIN to include users without groups
+    // First try with groups
     $sql = "SELECT u.id, u.firstname, u.lastname, u.username, COALESCE(g.name, '') as classcode
             FROM {user} u
             LEFT JOIN {groups_members} gm ON u.id = gm.userid
             LEFT JOIN {groups} g ON gm.groupid = g.id AND g.courseid = :courseid
             WHERE u.id IN ($selectedusers)";
-    
+
     $params = ['courseid' => $courseid];
     $users = $DB->get_records_sql($sql, $params);
-    
-    // If no users found (shouldn't happen with LEFT JOIN), fallback to simple query
+
+    // If no users found fallback to simple query
     if (empty($users)) {
-        $sql = "SELECT id, firstname, lastname, username, '' as classcode 
+        $sql = "SELECT id, firstname, lastname, username, '' as classcode
                 FROM {user} WHERE id IN ($selectedusers)";
         $users = $DB->get_records_sql($sql);
     }
-    
+
     $aux = [];
     foreach($users as $user) {
         profile_load_custom_fields($user);
