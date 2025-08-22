@@ -293,21 +293,27 @@ function report_assignfeedback_download_clean_filename($filename) {
 function report_assignfeedback_get_customfields($selectedusers, $courseid) {
     global $DB, $COURSE;
 
-    // First try with groups
-    $sql = "SELECT u.id, u.firstname, u.lastname, u.username, COALESCE(g.name, '') as classcode
-            FROM {user} u
-            LEFT JOIN {groups_members} gm ON u.id = gm.userid
-            LEFT JOIN {groups} g ON gm.groupid = g.id AND g.courseid = :courseid
-            WHERE u.id IN ($selectedusers)";
-
-    $params = ['courseid' => $courseid];
-    $users = $DB->get_records_sql($sql, $params);
-
-    // If no users found fallback to simple query
-    if (empty($users)) {
-        $sql = "SELECT id, firstname, lastname, username, '' as classcode
-                FROM {user} WHERE id IN ($selectedusers)";
-        $users = $DB->get_records_sql($sql);
+    // First get basic user info
+    $sql = "SELECT id, firstname, lastname, username, '' as classcode
+            FROM {user} WHERE id IN ($selectedusers)";
+    $users = $DB->get_records_sql($sql);
+    
+    // Then try to get group info for users who have groups
+    if (!empty($users)) {
+        $groupsql = "SELECT u.id, g.name as groupname
+                     FROM {user} u
+                     JOIN {groups_members} gm ON u.id = gm.userid
+                     JOIN {groups} g ON gm.groupid = g.id
+                     WHERE g.courseid = :courseid AND u.id IN ($selectedusers)";
+        
+        $groupusers = $DB->get_records_sql($groupsql, ['courseid' => $courseid]);
+        
+        // Update users with group info if they have it
+        foreach ($groupusers as $groupuser) {
+            if (isset($users[$groupuser->id])) {
+                $users[$groupuser->id]->classcode = $groupuser->groupname;
+            }
+        }
     }
 
     $aux = [];
