@@ -35,7 +35,8 @@ function report_assignfeedback_download_extend_navigation_course($navigation, $c
 
     if (has_capability('moodle/site:viewuseridentity', $context)) {
         $url = new moodle_url('/report/assignfeedback_download/index.php', array('id' => $course->id, 'cmid' => $context->id));
-        $navigation->add(get_string('pluginname', 'report_assignfeedback_download'), $url, navigation_node::COURSE_INDEX_PAGE, null, null, new pix_icon('i/report', ''));
+        $title = get_string('pluginrename', 'report_assignfeedback_download') . ' (Feedback Downloader)';
+        $navigation->add($title, $url, navigation_node::COURSE_INDEX_PAGE, null, null, new pix_icon('i/report', ''));
     }
 }
 
