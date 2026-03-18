@@ -138,6 +138,29 @@ class students extends \table_sql implements dynamic_table {
         }
 
         parent::out($pagesize, $useinitialsbar, $downloadhelpbutton);
+
+        // Add JS to toggle the "show more/less" link text on collapse events.
+        global $PAGE;
+        $PAGE->requires->js_amd_inline("
+            require([], function() {
+                document.getElementById('assignfeedback-students').addEventListener('shown.bs.collapse', function(e) {
+                    var toggle = e.target.nextElementSibling;
+                    if (toggle && toggle.classList.contains('detail-toggle')) {
+                        var icon = toggle.querySelector('i');
+                        toggle.childNodes[toggle.childNodes.length - 1].textContent = toggle.dataset.showless;
+                        if (icon) { icon.className = 'fa fa-chevron-up mr-1'; }
+                    }
+                });
+                document.getElementById('assignfeedback-students').addEventListener('hidden.bs.collapse', function(e) {
+                    var toggle = e.target.nextElementSibling;
+                    if (toggle && toggle.classList.contains('detail-toggle')) {
+                        var icon = toggle.querySelector('i');
+                        toggle.childNodes[toggle.childNodes.length - 1].textContent = toggle.dataset.showmore;
+                        if (icon) { icon.className = 'fa fa-chevron-down mr-1'; }
+                    }
+                });
+            });
+        ");
     }
 
     /**
@@ -192,6 +215,12 @@ class students extends \table_sql implements dynamic_table {
         return implode(', ', $usergroups);
     }
 
+    /** @var int $collapsecounter Counter for unique collapse IDs. */
+    protected static $collapsecounter = 0;
+
+    /** @var int Maximum items to show before collapsing. */
+    protected const VISIBLE_ITEMS = 3;
+
     /**
      * Generate the submission detail column.
      *
@@ -227,7 +256,7 @@ class students extends \table_sql implements dynamic_table {
             $items[] = \html_writer::div($link . ' ' . $badge, 'mb-1');
         }
 
-        return implode('', $items);
+        return $this->render_collapsible_list($items);
     }
 
     /**
@@ -265,7 +294,51 @@ class students extends \table_sql implements dynamic_table {
             $items[] = \html_writer::div($link . ' ' . $badge, 'mb-1');
         }
 
-        return implode('', $items);
+        return $this->render_collapsible_list($items);
+    }
+
+    /**
+     * Render a list of items, collapsing beyond VISIBLE_ITEMS with a toggle link.
+     *
+     * @param string[] $items The HTML items to render.
+     * @return string The rendered HTML.
+     */
+    protected function render_collapsible_list(array $items): string {
+        $count = count($items);
+        if ($count <= self::VISIBLE_ITEMS) {
+            return implode('', $items);
+        }
+
+        self::$collapsecounter++;
+        $collapseid = 'detail-collapse-' . self::$collapsecounter;
+
+        // Show first VISIBLE_ITEMS items directly.
+        $visible = implode('', array_slice($items, 0, self::VISIBLE_ITEMS));
+
+        // Remaining items go in a collapsible div.
+        $hidden = implode('', array_slice($items, self::VISIBLE_ITEMS));
+        $hiddencount = $count - self::VISIBLE_ITEMS;
+
+        $showmoretext = get_string('showmore', 'report_assignfeedback_download', $hiddencount);
+        $showlesstext = get_string('showless', 'report_assignfeedback_download');
+
+        $collapsediv = \html_writer::div($hidden, 'collapse', ['id' => $collapseid]);
+
+        $togglelink = \html_writer::link(
+            '#' . $collapseid,
+            \html_writer::tag('i', '', ['class' => 'fa fa-chevron-down mr-1']) . $showmoretext,
+            [
+                'class' => 'btn btn-link btn-sm p-0 mt-1 detail-toggle',
+                'data-toggle' => 'collapse',
+                'data-bs-toggle' => 'collapse',
+                'aria-expanded' => 'false',
+                'aria-controls' => $collapseid,
+                'data-showmore' => $showmoretext,
+                'data-showless' => $showlesstext,
+            ]
+        );
+
+        return $visible . $collapsediv . $togglelink;
     }
 
     /**

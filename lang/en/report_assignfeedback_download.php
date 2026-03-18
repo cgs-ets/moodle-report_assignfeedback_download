@@ -104,4 +104,6 @@ $string['notsubmitted']                 = 'Not submitted';
 $string['graded']                       = 'Graded';
 $string['notgraded']                    = 'Not graded';
 $string['nousersselected']              = 'No users selected';
+$string['showmore']                     = 'Show {$a} more...';
+$string['showless']                     = 'Show less';
 
