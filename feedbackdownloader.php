@@ -32,13 +32,13 @@ require_once($CFG->dirroot . '/mod/assign/locallib.php');
 
 $id                      = optional_param('id', 0, PARAM_INT); // Course ID.
 $cmid                    = optional_param('cmid', 0, PARAM_INT); // Course module ID.
-// $option                  = optional_param('operation', '', PARAM_TEXT);
-// $itemids                 = optional_param('itemids', '', PARAM_TEXT);
-// $cmids                   = optional_param('cmids', '', PARAM_TEXT);
-// $instaceids              = optional_param('instanceids', '', PARAM_TEXT);
-// $selectedusers           = optional_param('selectedusers', '', PARAM_TEXT);
-// $selectedaction          = optional_param('operation', '', PARAM_TEXT);
-// $frubricselection        = optional_param('frubricdetails', '', PARAM_TEXT);
+$option                  = optional_param('operation', '', PARAM_TEXT);
+$itemids                 = optional_param('itemids', '', PARAM_TEXT);
+$cmids                   = optional_param('cmids', '', PARAM_TEXT);
+$instaceids              = optional_param('instanceids', '', PARAM_TEXT);
+$selectedusers           = optional_param('selectedusers', '', PARAM_TEXT);
+$selectedaction          = optional_param('operation', '', PARAM_TEXT);
+$frubricselection        = optional_param('frubricdetails', '', PARAM_TEXT);
 
 $manager                 = new report_assignfeedback_download\reportmanager();
 $show = new stdClass();
@@ -80,7 +80,7 @@ if ($selectedusers != '') {
     }
 }
 
-$url = new moodle_url('/report/assignfeedback_download/index.php', array('id' => $id, 'cmid' => $cmid));
+$url = new moodle_url('/report/assignfeedback_download/feedbackdownloader.php', array('id' => $id, 'cmid' => $cmid));
 $PAGE->set_url($url);
 $PAGE->set_pagelayout('admin');
 $PAGE->add_body_class('report_assignfeedback_download');
@@ -94,80 +94,80 @@ if (!$course = $DB->get_record('course', array('id' => $id))) {
 require_login($course);
 $context = context_course::instance($course->id);
 //$CFG->contextlocking If the course is finished and its locked, teachers will not have athe capability
-// if ($CFG->contextlocking) {
-//     // Verify if the user is an admin or is a teacher in the course context
-//     $isallowed = false;
+if ($CFG->contextlocking) {
+    
+    $isallowed = false;
 
-//     if (is_siteadmin($USER)) {
-//         $isallowed = true;
-//     } else {
-//         $roles = get_user_roles($context, $USER->id, false);
-//         foreach ($roles as $role) {
-//             if ($role->shortname === 'editingteacher' || $role->shortname === 'teacher') {
-//                 $isallowed = true;
-//                 break;
-//             }
-//         }
-//     }
+    if (is_siteadmin($USER)) {
+        $isallowed = true;
+    } else {
+        $roles = get_user_roles($context, $USER->id, false);
+        foreach ($roles as $role) {
+            if ($role->shortname === 'editingteacher' || $role->shortname === 'teacher') {
+                $isallowed = true;
+                break;
+            }
+        }
+    }
 
-//     if (!$isallowed) {
-//         throw new required_capability_exception($context, 'report/assignfeedback_download:grade', 'nopermissions', '');
-//     }
+    if (!$isallowed) {
+        throw new required_capability_exception($context, 'report/assignfeedback_download:grade', 'nopermissions', '');
+    }
 
-// } else {
-//     require_capability('report/assignfeedback_download:grade', $context);
-// }
+} else {
+    require_capability('report/assignfeedback_download:grade', $context);
+}
 
 // Display the backup report.
-// $PAGE->set_title(format_string($course->shortname, true, array('context' => $context)));
-// $PAGE->set_heading(format_string($course->fullname, true, array('context' => $context)));
+$PAGE->set_title(format_string($course->shortname, true, array('context' => $context)));
+$PAGE->set_heading(format_string($course->fullname, true, array('context' => $context)));
 echo $OUTPUT->header();
 
-// $aids = $manager->get_submitted_assessments($id);
-// $mform = new assignfeedback_download_select_form(null, ['id' => $id, 'cmid' => $cmid, 'aids' => $aids]);
-// $assessmentids = '';
-// $filter = false;
-// $noasses = 0;
-// // Form processing and displaying is done here.
-// if ($data = $mform->get_data()) {
+$aids = $manager->get_submitted_assessments($id);
+$mform = new assignfeedback_download_select_form(null, ['id' => $id, 'cmid' => $cmid, 'aids' => $aids]);
+$assessmentids = '';
+$filter = false;
+$noasses = 0;
 
-//     // In this case you process validated data. $mform->get_data() returns data posted in form.
-//     $assessmentids = $data->assessments; // Get the selected assessments.
-//     $filter        = true;
-// } else {
-//     if (count($aids) == 0) {
-//         $noasses = 1;
-//     }
-// }
+if ($mform->is_cancelled()) {
+    redirect(new moodle_url('/report/assignfeedback_download/index.php', ['id' => $id]));
+}
+// Form processing and displaying is done here.
+if ($data = $mform->get_data()) {
 
-// if ($id == 0 || $id == 1) {  // 1 is the main page.
-//     $message = get_string('cantdisplayerror', 'report_assignfeedback_download');
-//     $level   = core\output\notification::NOTIFY_ERROR;
-//     \core\notification::add($message, $level);
-// } else {
-//     echo $OUTPUT->box_start();
-//     $renderer = $PAGE->get_renderer('report_assignfeedback_download');
+    // In this case you process validated data. $mform->get_data() returns data posted in form.
+    $assessmentids = $data->assessments; // Get the selected assessments.
+    $filter        = true;
+} else {
+    if (count($aids) == 0) {
+        $noasses = 1;
+    }
+}
 
-//     if ($noasses) {
-//         echo $renderer->render_no_assessment_in_course();
-//     } else {
-//         $mform->display();
-//     }
+if ($id == 0 || $id == 1) {  // 1 is the main page.
+    $message = get_string('cantdisplayerror', 'report_assignfeedback_download');
+    $level   = core\output\notification::NOTIFY_ERROR;
+    \core\notification::add($message, $level);
+} else {
+    echo $OUTPUT->box_start();
+    $renderer = $PAGE->get_renderer('report_assignfeedback_download');
 
-//     // Only if the user clicked filter display this.
-//     if ($filter) {
-//         $url            = $PAGE->url;
-//         $coursename     = $DB->get_field('course', 'fullname', ['id' => $id], $strictness = IGNORE_MISSING);
+    if ($noasses) {
+        echo $renderer->render_no_assessment_in_course();
+    } else {
+        $mform->display();
+    }
 
-//         echo $renderer->render_assignfeedback_download($id, $assessmentids, $url, $cmid, $filter, $coursename);
-//     }
+    // Only if the user clicked filter display this.
+    if ($filter) {
+        $url            = $PAGE->url;
+        $coursename     = $DB->get_field('course', 'fullname', ['id' => $id], $strictness = IGNORE_MISSING);
 
-//     echo $OUTPUT->box_end();
-// }
+        echo $renderer->render_assignfeedback_download($id, $assessmentids, $url, $cmid, $filter, $coursename);
+    }
 
-
-$renderer = $PAGE->get_renderer('report_assignfeedback_download');
-$renderer->display_landing_report_page($id);
+    echo $OUTPUT->box_end();
+}
 
 echo $OUTPUT->footer();
 

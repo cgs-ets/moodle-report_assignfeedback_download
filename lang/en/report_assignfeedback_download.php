@@ -64,6 +64,7 @@ $string['cancel']                       = 'Cancel';
 $string['noresult']                     = 'No submitted assessments found';
 $string['frubric_desc']                 = 'Frubric result. To Download use select option ';
 $string['returntocourse']               = 'Return to course';
+$string['returntoreport']               = 'Return to reports';
 $string['invalidcourse']                = 'Invalid course';
 $string['student']                      = 'Student';
 $string['firstname']                    = 'First name';
@@ -94,4 +95,12 @@ $string['cantgeneratepdf']              = 'Some of the rubric definitions change
                                            If you want to download Flexrubric PDFS and/or advanced grading methods, make sure the grade(s)/flexrubric are updated.
                                            Otherwise, those students whose grades/flexrubrics were not updated, will not be exported to the spreadhsheet.';
 $string['nofilestocompress']            = 'Files could not be generated. Please verify the grades have been updated and/or the rubric has been filled';
+$string['assignments']                  = 'Assignments';
+$string['submissionstatus']             = 'Submission status';
+$string['gradingstatus']                = 'Grading status';
+$string['submitted']                    = 'Submitted';
+$string['notsubmitted']                 = 'Not submitted';
+$string['graded']                       = 'Graded';
+$string['notgraded']                    = 'Not graded';
+$string['nousersselected']              = 'No users selected';
 

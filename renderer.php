@@ -627,6 +627,17 @@ class report_assignfeedback_download_renderer extends plugin_renderer_base {
 
     }
 
+    public function display_landing_report_page($id) {
+    $feedbackdownloaderurl = new \moodle_url('/report/assignfeedback_download/feedbackdownloader.php', ['id'=>$id]);
+    $assignmentreporturl = new \moodle_url('/report/assignfeedback_download/assignmentgeneralreports.php', ['id'=>$id]);
+    $context = ['feedbackdownloaderurl' => $feedbackdownloaderurl,
+    'assignmentreporturl' => $assignmentreporturl];
+    echo $this->render_from_template('report_assignfeedback_download/index_template', $context);
+}
+
+
+
+
 
 }
 
