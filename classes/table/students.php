@@ -193,10 +193,12 @@ class students extends \table_sql implements dynamic_table {
     public function col_fullname($data) {
         global $OUTPUT;
 
-        $userpic = $OUTPUT->user_picture($data, ['courseid' => $this->course->id, 'size' => 35]);
+        $userpic = $OUTPUT->user_picture($data, ['courseid' => $this->course->id, 'size' => 35, 'link' => true]);
         $fullname = fullname($data);
+        $profileurl = new moodle_url('/user/view.php', ['id' => $data->id, 'course' => $this->course->id]);
+        $namelink = \html_writer::link($profileurl, $fullname);
 
-        return $userpic . ' ' . $fullname;
+        return $userpic . ' ' . $namelink;
     }
 
     /**

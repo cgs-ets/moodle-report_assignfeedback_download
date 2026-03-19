@@ -25,6 +25,7 @@ table.feedbackfilestv td {
 
 table.innertable {
     width: 100%;
+    /* border-style: hidden; */
 }
 
 .innertable tbody tr {
