@@ -136,7 +136,7 @@ if (!empty($assignids)) {
 $rs = $DB->get_recordset_sql($sql, $params);
 
 \core\dataformat::download_data(
-    'assignment_report_course_' . $course->id,
+    'assignment_report_' . clean_filename($course->shortname),
     $dataformat,
     $columnnames,
     $rs,
