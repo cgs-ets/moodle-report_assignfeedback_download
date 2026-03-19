@@ -71,10 +71,13 @@ $PAGE->set_title(format_string($course->shortname, true, array('context' => $con
 $PAGE->set_heading(format_string($course->fullname, true, array('context' => $context)));
 echo $OUTPUT->header();
 
+// Page heading.
+echo $OUTPUT->heading(get_string('assessmentreports', 'report_assignfeedback_download'));
+
 // Link back to the plugin index page.
 $indexurl = new moodle_url('/report/assignfeedback_download/index.php', ['id' => $course->id]);
 echo html_writer::div(
-    html_writer::link($indexurl, get_string('returntocourse', 'report_assignfeedback_download'), ['class' => 'btn btn-primary mb-3']),
+    html_writer::link($indexurl, get_string('returntoreport', 'report_assignfeedback_download'), ['class' => 'btn btn-primary mb-3']),
 );
 
 echo $OUTPUT->box_start();

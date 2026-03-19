@@ -106,4 +106,6 @@ $string['notgraded']                    = 'Not graded';
 $string['nousersselected']              = 'No users selected';
 $string['showmore']                     = 'Show {$a} more...';
 $string['showless']                     = 'Show less';
+$string['afgdtitle']                    = 'Assessment feedback and grades downloader';
+$string['assessmentreports']            = 'Assessment Report';
 

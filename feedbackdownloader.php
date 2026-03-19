@@ -123,6 +123,9 @@ $PAGE->set_title(format_string($course->shortname, true, array('context' => $con
 $PAGE->set_heading(format_string($course->fullname, true, array('context' => $context)));
 echo $OUTPUT->header();
 
+// Page heading.
+echo $OUTPUT->heading(get_string('afgdtitle', 'report_assignfeedback_download'));
+
 $aids = $manager->get_submitted_assessments($id);
 $mform = new assignfeedback_download_select_form(null, ['id' => $id, 'cmid' => $cmid, 'aids' => $aids]);
 $assessmentids = '';
