@@ -57,10 +57,11 @@ $sql = "SELECT a.id, a.name, cm.id AS cmid
       ORDER BY a.name ASC";
 $assigns = $DB->get_records_sql($sql, ['courseid' => $course->id]);
 
-// Build column names: firstname, lastname, groups, then per-assignment submission and grading status.
+// Build column names: firstname, lastname, email, groups, then per-assignment submission and grading status.
 $columnnames = [
     'firstname' => get_string('firstname'),
     'lastname' => get_string('lastname'),
+    'email' => get_string('email'),
     'groups' => get_string('groups'),
 ];
 
@@ -79,7 +80,7 @@ $columnnames['lastaccess'] = get_string('lastcourseaccess');
 [$enrolledsql, $enrolledparams] = get_enrolled_sql($context, 'mod/assign:submit');
 [$groupconcatnamesql, $groupconcatnameparams] = groups_get_names_concat_sql($course->id);
 
-$sql = "SELECT u.id, u.firstname, u.lastname,
+$sql = "SELECT u.id, u.firstname, u.lastname, u.email,
                COALESCE(gcn.groupnames, '') AS groups,
                COALESCE(ul.timeaccess, 0) AS lastaccess
           FROM {user} u
@@ -144,6 +145,7 @@ $rs = $DB->get_recordset_sql($sql, $params);
         $out = new stdClass();
         $out->firstname = $record->firstname;
         $out->lastname = $record->lastname;
+        $out->email = $record->email;
         $out->groups = $record->groups;
 
         foreach ($assigns as $assign) {
