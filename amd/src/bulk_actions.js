@@ -70,6 +70,22 @@ export const init = (formId) => {
                 url.searchParams.append('userid[]', userid);
             });
 
+            // Include active assignment filter IDs so download.php respects the filter.
+            const tableEl = document.querySelector('[data-region="core_table/dynamic"]');
+            if (tableEl) {
+                try {
+                    const filtersData = JSON.parse(tableEl.dataset.tableFilters);
+                    const assignmentFilter = filtersData.filters && filtersData.filters.assignment;
+                    if (assignmentFilter && assignmentFilter.values && assignmentFilter.values.length) {
+                        assignmentFilter.values.forEach(assignid => {
+                            url.searchParams.append('assignid[]', assignid);
+                        });
+                    }
+                } catch (err) {
+                    // If parsing fails, proceed without assignment filter.
+                }
+            }
+
             // Navigate to download URL.
             window.location.href = url.toString();
             actionSelect.value = '';

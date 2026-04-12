@@ -27,6 +27,7 @@ require_once('../../config.php');
 $id = required_param('id', PARAM_INT); // Course ID.
 $dataformat = required_param('dataformat', PARAM_ALPHA);
 $userids = required_param_array('userid', PARAM_INT);
+$filterassignids = optional_param_array('assignid', [], PARAM_INT);
 
 if (!$course = $DB->get_record('course', ['id' => $id])) {
     throw new moodle_exception('invalidcourse', 'report_assignfeedback_download');
@@ -48,14 +49,26 @@ if (!isset($plugins[$dataformat]) || !$plugins[$dataformat]->is_enabled()) {
     throw new moodle_exception('invalidparam', 'error', '', 'dataformat');
 }
 
-// Get all assignments in the course with cmid for reference.
-$sql = "SELECT a.id, a.name, cm.id AS cmid
-          FROM {assign} a
-          JOIN {course_modules} cm ON cm.instance = a.id
-          JOIN {modules} m ON m.id = cm.module AND m.name = 'assign'
-         WHERE a.course = :courseid
-      ORDER BY a.name ASC";
-$assigns = $DB->get_records_sql($sql, ['courseid' => $course->id]);
+// Get assignments in the course, restricted to the active filter if provided.
+if (!empty($filterassignids)) {
+    [$filterinsql, $filterinparams] = $DB->get_in_or_equal($filterassignids, SQL_PARAMS_NAMED, 'filterassign');
+    $sql = "SELECT a.id, a.name, cm.id AS cmid
+              FROM {assign} a
+              JOIN {course_modules} cm ON cm.instance = a.id
+              JOIN {modules} m ON m.id = cm.module AND m.name = 'assign'
+             WHERE a.course = :courseid
+               AND a.id {$filterinsql}
+          ORDER BY a.name ASC";
+    $assigns = $DB->get_records_sql($sql, array_merge(['courseid' => $course->id], $filterinparams));
+} else {
+    $sql = "SELECT a.id, a.name, cm.id AS cmid
+              FROM {assign} a
+              JOIN {course_modules} cm ON cm.instance = a.id
+              JOIN {modules} m ON m.id = cm.module AND m.name = 'assign'
+             WHERE a.course = :courseid
+          ORDER BY a.name ASC";
+    $assigns = $DB->get_records_sql($sql, ['courseid' => $course->id]);
+}
 
 // Build column names: firstname, lastname, email, groups, then per-assignment submission and grading status.
 $columnnames = [
